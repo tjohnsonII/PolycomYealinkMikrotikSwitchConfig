@@ -1,11 +1,16 @@
+// Import React hooks for state and ref management
 import { useState, useRef } from 'react'
+// Import main CSS for styling
 import './App.css'
+// Import PapaParse for CSV import/export
 import Papa from 'papaparse';
+// Import custom dynamic switch config components
 import SwitchDynamicTemplate from './SwitchDynamicTemplate';
 import Switch24DynamicTemplate from './Switch24DynamicTemplate';
 import Switch8DynamicTemplate from './Switch8DynamicTemplate';
 import StrettoImportExportTab from './StrettoImportExportTab';
 
+// List of supported phone models for config generation
 const MODEL_OPTIONS = [
   'VVX 400', 'VVX 500', 'VVX 600', 'CP-7841-3PCC', 'CP-8832-K9', 'CP-7832-3PCC',
   'CP-8832-3PCC', 'SPA-122 ATA', 'SSIP6000', 'CP-7811-3PCC', 'SSIP7000', 'SSIP330',
@@ -16,6 +21,7 @@ const MODEL_OPTIONS = [
   'Yealink 56h Dect Handset'
 ];
 
+// Tab definitions for navigation
 const TABS = [
   { key: 'phone', label: 'Phone Configs' },
   { key: 'fbpx', label: 'FBPX Import Template' },
@@ -25,6 +31,7 @@ const TABS = [
   { key: 'switch', label: 'Switch Template' },
 ];
 
+// Field definitions for FBPX import/export template
 const FPBX_FIELDS = [
   "extension",
   "name",
@@ -47,6 +54,7 @@ const FPBX_FIELDS = [
   "accountcode"
 ];
 
+// Field definitions for VPBX import/export template
 const VPBX_FIELDS = [
   "mac",
   "model",
@@ -54,20 +62,27 @@ const VPBX_FIELDS = [
   ...FPBX_FIELDS.filter(f => !["extension"].includes(f)),
 ];
 
+// Type definitions for FBPX and VPBX forms
 type FpbxFormType = Record<typeof FPBX_FIELDS[number], string>;
 type VpbxFormType = Record<typeof VPBX_FIELDS[number], string>;
 
 function App() {
+  // State for active tab
   const [activeTab, setActiveTab] = useState('phone');
+  // State for phone type (Polycom or Yealink)
   const [phoneType, setPhoneType] = useState<'Polycom' | 'Yealink'>('Polycom');
+  // State for selected phone model
   const [model, setModel] = useState(MODEL_OPTIONS[0]);
+  // State for IP address input
   const [ip, setIp] = useState('');
+  // State for extension range and label prefix
   const [startExt, setStartExt] = useState('71');
   const [endExt, setEndExt] = useState('73');
   const [labelPrefix, setLabelPrefix] = useState('Park');
+  // State for generated config output
   const [output, setOutput] = useState('');
 
-  // Yealink Expansion Module Section
+  // State for Yealink expansion module section
   const [yealinkSection, setYealinkSection] = useState({
     templateType: 'BLF', // 'BLF' or 'SpeedDial'
     sidecarPage: '1',
@@ -76,8 +91,10 @@ function App() {
     value: '',
     pbxIp: '',
   });
+  // State for Yealink expansion config output
   const [yealinkOutput, setYealinkOutput] = useState('');
 
+  // Generate Yealink expansion module config
   const generateYealinkExpansion = () => {
     const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
     let config = '';
@@ -95,7 +112,7 @@ function App() {
     setYealinkOutput(config);
   };
 
-  // Polycom Expansion Module Section (example: BLF)
+  // State for Polycom expansion module section
   const [polycomSection, setPolycomSection] = useState({
     address: '',
     label: '',
@@ -103,8 +120,10 @@ function App() {
     linekeyCategory: 'BLF',
     linekeyIndex: '',
   });
+  // State for Polycom expansion config output
   const [polycomOutput, setPolycomOutput] = useState('');
 
+  // Generate Polycom expansion module config
   const generatePolycomExpansion = () => {
     const { address, label, type, linekeyCategory, linekeyIndex } = polycomSection;
     let config = '';
@@ -116,7 +135,7 @@ function App() {
     setPolycomOutput(config);
   };
 
-  // Helper: Polycom Park Lines Template
+  // Helper: Generate Polycom park lines config for selected model
   function generatePolycomParkLines(model: string, start: number, end: number, ip: string) {
     let config = '';
     if (model === 'VVX 400') {
@@ -174,7 +193,7 @@ function App() {
     return config;
   }
 
-  // Helper: Yealink Park Lines Template
+  // Helper: Generate Yealink park lines config for selected model
   function generateYealinkParkLines(model: string, start: number, end: number, ip: string) {
     let config = '';
     if (model === 'Yealink SIP-T46S' || model === 'Yealink T54W') {
@@ -208,13 +227,14 @@ function App() {
     return config;
   }
 
-  // Global/Required Attributes for Yealink
+  // Global/Required attributes for Yealink phones
   const yealinkOptions = {
     callStealing: false,
     labelLength: false,
     disableMissedCall: false,
   };
 
+  // Helper: Generate Yealink global attributes config
   function getYealinkGlobalAttributes(opts: typeof yealinkOptions) {
     let config = '';
     if (opts.callStealing) {
@@ -231,7 +251,7 @@ function App() {
     return config;
   }
 
-  // Feature Key Template Section
+  // State for feature key template section
   const [featureKey, setFeatureKey] = useState({
     brand: 'Yealink',
     lineNum: '',
@@ -242,8 +262,10 @@ function App() {
     promptLength: '',
     efkIndex: '',
   });
+  // State for feature key config output
   const [featureKeyOutput, setFeatureKeyOutput] = useState('');
 
+  // Generate feature key config for Yealink or Polycom
   function generateFeatureKeyConfig() {
     if (featureKey.brand === 'Yealink') {
       setFeatureKeyOutput(
@@ -271,7 +293,7 @@ function App() {
     }
   }
 
-  // Yealink Record Templates
+  // Yealink record templates for quick config
   const yealinkRecordTemplates = [
     { label: 'Record Unavailable', value: '*97$Cwc$$Cp1$01$Tdtmf$' },
     { label: 'Record Busy', value: '*97$Cwc$$Cp1$02$Tdtmf$' },
@@ -279,7 +301,7 @@ function App() {
     { label: 'Record Unreachable/DND', value: '*97$Cwc$$Cp1$04$Tdtmf$' },
   ];
 
-  // Polycom Record Templates
+  // Polycom record templates for quick config
   const polycomRecordTemplates = [
     { label: 'Record Unavailable', value: '*97$Tinvite$$Cpause2$01$Tdtmf$' },
     { label: 'Record Busy', value: '*97$Tinvite$$Cpause2$02$Tdtmf$' },
@@ -287,6 +309,7 @@ function App() {
     { label: 'Record DND', value: '*97$Tinvite$$Cpause2$04$Tdtmf$' },
   ];
 
+  // State for record template section
   const [recordTemplate, setRecordTemplate] = useState({
     brand: 'Yealink',
     lineNum: '',
@@ -294,8 +317,10 @@ function App() {
     label: '',
     templateIdx: 0,
   });
+  // State for record config output
   const [recordOutput, setRecordOutput] = useState('');
 
+  // Generate record config for Yealink or Polycom
   function generateRecordConfig() {
     if (recordTemplate.brand === 'Yealink') {
       const t = yealinkRecordTemplates[recordTemplate.templateIdx];
@@ -320,7 +345,7 @@ function App() {
     }
   }
 
-  // Yealink Transfer to VM Template
+  // Helper: Generate Yealink transfer-to-VM config
   function generateYealinkTransferToVM(lineNum: string, extNum: string, pbxIp: string) {
     return (
       `linekey.${lineNum}.extension=${extNum}\n` +
@@ -331,7 +356,7 @@ function App() {
     );
   }
 
-  // Yealink Speed Dial Template
+  // Helper: Generate Yealink speed dial config
   function generateYealinkSpeedDial(lineNum: string, label: string, value: string) {
     return (
       `linekey.${lineNum}.line=1\n` +
@@ -341,7 +366,7 @@ function App() {
     );
   }
 
-  // Polycom External Number Template
+  // Helper: Generate Polycom external number config
   function generatePolycomExternal(lineNum: string, macroNum: string, label: string, externalNum: string) {
     return (
       'feature.enhancedFeatureKeys.enabled=1\n' +
@@ -354,7 +379,7 @@ function App() {
     );
   }
 
-  // UI state for selectable feature templates
+  // State for selected feature template and its inputs
   const [selectedFeature, setSelectedFeature] = useState('');
   const [featureInputs, setFeatureInputs] = useState({
     lineNum: '',
@@ -365,8 +390,10 @@ function App() {
     macroNum: '',
     externalNum: '',
   });
+  // State for feature template config output
   const [featureOutput, setFeatureOutput] = useState('');
 
+  // Generate config for selected feature template
   function handleFeatureGenerate() {
     let out = '';
     switch (selectedFeature) {
@@ -385,6 +412,7 @@ function App() {
     setFeatureOutput(out);
   }
 
+  // Generate main config for Polycom or Yealink park lines
   const generateConfig = () => {
     const start = parseInt(startExt, 10);
     const end = parseInt(endExt, 10);
@@ -402,7 +430,7 @@ function App() {
     setOutput(config);
   };
 
-  // FPBX Import Template state
+  // State and handlers for FBPX import/export form
   const [fpbxForm, setFpbxForm] = useState<FpbxFormType>(() => FPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType));
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
@@ -445,7 +473,7 @@ function App() {
     });
   }
 
-  // VPBX Import Template state
+  // State and handlers for VPBX import/export form
   const [vpbxForm, setVpbxForm] = useState<VpbxFormType>(() => VPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as VpbxFormType));
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
@@ -487,8 +515,10 @@ function App() {
     });
   }
 
+  // Main UI rendering
   return (
     <div className="container">
+      {/* App title and tab navigation */}
       <h1>Configuration Generator</h1>
       <div className="tabs">
         {TABS.map(tab => (
@@ -503,8 +533,10 @@ function App() {
         ))}
       </div>
       <hr />
+      {/* Phone Configs Tab */}
       {activeTab === 'phone' && (
         <>
+          {/* Phone type/model/extension input form */}
           <div className="form-group">
             <label>Phone Type:</label>
             <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
@@ -754,8 +786,10 @@ function App() {
           </div>
         </>
       )}
+      {/* FBPX Import Template Tab */}
       {activeTab === 'fbpx' && (
         <div>
+          {/* FBPX import/export form UI */}
           <h2>FBPX Import Template</h2>
           <form style={{ maxWidth: 500 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
@@ -781,8 +815,10 @@ function App() {
           </form>
         </div>
       )}
+      {/* VPBX Import Template Tab */}
       {activeTab === 'vpbx' && (
         <div>
+          {/* VPBX import/export form UI */}
           <h2>VPBX Import Template</h2>
           <form style={{ maxWidth: 500 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
@@ -808,11 +844,14 @@ function App() {
           </form>
         </div>
       )}
+      {/* Streeto Import Template Tab */}
       {activeTab === 'streeto' && (
         <StrettoImportExportTab />
       )}
+      {/* Mikrotik Template Tab */}
       {activeTab === 'mikrotik' && (
         <>
+          {/* Mikrotik static config templates */}
           <hr style={{ margin: '32px 0' }} />
           <h2>Mikrotik 5009 Bridge Template</h2>
           <textarea
@@ -910,8 +949,10 @@ set sctp disabled=yes`}
           />
         </>
       )}
+      {/* Switch Template Tab */}
       {activeTab === 'switch' && (
         <>
+          {/* Dynamic/static switch config templates */}
           <SwitchDynamicTemplate />
           <hr style={{ margin: '32px 0' }} />
           <Switch24DynamicTemplate />
@@ -923,4 +964,5 @@ set sctp disabled=yes`}
   );
 }
 
+// Export main App component
 export default App

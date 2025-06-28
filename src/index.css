@@ -1,12 +1,22 @@
+/*
+  index.css - Global styles for the app
+  - Sets up color scheme, font, and base element styles
+  - Includes light/dark mode support
+  - Styles for links, buttons, and layout
+*/
+
 :root {
+  /* Base font and rendering settings */
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
+  /* Color scheme and background for dark mode */
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  /* Font rendering optimizations */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -14,6 +24,7 @@
 }
 
 a {
+  /* Link color and hover effect */
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
@@ -23,6 +34,7 @@ a:hover {
 }
 
 body {
+  /* Remove default margin and center content */
   margin: 0;
   display: flex;
   place-items: center;
@@ -31,11 +43,13 @@ body {
 }
 
 h1 {
+  /* Large heading style */
   font-size: 3.2em;
   line-height: 1.1;
 }
 
 button {
+  /* Button base style and hover/focus effects */
   border-radius: 8px;
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
@@ -56,6 +70,7 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
+    /* Light mode overrides */
     color: #213547;
     background-color: #ffffff;
   }
