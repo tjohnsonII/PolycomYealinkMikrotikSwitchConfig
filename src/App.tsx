@@ -536,58 +536,70 @@ function App() {
       <hr />
       {/* Reference Tab for Phone Configs (moved to its own tab) */}
       {activeTab === 'reference' && (
-        <div style={{ margin: '24px 0' }}>
+        <div style={{ margin: '24px 0', maxWidth: 900 }}>
           <h2>Phone Config Reference (Legend)</h2>
-          <div style={{ marginTop: 16 }}>
-            <h3>Polycom</h3>
-            <table className="reference-table">
-              <thead>
-                <tr><th>Setting</th><th>Description</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><code>attendant.resourcelist.X.address</code></td><td>BLF/park/extension address (e.g. 1001@ip)</td></tr>
-                <tr><td><code>attendant.resourcelist.X.label</code></td><td>Button label (displayed on phone)</td></tr>
-                <tr><td><code>attendant.resourcelist.X.type</code></td><td>Type of key (e.g. <b>automata</b> for BLF/park, <b>normal</b> for speed dial)</td></tr>
-                <tr><td><code>linekey.X.category</code></td><td>Key category (e.g. <b>BLF</b>, <b>EFK</b>)</td></tr>
-                <tr><td><code>efk.efklist.X.action.string</code></td><td>Macro or feature key action (e.g. transfer, record, external number)</td></tr>
-                <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
-                <tr><td><code>linekey.X.index</code></td><td>Index of the key (matches resourcelist or efklist)</td></tr>
-                <tr><td><code>efk.efkprompt.X.label</code></td><td>Prompt label for user input (numeric, string, etc.)</td></tr>
-                <tr><td><code>feature.EFKLineKey.enabled</code></td><td>Enable EFK line key macros</td></tr>
-              </tbody>
-            </table>
-            <h4 style={{ marginTop: 12 }}>Common Polycom Features</h4>
-            <ul>
-              <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use.</li>
-              <li><b>Speed Dial:</b> Quick dial to a number or extension.</li>
-              <li><b>EFK (Enhanced Feature Key):</b> Macro for advanced actions (e.g. transfer, record, external call).</li>
-              <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules.</li>
-            </ul>
-            <h3 style={{ marginTop: 24 }}>Yealink</h3>
-            <table className="reference-table">
-              <thead>
-                <tr><th>Setting</th><th>Description</th></tr>
-              </thead>
-              <tbody>
-                <tr><td><code>linekey.X.extension</code></td><td>Extension or park number assigned to key</td></tr>
-                <tr><td><code>linekey.X.label</code></td><td>Button label (displayed on phone)</td></tr>
-                <tr><td><code>linekey.X.type</code></td><td>Type of key (e.g. <b>10</b> for BLF, <b>13</b> for speed dial, <b>3</b> for transfer-to-VM)</td></tr>
-                <tr><td><code>linekey.X.value</code></td><td>Value for the key (e.g. extension@ip, feature code)</td></tr>
-                <tr><td><code>features.enhanced_dss_keys.enable</code></td><td>Enable enhanced DSS keys (advanced features/macros)</td></tr>
-                <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
-                <tr><td><code>expansion_module.Y.key.Z.label</code></td><td>Label for expansion module key (sidecar)</td></tr>
-                <tr><td><code>expansion_module.Y.key.Z.type</code></td><td>Type of expansion key (e.g. <b>16</b> for BLF, <b>13</b> for speed dial)</td></tr>
-                <tr><td><code>expansion_module.Y.key.Z.value</code></td><td>Value for expansion key (e.g. extension@ip)</td></tr>
-              </tbody>
-            </table>
-            <h4 style={{ marginTop: 12 }}>Common Yealink Features</h4>
-            <ul>
-              <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use (type=10).</li>
-              <li><b>Speed Dial:</b> Quick dial to a number or extension (type=13).</li>
-              <li><b>Transfer to VM:</b> Direct transfer to voicemail (type=3, value=*ext@ip).</li>
-              <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules (expansion_module.Y.key.Z.*).</li>
-              <li><b>Enhanced DSS/Feature Keys:</b> Enable advanced macros and prompts.</li>
-            </ul>
+          <div style={{ marginTop: 16, display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+            {/* Polycom Reference Table */}
+            <div style={{ flex: 1, minWidth: 350 }}>
+              <h3>Polycom</h3>
+              <table className="reference-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+                <thead>
+                  <tr style={{ background: '#f4f4f4' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Setting</th>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>attendant.resourcelist.X.address</code></td><td>BLF/park/extension address (e.g. 1001@ip)</td></tr>
+                  <tr><td><code>attendant.resourcelist.X.label</code></td><td>Button label (displayed on phone)</td></tr>
+                  <tr><td><code>attendant.resourcelist.X.type</code></td><td>Type of key (<b>automata</b> for BLF/park, <b>normal</b> for speed dial)</td></tr>
+                  <tr><td><code>linekey.X.category</code></td><td>Key category (<b>BLF</b>, <b>EFK</b>)</td></tr>
+                  <tr><td><code>efk.efklist.X.action.string</code></td><td>Macro or feature key action (e.g. transfer, record, external number)</td></tr>
+                  <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
+                  <tr><td><code>linekey.X.index</code></td><td>Index of the key (matches resourcelist or efklist)</td></tr>
+                  <tr><td><code>efk.efkprompt.X.label</code></td><td>Prompt label for user input (numeric, string, etc.)</td></tr>
+                  <tr><td><code>feature.EFKLineKey.enabled</code></td><td>Enable EFK line key macros</td></tr>
+                </tbody>
+              </table>
+              <h4 style={{ marginTop: 12 }}>Common Polycom Features</h4>
+              <ul style={{ marginLeft: 20 }}>
+                <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use.</li>
+                <li><b>Speed Dial:</b> Quick dial to a number or extension.</li>
+                <li><b>EFK (Enhanced Feature Key):</b> Macro for advanced actions (e.g. transfer, record, external call).</li>
+                <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules.</li>
+              </ul>
+            </div>
+            {/* Yealink Reference Table */}
+            <div style={{ flex: 1, minWidth: 350 }}>
+              <h3>Yealink</h3>
+              <table className="reference-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+                <thead>
+                  <tr style={{ background: '#f4f4f4' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Setting</th>
+                    <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td><code>linekey.X.extension</code></td><td>Extension or park number assigned to key</td></tr>
+                  <tr><td><code>linekey.X.label</code></td><td>Button label (displayed on phone)</td></tr>
+                  <tr><td><code>linekey.X.type</code></td><td>Type of key (<b>10</b> for BLF, <b>13</b> for speed dial, <b>3</b> for transfer-to-VM)</td></tr>
+                  <tr><td><code>linekey.X.value</code></td><td>Value for the key (e.g. extension@ip, feature code)</td></tr>
+                  <tr><td><code>features.enhanced_dss_keys.enable</code></td><td>Enable enhanced DSS keys (advanced features/macros)</td></tr>
+                  <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
+                  <tr><td><code>expansion_module.Y.key.Z.label</code></td><td>Label for expansion module key (sidecar)</td></tr>
+                  <tr><td><code>expansion_module.Y.key.Z.type</code></td><td>Type of expansion key (<b>16</b> for BLF, <b>13</b> for speed dial)</td></tr>
+                  <tr><td><code>expansion_module.Y.key.Z.value</code></td><td>Value for expansion key (e.g. extension@ip)</td></tr>
+                </tbody>
+              </table>
+              <h4 style={{ marginTop: 12 }}>Common Yealink Features</h4>
+              <ul style={{ marginLeft: 20 }}>
+                <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use (type=10).</li>
+                <li><b>Speed Dial:</b> Quick dial to a number or extension (type=13).</li>
+                <li><b>Transfer to VM:</b> Direct transfer to voicemail (type=3, value=*ext@ip).</li>
+                <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules (expansion_module.Y.key.Z.*).</li>
+                <li><b>Enhanced DSS/Feature Keys:</b> Enable advanced macros and prompts.</li>
+              </ul>
+            </div>
           </div>
         </div>
       )}
