@@ -14,7 +14,7 @@ A web app for generating configuration code for Polycom and Yealink phones, as w
 ---
 
 ## Features
-- **Tabbed UI** for easy navigation between device/template types
+- **Tabbed UI** for easy navigation between device/template types, including a dedicated Reference tab for Polycom/Yealink config legends
 - **Dynamic forms** for phone and device configuration
 - **Model-specific templates** for Polycom and Yealink (including expansion modules and feature keys)
 - **CSV import/export** for FBPX, VPBX, and Streeto tabs (using papaparse)
@@ -37,6 +37,8 @@ The app uses a tabbed interface to separate configuration generators for differe
   - Table-based import/export for Streeto device data.
 - **Mikrotik/Switch Tabs:**
   - Editable templates for Mikrotik routers and Switches (8/24 port), with fields for hostname and asset tag.
+- **Reference Tab:**
+  - Dedicated legend for Polycom and Yealink configuration settings, with tables and feature explanations for both brands.
 
 ---
 
@@ -45,9 +47,10 @@ The app uses a tabbed interface to separate configuration generators for differe
 ### `/src/App.tsx`
 - **Main application component.**
 - Implements the tabbed UI and manages state for the selected tab.
-- Renders the appropriate form/component for each tab (Phone Configs, FBPX, VPBX, Streeto, Mikrotik, Switch).
+- Renders the appropriate form/component for each tab (Phone Configs, FBPX, VPBX, Streeto, Mikrotik, Switch, Reference).
 - Handles passing props and state to child components.
 - Contains high-level and section comments for clarity.
+- The Reference tab provides a legend for Polycom and Yealink config settings and features.
 
 ### `/src/main.tsx`
 - **Entry point for the React app.**

@@ -21,7 +21,7 @@ const MODEL_OPTIONS = [
   'Yealink 56h Dect Handset'
 ];
 
-// Tab definitions for navigation
+// Tab definitions for navigation, including the Reference tab
 const TABS = [
   { key: 'phone', label: 'Phone Configs' },
   { key: 'fbpx', label: 'FBPX Import Template' },
@@ -29,9 +29,10 @@ const TABS = [
   { key: 'streeto', label: 'Streeto Import Template' },
   { key: 'mikrotik', label: 'Mikrotik Template' },
   { key: 'switch', label: 'Switch Template' },
+  { key: 'reference', label: 'Reference' }, // Dedicated reference/legend tab
 ];
 
-// Field definitions for FBPX import/export template
+// Field definitions for FBPX import/export template (PBX user fields)
 const FPBX_FIELDS = [
   "extension",
   "name",
@@ -54,7 +55,7 @@ const FPBX_FIELDS = [
   "accountcode"
 ];
 
-// Field definitions for VPBX import/export template
+// Field definitions for VPBX import/export template (adds MAC/model)
 const VPBX_FIELDS = [
   "mac",
   "model",
@@ -62,12 +63,12 @@ const VPBX_FIELDS = [
   ...FPBX_FIELDS.filter(f => !["extension"].includes(f)),
 ];
 
-// Type definitions for FBPX and VPBX forms
+// Type definitions for FBPX and VPBX forms (for type safety)
 type FpbxFormType = Record<typeof FPBX_FIELDS[number], string>;
 type VpbxFormType = Record<typeof VPBX_FIELDS[number], string>;
 
 function App() {
-  // State for active tab
+  // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
   // State for phone type (Polycom or Yealink)
   const [phoneType, setPhoneType] = useState<'Polycom' | 'Yealink'>('Polycom');
@@ -94,7 +95,7 @@ function App() {
   // State for Yealink expansion config output
   const [yealinkOutput, setYealinkOutput] = useState('');
 
-  // Generate Yealink expansion module config
+  // Generate Yealink expansion module config (sidecar keys)
   const generateYealinkExpansion = () => {
     const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
     let config = '';
@@ -123,7 +124,7 @@ function App() {
   // State for Polycom expansion config output
   const [polycomOutput, setPolycomOutput] = useState('');
 
-  // Generate Polycom expansion module config
+  // Generate Polycom expansion module config (sidecar keys)
   const generatePolycomExpansion = () => {
     const { address, label, type, linekeyCategory, linekeyIndex } = polycomSection;
     let config = '';
@@ -227,7 +228,7 @@ function App() {
     return config;
   }
 
-  // Global/Required attributes for Yealink phones
+  // Global/Required attributes for Yealink phones (toggle advanced features)
   const yealinkOptions = {
     callStealing: false,
     labelLength: false,
@@ -251,7 +252,7 @@ function App() {
     return config;
   }
 
-  // State for feature key template section
+  // State for feature key template section (advanced programmable keys)
   const [featureKey, setFeatureKey] = useState({
     brand: 'Yealink',
     lineNum: '',
@@ -265,7 +266,7 @@ function App() {
   // State for feature key config output
   const [featureKeyOutput, setFeatureKeyOutput] = useState('');
 
-  // Generate feature key config for Yealink or Polycom
+  // Generate feature key config for Yealink or Polycom (macros, prompts)
   function generateFeatureKeyConfig() {
     if (featureKey.brand === 'Yealink') {
       setFeatureKeyOutput(
@@ -293,7 +294,7 @@ function App() {
     }
   }
 
-  // Yealink record templates for quick config
+  // Yealink record templates for quick config (voicemail, busy, etc)
   const yealinkRecordTemplates = [
     { label: 'Record Unavailable', value: '*97$Cwc$$Cp1$01$Tdtmf$' },
     { label: 'Record Busy', value: '*97$Cwc$$Cp1$02$Tdtmf$' },
@@ -301,7 +302,7 @@ function App() {
     { label: 'Record Unreachable/DND', value: '*97$Cwc$$Cp1$04$Tdtmf$' },
   ];
 
-  // Polycom record templates for quick config
+  // Polycom record templates for quick config (voicemail, busy, etc)
   const polycomRecordTemplates = [
     { label: 'Record Unavailable', value: '*97$Tinvite$$Cpause2$01$Tdtmf$' },
     { label: 'Record Busy', value: '*97$Tinvite$$Cpause2$02$Tdtmf$' },
@@ -309,7 +310,7 @@ function App() {
     { label: 'Record DND', value: '*97$Tinvite$$Cpause2$04$Tdtmf$' },
   ];
 
-  // State for record template section
+  // State for record template section (quick record macros)
   const [recordTemplate, setRecordTemplate] = useState({
     brand: 'Yealink',
     lineNum: '',
@@ -320,7 +321,7 @@ function App() {
   // State for record config output
   const [recordOutput, setRecordOutput] = useState('');
 
-  // Generate record config for Yealink or Polycom
+  // Generate record config for Yealink or Polycom (quick record macros)
   function generateRecordConfig() {
     if (recordTemplate.brand === 'Yealink') {
       const t = yealinkRecordTemplates[recordTemplate.templateIdx];
@@ -345,7 +346,7 @@ function App() {
     }
   }
 
-  // Helper: Generate Yealink transfer-to-VM config
+  // Helper: Generate Yealink transfer-to-VM config (special feature)
   function generateYealinkTransferToVM(lineNum: string, extNum: string, pbxIp: string) {
     return (
       `linekey.${lineNum}.extension=${extNum}\n` +
@@ -356,7 +357,7 @@ function App() {
     );
   }
 
-  // Helper: Generate Yealink speed dial config
+  // Helper: Generate Yealink speed dial config (special feature)
   function generateYealinkSpeedDial(lineNum: string, label: string, value: string) {
     return (
       `linekey.${lineNum}.line=1\n` +
@@ -366,7 +367,7 @@ function App() {
     );
   }
 
-  // Helper: Generate Polycom external number config
+  // Helper: Generate Polycom external number config (special feature)
   function generatePolycomExternal(lineNum: string, macroNum: string, label: string, externalNum: string) {
     return (
       'feature.enhancedFeatureKeys.enabled=1\n' +
@@ -379,7 +380,7 @@ function App() {
     );
   }
 
-  // State for selected feature template and its inputs
+  // State for selected feature template and its inputs (for advanced features)
   const [selectedFeature, setSelectedFeature] = useState('');
   const [featureInputs, setFeatureInputs] = useState({
     lineNum: '',
@@ -393,7 +394,7 @@ function App() {
   // State for feature template config output
   const [featureOutput, setFeatureOutput] = useState('');
 
-  // Generate config for selected feature template
+  // Generate config for selected feature template (advanced feature generator)
   function handleFeatureGenerate() {
     let out = '';
     switch (selectedFeature) {
@@ -412,7 +413,7 @@ function App() {
     setFeatureOutput(out);
   }
 
-  // Generate main config for Polycom or Yealink park lines
+  // Generate main config for Polycom or Yealink park lines (main output)
   const generateConfig = () => {
     const start = parseInt(startExt, 10);
     const end = parseInt(endExt, 10);
@@ -430,7 +431,7 @@ function App() {
     setOutput(config);
   };
 
-  // State and handlers for FBPX import/export form
+  // State and handlers for FBPX import/export form (PBX CSV import/export)
   const [fpbxForm, setFpbxForm] = useState<FpbxFormType>(() => FPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType));
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
@@ -473,7 +474,7 @@ function App() {
     });
   }
 
-  // State and handlers for VPBX import/export form
+  // State and handlers for VPBX import/export form (PBX CSV import/export)
   const [vpbxForm, setVpbxForm] = useState<VpbxFormType>(() => VPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as VpbxFormType));
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
@@ -533,6 +534,63 @@ function App() {
         ))}
       </div>
       <hr />
+      {/* Reference Tab for Phone Configs (moved to its own tab) */}
+      {activeTab === 'reference' && (
+        <div style={{ margin: '24px 0' }}>
+          <h2>Phone Config Reference (Legend)</h2>
+          <div style={{ marginTop: 16 }}>
+            <h3>Polycom</h3>
+            <table className="reference-table">
+              <thead>
+                <tr><th>Setting</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>attendant.resourcelist.X.address</code></td><td>BLF/park/extension address (e.g. 1001@ip)</td></tr>
+                <tr><td><code>attendant.resourcelist.X.label</code></td><td>Button label (displayed on phone)</td></tr>
+                <tr><td><code>attendant.resourcelist.X.type</code></td><td>Type of key (e.g. <b>automata</b> for BLF/park, <b>normal</b> for speed dial)</td></tr>
+                <tr><td><code>linekey.X.category</code></td><td>Key category (e.g. <b>BLF</b>, <b>EFK</b>)</td></tr>
+                <tr><td><code>efk.efklist.X.action.string</code></td><td>Macro or feature key action (e.g. transfer, record, external number)</td></tr>
+                <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
+                <tr><td><code>linekey.X.index</code></td><td>Index of the key (matches resourcelist or efklist)</td></tr>
+                <tr><td><code>efk.efkprompt.X.label</code></td><td>Prompt label for user input (numeric, string, etc.)</td></tr>
+                <tr><td><code>feature.EFKLineKey.enabled</code></td><td>Enable EFK line key macros</td></tr>
+              </tbody>
+            </table>
+            <h4 style={{ marginTop: 12 }}>Common Polycom Features</h4>
+            <ul>
+              <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use.</li>
+              <li><b>Speed Dial:</b> Quick dial to a number or extension.</li>
+              <li><b>EFK (Enhanced Feature Key):</b> Macro for advanced actions (e.g. transfer, record, external call).</li>
+              <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules.</li>
+            </ul>
+            <h3 style={{ marginTop: 24 }}>Yealink</h3>
+            <table className="reference-table">
+              <thead>
+                <tr><th>Setting</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><code>linekey.X.extension</code></td><td>Extension or park number assigned to key</td></tr>
+                <tr><td><code>linekey.X.label</code></td><td>Button label (displayed on phone)</td></tr>
+                <tr><td><code>linekey.X.type</code></td><td>Type of key (e.g. <b>10</b> for BLF, <b>13</b> for speed dial, <b>3</b> for transfer-to-VM)</td></tr>
+                <tr><td><code>linekey.X.value</code></td><td>Value for the key (e.g. extension@ip, feature code)</td></tr>
+                <tr><td><code>features.enhanced_dss_keys.enable</code></td><td>Enable enhanced DSS keys (advanced features/macros)</td></tr>
+                <tr><td><code>feature.enhancedFeatureKeys.enabled</code></td><td>Enable enhanced feature keys (macros, advanced features)</td></tr>
+                <tr><td><code>expansion_module.Y.key.Z.label</code></td><td>Label for expansion module key (sidecar)</td></tr>
+                <tr><td><code>expansion_module.Y.key.Z.type</code></td><td>Type of expansion key (e.g. <b>16</b> for BLF, <b>13</b> for speed dial)</td></tr>
+                <tr><td><code>expansion_module.Y.key.Z.value</code></td><td>Value for expansion key (e.g. extension@ip)</td></tr>
+              </tbody>
+            </table>
+            <h4 style={{ marginTop: 12 }}>Common Yealink Features</h4>
+            <ul>
+              <li><b>BLF (Busy Lamp Field):</b> Monitors extension/park status, lights up when in use (type=10).</li>
+              <li><b>Speed Dial:</b> Quick dial to a number or extension (type=13).</li>
+              <li><b>Transfer to VM:</b> Direct transfer to voicemail (type=3, value=*ext@ip).</li>
+              <li><b>Expansion Module:</b> Extra programmable keys for sidecar modules (expansion_module.Y.key.Z.*).</li>
+              <li><b>Enhanced DSS/Feature Keys:</b> Enable advanced macros and prompts.</li>
+            </ul>
+          </div>
+        </div>
+      )}
       {/* Phone Configs Tab */}
       {activeTab === 'phone' && (
         <>
