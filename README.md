@@ -9,6 +9,7 @@ A web app for generating configuration code for Polycom and Yealink phones, as w
 - [How It Works](#how-it-works)
 - [File-by-File Technical Overview](#file-by-file-technical-overview)
 - [Development](#development)
+- [Automated Start Script](#automated-start-script)
 - [License](#license)
 
 ---
@@ -127,6 +128,27 @@ The app uses a tabbed interface to separate configuration generators for differe
    ```bash
    npm run preview
    ```
+
+---
+
+## Automated Start Script
+
+You can use the provided `start-app.sh` script to automate starting the app with all common network options:
+
+```bash
+chmod +x start-app.sh
+./start-app.sh
+```
+
+This script will:
+- Install dependencies (if needed)
+- Start the Vite dev server with:
+  - `--host 0.0.0.0` (listen on all interfaces)
+  - `--port 3000` (custom port)
+  - `--open` (open browser)
+  - `--strictPort` (fail if port is taken)
+
+You can edit the script to change options as needed.
 
 ---
 
