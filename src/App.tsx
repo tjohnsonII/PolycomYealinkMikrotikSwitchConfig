@@ -1,7 +1,6 @@
 import { useState, useRef } from 'react'
 import './App.css'
 import Papa from 'papaparse';
-import MikrotikDynamicTemplate from './MikrotikDynamicTemplate';
 import SwitchDynamicTemplate from './SwitchDynamicTemplate';
 import Switch24DynamicTemplate from './Switch24DynamicTemplate';
 import Switch8DynamicTemplate from './Switch8DynamicTemplate';
@@ -814,7 +813,6 @@ function App() {
       )}
       {activeTab === 'mikrotik' && (
         <>
-          <MikrotikDynamicTemplate />
           <hr style={{ margin: '32px 0' }} />
           <h2>Mikrotik 5009 Bridge Template</h2>
           <textarea
