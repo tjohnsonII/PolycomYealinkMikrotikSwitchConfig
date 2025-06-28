@@ -1,0 +1,94 @@
+import React, { useRef, useState } from 'react';
+import * as Papa from 'papaparse';
+
+const COLUMNS = [
+  'username',
+  'password',
+  'email',
+  'profile',
+  'account1Sip.credentials.password',
+  'account1Sip.credentials.displayName',
+  'account1Sip.credentials.username',
+  'account1Sip.domain',
+];
+
+type RowType = Record<(typeof COLUMNS)[number], string>;
+
+const StrettoImportExportTab: React.FC = () => {
+  const [rows, setRows] = useState<RowType[]>([]);
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+  const [error, setError] = useState('');
+
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    Papa.parse(file, {
+      header: true,
+      complete: (results: Papa.ParseResult<Record<string, string>>) => {
+        const validRows = (results.data as RowType[]).filter(
+          row => row.username && row['account1Sip.credentials.username']
+        );
+        setRows(validRows);
+        setError(validRows.length < (results.data as RowType[]).length ? 'Some rows were skipped due to missing required fields.' : '');
+      },
+    });
+  }
+
+  function handleExport() {
+    const csvHeader = COLUMNS.join(',') + '\n';
+    const csvRows = rows.map(row =>
+      COLUMNS.map(col => `"${(row[col] || '').replace(/"/g, '""')}"`).join(',')
+    ).join('\n') + '\n';
+    const csv = csvHeader + csvRows;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    if (downloadRef.current) {
+      downloadRef.current.href = url;
+      downloadRef.current.download = 'stretto_import.csv';
+      downloadRef.current.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+
+  return (
+    <div>
+      <h2>Stretto Import/Export</h2>
+      <div style={{ marginBottom: 12 }}>
+        <input type="file" accept=".csv" onChange={handleImport} />
+        <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>
+          Export as CSV
+        </button>
+        <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
+      </div>
+      {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <thead>
+          <tr>
+            {COLUMNS.map(col => (
+              <th key={col} style={{ border: '1px solid #ccc', padding: 4 }}>{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.length === 0 ? (
+            <tr>
+              <td colSpan={COLUMNS.length} style={{ textAlign: 'center', padding: 8 }}>
+                No data
+              </td>
+            </tr>
+          ) : (
+            rows.map((row, i) => (
+              <tr key={i}>
+                {COLUMNS.map(col => (
+                  <td key={col} style={{ border: '1px solid #ccc', padding: 4 }}>{row[col] || ''}</td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+export default StrettoImportExportTab;
