@@ -1118,6 +1118,25 @@ function App() {
               <div className="output">
                 <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* FBPX Import Template Tab */}
+      {activeTab === 'fbpx' && (
+        <div>
+          {/* FBPX import/export form UI as a table */}
+          <h2>FBPX Import Template</h2>
+          <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
+            <div style={{ marginBottom: 12 }}>
+              <input type="file" accept=".csv" onChange={handleFpbxImport} />
+              <button type="button" onClick={() => handleFpbxAddRow(1)} style={{ marginLeft: 8 }}>Add Row</button>
+              <button type="button" onClick={() => handleFpbxAddRow(5)} style={{ marginLeft: 8 }}>Add 5 Rows</button>
+              <button type="button" onClick={() => handleFpbxAddRow(10)} style={{ marginLeft: 8 }}>Add 10 Rows</button>
+            </div>
+            <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+              <thead>
+                <tr style={{ background: '#f4f4f4' }}>
                   {FPBX_FIELDS.map(f => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
                   ))}
