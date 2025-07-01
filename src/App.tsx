@@ -18,6 +18,7 @@ import { onNetMikrotikConfigTemplate } from './onNetMikrotikConfigTemplate';
 import { ottMikrotikTemplate } from './ottMikrotikTemplate';
 import { mikrotikStandAloneATATemplate } from './mikrotikStandAloneATATemplate';
 import { mikrotikDhcpOptions } from './mikrotikDhcpOptionsTemplate';
+import { FaInfoCircle } from 'react-icons/fa';
 
 // List of supported phone models for config generation
 const MODEL_OPTIONS = [
@@ -995,38 +996,79 @@ function App() {
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Base Config Options</h3>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.phoneType}>Phone Type:</label>
-              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')} title={FIELD_TOOLTIPS.phoneType}>
-                <option value="Polycom">Polycom</option>
-                <option value="Yealink">Yealink</option>
-              </select>
-              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.model}>Model:</label>
-              <select value={model} onChange={e => setModel(e.target.value)} title={FIELD_TOOLTIPS.model}>
+              <label>Phone Type:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.phoneType}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')} />
+              <label style={{marginLeft:16}}>Model:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.model}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <select value={model} onChange={e => setModel(e.target.value)}>
                 {MODEL_OPTIONS.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.ip}>IP Address:</label>
-              <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" title={FIELD_TOOLTIPS.ip} />
-              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.startExt}>Start Extension:</label>
-              <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} title={FIELD_TOOLTIPS.startExt} />
-              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.endExt}>End Extension:</label>
-              <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} title={FIELD_TOOLTIPS.endExt} />
-              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.labelPrefix}>Label Prefix:</label>
-              <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} title={FIELD_TOOLTIPS.labelPrefix} />
+              <label>IP Address:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.ip}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
+              <label style={{marginLeft:16}}>Start Extension:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.startExt}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} />
+              <label style={{marginLeft:16}}>End Extension:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.endExt}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} />
+              <label style={{marginLeft:16}}>Label Prefix:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.labelPrefix}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
             </div>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.timeOffset}>Time Offset (e.g. -5):</label>
-              <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} title={FIELD_TOOLTIPS.timeOffset} />
-              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.adminPassword}>Admin Password:</label>
-              <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} title={FIELD_TOOLTIPS.adminPassword} />
+              <label>Time Offset (e.g. -5):
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.timeOffset}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
+              <label style={{marginLeft:16}}>Admin Password:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.adminPassword}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
             </div>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.yealinkLabelLength}><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels</label>
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.yealinkDisableMissedCall}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification</label>
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.yealinkCallStealing}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing</label>
+              <label><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkLabelLength}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkDisableMissedCall}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkCallStealing}>
+                  <FaInfoCircle />
+                </span>
+              </label>
             </div>
             <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
             <div className="output">
@@ -1038,10 +1080,18 @@ function App() {
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Polycom MWI (Message Waiting Indicator)</h3>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.polycomMWIExt}>Extension:</label>
-              <input type="text" value={polycomMWI.ext} onChange={e => setPolycomMWI(mwi => ({ ...mwi, ext: e.target.value }))} title={FIELD_TOOLTIPS.polycomMWIExt} />
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.polycomMWIPbxIp}>PBX IP:</label>
-              <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} title={FIELD_TOOLTIPS.polycomMWIPbxIp} />
+              <label>Extension:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.polycomMWIExt}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={polycomMWI.ext} onChange={e => setPolycomMWI(mwi => ({ ...mwi, ext: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>PBX IP:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.polycomMWIPbxIp}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} />
               <button type="button" onClick={generatePolycomMWI} style={{ marginLeft: 16 }}>Generate MWI</button>
             </div>
             <textarea value={polycomMWI.output} readOnly rows={3} style={{ width: '100%', marginTop: 8 }} />
@@ -1051,29 +1101,50 @@ function App() {
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Linekey/BLF/Speed/Transfer/Hotkey Generator</h3>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.linekeyBrand}>Brand:</label>
-              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))} title={FIELD_TOOLTIPS.linekeyBrand}>
-                <option value="Yealink">Yealink</option>
-                <option value="Polycom">Polycom</option>
-              </select>
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyNum}>Line Key Number:</label>
-              <input type="text" value={linekeyGen.lineNum} onChange={e => setLinekeyGen(lk => ({ ...lk, lineNum: e.target.value }))} title={FIELD_TOOLTIPS.linekeyNum} />
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyLabel}>Label:</label>
-              <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} title={FIELD_TOOLTIPS.linekeyLabel} />
+              <label>Brand:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyBrand}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Line Key Number:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyNum}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={linekeyGen.lineNum} onChange={e => setLinekeyGen(lk => ({ ...lk, lineNum: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyLabel}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} />
             </div>
             <div className="form-group">
               {linekeyGen.brand === 'Yealink' && (
                 <>
-                  <label title={FIELD_TOOLTIPS.linekeyRegLine}>Registered Line:</label>
-                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} title={FIELD_TOOLTIPS.linekeyRegLine} />
-                  <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyType}>Type:</label>
-                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))} title={FIELD_TOOLTIPS.linekeyType}>
+                  <label>Registered Line:
+                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyRegLine}>
+                      <FaInfoCircle />
+                    </span>
+                  </label>
+                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} />
+                  <label style={{ marginLeft: 16 }}>Type:
+                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyType}>
+                      <FaInfoCircle />
+                    </span>
+                  </label>
+                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))}>
                     {YEALINK_LINEKEY_TYPES.map(t => (
                       <option key={t.code} value={t.code}>{t.code} - {t.label}</option>
                     ))}
                   </select>
-                  <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyValue}>Value:</label>
-                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} title={FIELD_TOOLTIPS.linekeyValue} />
+                  <label style={{ marginLeft: 16 }}>Value:
+                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyValue}>
+                      <FaInfoCircle />
+                    </span>
+                  </label>
+                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
                 </>
               )}
               {linekeyGen.brand === 'Polycom' && (
@@ -1093,17 +1164,30 @@ function App() {
           <div className="form-section" style={{marginBottom:24}}>
             <h3>External Number Speed Dial</h3>
             <div className="form-group">
-              <label title={FIELD_TOOLTIPS.externalBrand}>Brand:</label>
-              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))} title={FIELD_TOOLTIPS.externalBrand}>
-                <option value="Yealink">Yealink</option>
-                <option value="Polycom">Polycom</option>
-              </select>
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalLineNum}>Line Key Number:</label>
-              <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} title={FIELD_TOOLTIPS.externalLineNum} />
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalLabel}>Label:</label>
-              <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} title={FIELD_TOOLTIPS.externalLabel} />
-              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalNumber}>External Number:</label>
-              <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} title={FIELD_TOOLTIPS.externalNumber} />
+              <label>Brand:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.externalBrand}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Line Key Number:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.externalLineNum}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.externalLabel}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>External Number:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.externalNumber}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} />
               {externalSpeed.brand === 'Polycom' && (
                 <>
                   <label style={{ marginLeft: 16 }}>EFK Index:</label>
