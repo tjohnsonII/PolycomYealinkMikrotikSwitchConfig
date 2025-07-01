@@ -1,23 +1,21 @@
 import React, { useState } from 'react';
-// import InfoIcon from '../InfoIcon';
+// Expansion module preview icons, tooltips, and Polycom constants
 import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS, POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE } from '../constants/expansionModule';
 // ...import any other shared components or icons as needed
 
-// TODO: Move any shared constants, icons, and tooltips to a shared file if not already
-
+// Polycom expansion module state shape
 interface PolycomSection {
-  address: string;
-  label: string;
-  type: string;
-  linekeyCategory: string;
-  linekeyIndex: string;
-  activePage: number;
+  address: string;         // SIP address or extension for the key
+  label: string;           // Display label for the key
+  type: string;            // Key function type (e.g., automata for BLF)
+  linekeyCategory: string; // Key category (BLF, EFK, etc.)
+  linekeyIndex: string;    // Key position (1-84)
+  activePage: number;      // Current preview page (0-2)
 }
 
-
-
+// Main Expansion Module Tab component
 const ExpansionModuleTab: React.FC = () => {
-  // Polycom state (copy initial state and logic from App.tsx)
+  // Polycom expansion module form state
   const [polycomSection, setPolycomSection] = useState<PolycomSection>({
     address: '',
     label: '',
@@ -26,22 +24,24 @@ const ExpansionModuleTab: React.FC = () => {
     linekeyIndex: '',
     activePage: 0,
   });
+  // Polycom config output
   const [polycomOutput, setPolycomOutput] = useState('');
 
-  // Yealink state
+  // Yealink expansion module form state
   const [yealinkSection, setYealinkSection] = useState({
-    templateType: 'BLF',
-    sidecarPage: '1',
-    sidecarLine: '1',
-    label: '',
-    value: '',
-    pbxIp: '',
+    templateType: 'BLF',   // BLF or SpeedDial
+    sidecarPage: '1',      // Page number (1-3)
+    sidecarLine: '1',      // Button number (1-20)
+    label: '',             // Display label
+    value: '',             // Extension or number
+    pbxIp: '',             // PBX IP for BLF
   });
+  // Yealink config output
   const [yealinkOutput, setYealinkOutput] = useState('');
 
-  // Yealink config generation
+  // Generate Yealink expansion config string based on form state
   const generateYealinkExpansion = () => {
-    const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
+    const { templateType, sidecarPage, sidecarLine, value, pbxIp } = yealinkSection;
     let config = '';
     if (templateType === 'BLF') {
       config += `expansion_module.${sidecarPage}.key.${sidecarLine}.type=16\n`;
@@ -55,7 +55,7 @@ const ExpansionModuleTab: React.FC = () => {
     setYealinkOutput(config);
   };
 
-  // Polycom config generation
+  // Generate Polycom expansion config string based on form state
   const generatePolycomExpansion = () => {
     const { address, label, type, linekeyCategory, linekeyIndex } = polycomSection;
     let config = '';
@@ -72,12 +72,14 @@ const ExpansionModuleTab: React.FC = () => {
       {/* Yealink Expansion Module Preview and Form */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <h3>Yealink Expansion Module</h3>
+        {/* Device images for user reference */}
         <img src="/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
         <img src="/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        {/* Instructions for users */}
         <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
           <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page toggles to preview each page. Hover over any key in the preview for details.
         </div>
-        {/* Yealink Form */}
+        {/* Yealink config form */}
         <div className="form-group" style={{ marginBottom: 16 }}>
           <label>Template Type:
             <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="BLF: Busy Lamp Field (monitors extension/park status). SpeedDial: Quick dial to a number or extension.">ℹ️</span>
@@ -111,6 +113,7 @@ const ExpansionModuleTab: React.FC = () => {
           </label>
           <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
         </div>
+        {/* PBX IP only shown for BLF type */}
         {yealinkSection.templateType === 'BLF' && (
           <div className="form-group" style={{ marginBottom: 16 }}>
             <label>PBX IP:
@@ -119,14 +122,17 @@ const ExpansionModuleTab: React.FC = () => {
             <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
           </div>
         )}
+        {/* Generate config button */}
         <button onClick={generateYealinkExpansion} style={{ marginBottom: 16 }}>Generate Yealink Expansion Config</button>
+        {/* Output area for generated config */}
         <div className="output" style={{ marginBottom: 16 }}>
           <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
         </div>
-        {/* Yealink Preview Grid */}
+        {/* Graphical preview of Yealink expansion module keys */}
         <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
           <div style={{ marginBottom: 8 }}>
             <b>Preview:</b> Page
+            {/* Page toggle buttons */}
             {[1,2,3].map(page => (
               <button
                 key={page}
@@ -136,8 +142,10 @@ const ExpansionModuleTab: React.FC = () => {
               >{page}</button>
             ))}
           </div>
+          {/* 2x10 grid for each page */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
             {Array.from({ length: 20 }).map((_, idx) => {
+              // Highlight the currently selected key
               const isCurrent = parseInt(yealinkSection.sidecarLine) === idx + 1 && yealinkSection.sidecarPage === String(Math.ceil((idx + 1) / 20) || '1');
               const label = isCurrent ? yealinkSection.label : '';
               const value = isCurrent ? yealinkSection.value : '';
@@ -171,12 +179,14 @@ const ExpansionModuleTab: React.FC = () => {
       {/* Polycom Expansion Module Preview and Form */}
       <div style={{ flex: 1, minWidth: 320 }}>
         <h3>Polycom VVX Color Expansion Module</h3>
+        {/* Device image for user reference */}
         <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        {/* Instructions for users */}
         <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
           <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout for each page (1–3). Hover over any key for details. <br />
           <b>Linekey Index:</b> The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.
         </div>
-        {/* Polycom Form */}
+        {/* Polycom config form */}
         <div className="form-group" style={{ marginBottom: 16 }}>
           <label>Linekey Index (1-84):
             <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.">ℹ️</span>
@@ -207,14 +217,17 @@ const ExpansionModuleTab: React.FC = () => {
           </label>
           <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
         </div>
+        {/* Generate config button */}
         <button onClick={generatePolycomExpansion} style={{ marginBottom: 16 }}>Generate Polycom Expansion Config</button>
+        {/* Output area for generated config */}
         <div className="output" style={{ marginBottom: 16 }}>
           <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
         </div>
-        {/* Polycom Preview Grid with page toggles */}
+        {/* Graphical preview of Polycom expansion module keys */}
         <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
           <div style={{ marginBottom: 8 }}>
             <b>Preview:</b>
+            {/* Page toggle buttons for Polycom preview */}
             {POLYCOM_PAGE_LABELS.map((label, i) => (
               <button
                 key={label}
@@ -224,9 +237,12 @@ const ExpansionModuleTab: React.FC = () => {
               >{label}</button>
             ))}
           </div>
+          {/* 2x14 grid for each Polycom page (28 keys per page) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
             {Array.from({ length: POLYCOM_KEYS_PER_PAGE }).map((_, idx) => {
+              // Calculate global key index for Polycom expansion
               const globalIdx = polycomSection.activePage * POLYCOM_KEYS_PER_PAGE + idx + 1;
+              // Highlight the currently selected key
               const isCurrent = parseInt(polycomSection.linekeyIndex) === globalIdx;
               const label = isCurrent ? polycomSection.label : '';
               const value = isCurrent ? polycomSection.address : '';
