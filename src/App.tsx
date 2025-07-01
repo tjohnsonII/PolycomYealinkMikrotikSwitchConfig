@@ -10,6 +10,13 @@ import Switch24DynamicTemplate from './Switch24DynamicTemplate';
 import Switch8DynamicTemplate from './Switch8DynamicTemplate';
 import StrettoImportExportTab from './StrettoImportExportTab';
 
+// Import Mikrotik template modules
+import { mikrotik5009Bridge } from './mikrotik5009BridgeTemplate';
+import { mikrotik5009Passthrough } from './mikrotik5009PassthroughTemplate';
+import { onNetMikrotikConfigTemplate } from './onNetMikrotikConfigTemplate';
+import { ottMikrotikTemplate } from './ottMikrotikTemplate';
+import { mikrotikStandAloneATATemplate } from './mikrotikStandAloneATATemplate';
+
 // List of supported phone models for config generation
 const MODEL_OPTIONS = [
   'VVX 400', 'VVX 500', 'VVX 600', 'CP-7841-3PCC', 'CP-8832-K9', 'CP-7832-3PCC',
@@ -746,6 +753,25 @@ function App() {
   ];
   const [referenceSubtab, setReferenceSubtab] = useState('phones');
 
+  // --- OTT Mikrotik Template Editor State ---
+  const [ottFields, setOttFields] = useState({
+    ip: '',
+    customerName: '',
+    customerAddress: '',
+    city: '',
+    xip: '',
+    handle: '',
+  });
+  function getOttTemplate(fields: typeof ottFields) {
+    return ottMikrotikTemplate
+      .replace('XXX.XXX.XXX.XXX', fields.ip || 'XXX.XXX.XXX.XXX')
+      .replace('"CUSTOMER NAME"', fields.customerName || '"CUSTOMER NAME"')
+      .replace('"CUSTOMER ADDRESS"', fields.customerAddress || '"CUSTOMER ADDRESS"')
+      .replace('"CITY"', fields.city || '"CITY"')
+      .replace('"XIP"', fields.xip || '"XIP"')
+      .replace('"HANDLE-CUSTOMERADDRESS"', fields.handle || '"HANDLE-CUSTOMERADDRESS"');
+  }
+
   // Main UI rendering
   return (
     <div className="container">
@@ -1092,25 +1118,6 @@ function App() {
               <div className="output">
                 <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* FBPX Import Template Tab */}
-      {activeTab === 'fbpx' && (
-        <div>
-          {/* FBPX import/export form UI as a table */}
-          <h2>FBPX Import Template</h2>
-          <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
-            <div style={{ marginBottom: 12 }}>
-              <input type="file" accept=".csv" onChange={handleFpbxImport} />
-              <button type="button" onClick={() => handleFpbxAddRow(1)} style={{ marginLeft: 8 }}>Add Row</button>
-              <button type="button" onClick={() => handleFpbxAddRow(5)} style={{ marginLeft: 8 }}>Add 5 Rows</button>
-              <button type="button" onClick={() => handleFpbxAddRow(10)} style={{ marginLeft: 8 }}>Add 10 Rows</button>
-            </div>
-            <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
-              <thead>
-                <tr style={{ background: '#f4f4f4' }}>
                   {FPBX_FIELDS.map(f => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
                   ))}
@@ -1202,161 +1209,82 @@ function App() {
       )}
       {/* Mikrotik Template Tab */}
       {activeTab === 'mikrotik' && (
-        <>
-          {/* Mikrotik static config templates */}
-          <hr style={{ margin: '32px 0' }} />
-          <h2>Mikrotik 5009 Bridge Template</h2>
-          <textarea
-            readOnly
-            rows={20}
-            style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
-            value={`/interface bridge
-add name=Phones
-/interface ethernet
-set [ find default-name=ether4 ] comment="HOSTED PHONE"
-set [ find default-name=ether5 ] comment="HOSTED PHONE"
-/interface vlan
-add interface=Phones name=vlan202 vlan-id=202
-/ip pool
-add name=Phones ranges=172.16.1.3-172.16.1.10
-/ip dhcp-server
-add address-pool=Phones interface=Phones name="Phone DHCP NETWORK"
-/interface bridge port
-add bridge=Phones interface=ether4
-add bridge=Phones interface=ether5
-/ip firewall connection tracking
-set udp-timeout=1m30s
-/ip address
-add address=172.16.1.1/24 interface=Phones network=172.16.1.0
-/ip dhcp-server network
-add address=172.16.1.0/24 dns-server=1.1.1.1,8.8.8.8 gateway=172.16.1.1 \
-    netmask=24
-/ip firewall.address-list
-add address=172.16.1.0/24 list=MGMT
-add address=216.109.194.21 list=MGMT
-/ip firewall nat
-add action=masquerade chain=srcnat src-address=172.16.1.0/24
-/ip firewall service-port
-set ftp disabled=yes
-set tftp disabled=yes
-set h323 disabled=yes
-set sip disabled=yes
-set pptp disabled=yes`}
-          />
-          <hr style={{ margin: '32px 0' }} />
-          <h2>Mikrotik 5009 Alternate Config</h2>
-          <textarea
-            readOnly
-            rows={22}
-            style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
-            value={`/interface ethernet
-set [ find default-name=ether7 ] comment="Uplink to 123Net Switch"
-/interface vlan
-add interface=ether7 name=vlan102 vlan-id=102
-add interface=ether7 name=vlan202 vlan-id=202
-/ip dhcp-server option
-add code=2 name="GMT Offset -5" value=0xFFFFB9B0
-add code=42 name=NTP value="'184.105.182.16'"
-add code=160 name=prov_160 value="'http://provisioner.123.net'"
-add code=66 name=prov_66 value="'http://provisioner.123.net'"
-add code=202 name=Phone_vlan value="'VLAN-A=202'"
-/ip dhcp-server option sets
-add name=Phones_Options options="GMT Offset -5,NTP,prov_66,prov_160,Phone_vlan"
-/ip pool
-add name=Phones_IP_Pool ranges=172.16.1.30-172.16.1.250
-/ip dhcp-server
-add address-pool=Phones_IP_Pool authoritative=after-2sec-delay dhcp-option-set=Phones_Options disabled=no interface=vlan202 name=\
-    "Phones DHCP"
-/ip address
-add address=192.168.10.1/24 interface=vlan102 network=192.168.10.0
-add address=172.16.1.1/24 interface=vlan202 network=172.16.1.0
-/ip dhcp-server network
-add address=172.16.1.0/24 dhcp-option-set=Phones_Options dns-server=8.8.8.8,216.234.97.2,216.234.97.3 gateway=172.16.1.1 \
-    netmask=24 ntp-server=184.105.182.16
-/ip firewall address-list
-add address=192.168.10.0/24 list=MGMT
-add address=172.16.1.0/24 list=PHONEVLAN
-add address=205.251.183.0/24 list=PBX
-add address=69.39.69.0/24 list=PBX
-add address=216.109.194.50 list=PBX
-add address=184.105.182.16 comment=NTP list=PBX
-/ip firewall connection tracking
-set udp-timeout=1m30s
-/ip firewall filter
-add action=accept chain=forward comment="ALLOW CUSTOMER PASSTHROUGH"
-add action=accept chain=input comment=ALLOW_PBX src-address-list=PBX
-add action=accept chain=input comment=ALLOW_PHONES src-address-list=PHONEVLAN
-/ip firewall nat
-add action=masquerade chain=srcnat src-address=172.16.1.0/24
-/ip firewall service-port
-set ftp disabled=yes
-set tftp disabled=yes
-set irc disabled=yes
-set h323 disabled=yes
-set sip disabled=yes
-set pptp disabled=yes
-set udplite disabled=yes
-set dccp disabled=yes
-set sctp disabled=yes
-/ip firewall connection tracking
-set udp-timeout=1m30s`}
-          />
-          <hr style={{ margin: '32px 0' }} />
-          <h2>Mikrotik 10-Port Switch (On Net) Config</h2>
-          <textarea
-            readOnly
-            rows={28}
-            style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
-            value={`/interface ethernet
-set [ find default-name=ether9 ] comment="Uplink to 123Net Switch"
-/interface vlan
-add interface=ether9 name=vlan102 vlan-id=102
-add interface=ether9 name=vlan202 vlan-id=202
-/ip dhcp-server option
-add code=2 name="GMT Offset -5" value=0xFFFFB9B0
-add code=42 name=NTP value="'184.105.182.16'"
-add code=160 name=prov_160 value="'http://provisioner.123.net'"
-add code=66 name=prov_66 value="'http://provisioner.123.net'"
-add code=202 name=Phone_vlan value="'VLAN-A=202'"
-/ip dhcp-server option sets
-add name=Phones_Options options="GMT Offset -5,NTP,prov_66,prov_160,Phone_vlan"
-/ip pool
-add name=Phones_IP_Pool ranges=172.16.1.30-172.16.1.250
-/ip dhcp-server
-add address-pool=Phones_IP_Pool authoritative=after-2sec-delay dhcp-option-set=Phones_Options disabled=no interface=vlan202 name=\
-    "Phones DHCP"
-/ip address
-add address=192.168.10.1/24 interface=vlan102 network=192.168.10.0
-add address=172.16.1.1/24 interface=vlan202 network=172.16.1.0
-/ip dhcp-server network
-add address=172.16.1.0/24 dhcp-option-set=Phones_Options dns-server=8.8.8.8,216.234.97.2,216.234.97.3 gateway=172.16.1.1 \
-    netmask=24 ntp-server=184.105.182.16
-/ip firewall address-list
-add address=192.168.10.0/24 list=MGMT
-add address=172.16.1.0/24 list=PHONEVLAN
-add address=205.251.183.0/24 list=PBX
-add address=69.39.69.0/24 list=PBX
-add address=216.109.194.50 list=PBX
-add address=184.105.182.16 comment=NTP list=PBX
-/ip firewall filter
-add action=accept chain=input comment=ALLOW_PBX src-address-list=PBX
-add action=accept chain=input comment=ALLOW_PHONES src-address-list=PHONEVLAN
-/ip firewall nat
-add action=masquerade chain=srcnat src-address=172.16.1.0/24
-/ip firewall service-port
-set ftp disabled=yes
-set tftp disabled=yes
-set irc disabled=yes
-set h323 disabled=yes
-set sip disabled=yes
-set pptp disabled=yes
-set udplite disabled=yes
-set dccp disabled=yes
-set sctp disabled=yes
-/ip firewall connection tracking
-set udp-timeout=1m30s`}
-          />
-        </>
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2>Mikrotik Templates</h2>
+          {/* OTT Mikrotik Template Editor */}
+          <div style={{ marginBottom: 32, padding: 16, border: '1px solid #e0e0e0', borderRadius: 8, background: '#fafbfc' }}>
+            <h3>OTT Mikrotik Template (Editable)</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>IP Address:</label>
+                <input type="text" value={ottFields.ip} onChange={e => setOttFields(f => ({ ...f, ip: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>Customer Name:</label>
+                <input type="text" value={ottFields.customerName} onChange={e => setOttFields(f => ({ ...f, customerName: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>Customer Address:</label>
+                <input type="text" value={ottFields.customerAddress} onChange={e => setOttFields(f => ({ ...f, customerAddress: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>City:</label>
+                <input type="text" value={ottFields.city} onChange={e => setOttFields(f => ({ ...f, city: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>XIP:</label>
+                <input type="text" value={ottFields.xip} onChange={e => setOttFields(f => ({ ...f, xip: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 180 }}>
+                <label>Handle (Customer Address):</label>
+                <input type="text" value={ottFields.handle} onChange={e => setOttFields(f => ({ ...f, handle: e.target.value }))} style={{ width: '100%' }} />
+              </div>
+            </div>
+            <textarea
+              readOnly
+              rows={10}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13, marginTop: 8 }}
+              value={getOttTemplate(ottFields)}
+            />
+          </div>
+          {/* Other Mikrotik Templates (read-only) */}
+          <div style={{ marginBottom: 32 }}>
+            <h3>Mikrotik 5009 Bridge Template</h3>
+            <textarea
+              readOnly
+              rows={10}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+              value={mikrotik5009Bridge}
+            />
+          </div>
+          <div style={{ marginBottom: 32 }}>
+            <h3>Mikrotik 5009 Passthrough Template</h3>
+            <textarea
+              readOnly
+              rows={10}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+              value={mikrotik5009Passthrough}
+            />
+          </div>
+          <div style={{ marginBottom: 32 }}>
+            <h3>OnNet Mikrotik Config Template</h3>
+            <textarea
+              readOnly
+              rows={10}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+              value={onNetMikrotikConfigTemplate}
+            />
+          </div>
+          <div style={{ marginBottom: 32 }}>
+            <h3>Mikrotik StandAlone ATA Template</h3>
+            <textarea
+              readOnly
+              rows={10}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+              value={mikrotikStandAloneATATemplate}
+            />
+          </div>
+        </div>
       )}
       {/* Switch Template Tab */}
       {activeTab === 'switch' && (
