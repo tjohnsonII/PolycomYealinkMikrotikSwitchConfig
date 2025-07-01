@@ -120,6 +120,13 @@ const FIELD_TOOLTIPS: Record<string, string> = {
   externalNumber: "Enter the external phone number this key will dial when pressed."
 };
 
+// Expansion Module Preview Icons
+const EXP_TYPE_ICONS: Record<string, string> = {
+  BLF: '📛',
+  SpeedDial: '📞',
+  default: '🔲',
+};
+
 function App() {
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
@@ -1212,8 +1219,62 @@ function App() {
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h2>Expansion Module Code Generators</h2>
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 32 }}>
+            {/* Yealink Expansion Module Preview + Form */}
             <div style={{ flex: 1, minWidth: 320 }}>
               <h3>Yealink Expansion Module</h3>
+              <div style={{ marginBottom: 12 }}>
+                <button
+                  type="button"
+                  style={{ marginRight: 8, background: yealinkSection.sidecarPage === '1' ? '#0078d4' : '#eee', color: yealinkSection.sidecarPage === '1' ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}
+                  onClick={() => setYealinkSection(s => ({ ...s, sidecarPage: '1' }))}
+                >Page 1</button>
+                <button
+                  type="button"
+                  style={{ marginRight: 8, background: yealinkSection.sidecarPage === '2' ? '#0078d4' : '#eee', color: yealinkSection.sidecarPage === '2' ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}
+                  onClick={() => setYealinkSection(s => ({ ...s, sidecarPage: '2' }))}
+                >Page 2</button>
+                <button
+                  type="button"
+                  style={{ background: yealinkSection.sidecarPage === '3' ? '#0078d4' : '#eee', color: yealinkSection.sidecarPage === '3' ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '4px 12px', cursor: 'pointer' }}
+                  onClick={() => setYealinkSection(s => ({ ...s, sidecarPage: '3' }))}
+                >Page 3</button>
+              </div>
+              {/* Preview Grid */}
+              <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <h4 style={{ margin: '0 0 8px 0' }}>Preview: Page {yealinkSection.sidecarPage}</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
+                  {Array.from({ length: 20 }).map((_, idx) => {
+                    // Find if this key is the one being edited/generated
+                    const isCurrent =
+                      yealinkSection.sidecarPage === String(Math.ceil((parseInt(yealinkSection.sidecarLine) || 1) / 20)) &&
+                      idx + 1 === (parseInt(yealinkSection.sidecarLine) || 1) % 20;
+                    const label = isCurrent ? yealinkSection.label : '';
+                    const value = isCurrent ? yealinkSection.value : '';
+                    const type = isCurrent ? yealinkSection.templateType : '';
+                    const icon = EXP_TYPE_ICONS[type || 'default'];
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: 5,
+                          background: type === 'BLF' ? '#d6f5d6' : type === 'SpeedDial' ? '#d6e6f5' : '#e0f0ff',
+                          border: '1px solid #aaa',
+                          textAlign: 'center',
+                          borderRadius: 6,
+                          fontSize: 12,
+                          minHeight: 38,
+                          position: 'relative',
+                        }}
+                        title={label ? `Line: ${yealinkSection.sidecarLine}\nType: ${type}\nLabel: ${label}\nValue: ${value}` : 'Empty'}
+                      >
+                        <span style={{ fontSize: 18 }}>{icon}</span>
+                        <div>{label || <span style={{ color: '#bbb' }}>Empty</span>}</div>
+                        <div style={{ fontSize: 10, color: '#888' }}>{value}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
               <img src="/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
               <img src="/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
               <div className="form-group">
@@ -1250,6 +1311,7 @@ function App() {
                 <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
             </div>
+            {/* Polycom module code */}
             <div style={{ flex: 1, minWidth: 320 }}>
               <h3>Polycom VVX Color Expansion Module</h3>
               <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
