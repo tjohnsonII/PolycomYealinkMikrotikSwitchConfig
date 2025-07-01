@@ -581,9 +581,7 @@ function App() {
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
   // FBPX dynamic fields (columns)
-  const [fpbxFields, setFpbxFields] = useState([...FPBX_FIELDS]);
   function handleFpbxDeleteField(field: string) {
-    setFpbxFields(fields => fields.filter(f => f !== field));
     setFpbxRows(rows => rows.map(row => {
       const newRow = { ...row };
       delete newRow[field];
@@ -637,9 +635,7 @@ function App() {
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
   // VPBX dynamic fields (columns)
-  const [vpbxFields, setVpbxFields] = useState([...VPBX_FIELDS]);
   function handleVpbxDeleteField(field: string) {
-    setVpbxFields(fields => fields.filter(f => f !== field));
     setVpbxRows(rows => rows.map(row => {
       const newRow = { ...row };
       delete newRow[field];
@@ -1419,7 +1415,6 @@ function App() {
       {/* FBPX Import Template Tab */}
       {activeTab === 'fbpx' && (
         <div>
-          {/* FBPX import/export form UI as a table */}
           <h2>FBPX Import Template</h2>
           <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
@@ -1431,12 +1426,12 @@ function App() {
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
                 <tr style={{ background: '#f4f4f4' }}>
-                  {fpbxFields.map(f => (
+                  {FPBX_FIELDS.map((f: string) => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc', position: 'relative' }}>
                       {f}
                       <button
                         type="button"
-                                               onClick={() => handleFpbxDeleteField(f)}
+                        onClick={() => handleFpbxDeleteField(f)}
                         style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
                         title={`Delete column ${f}`}
                       >
@@ -1450,7 +1445,7 @@ function App() {
               <tbody>
                 {fpbxRows.map((row, rowIdx) => (
                   <tr key={rowIdx}>
-                    {fpbxFields.map(f => (
+                    {FPBX_FIELDS.map((f: string) => (
                       <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
                         <input
                           id={f + '-' + rowIdx}
@@ -1479,7 +1474,6 @@ function App() {
       {/* VPBX Import Template Tab */}
       {activeTab === 'vpbx' && (
         <div>
-          {/* VPBX import/export form UI as a table */}
           <h2>VPBX Import Template</h2>
           <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
@@ -1490,8 +1484,8 @@ function App() {
             </div>
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
-                <tr style={{ background: '#f4f4' }}>
-                  {vpbxFields.map(f => (
+                <tr style={{ background: '#f4f4f4' }}>
+                  {VPBX_FIELDS.map((f: string) => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc', position: 'relative' }}>
                       {f}
                       <button
@@ -1510,7 +1504,7 @@ function App() {
               <tbody>
                 {vpbxRows.map((row, rowIdx) => (
                   <tr key={rowIdx}>
-                    {vpbxFields.map(f => (
+                    {VPBX_FIELDS.map((f: string) => (
                       <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
                         <input
                           id={f + '-' + rowIdx}
