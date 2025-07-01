@@ -17,6 +17,7 @@ type RowType = Record<(typeof COLUMNS)[number], string>;
 const StrettoImportExportTab: React.FC = () => {
   // Start with 10 rows by default
   const [rows, setRows] = useState<RowType[]>(Array(10).fill(0).map(() => Object.fromEntries(COLUMNS.map(c => [c, ''])) as RowType));
+  const [columns, setColumns] = useState<string[]>([...COLUMNS]);
   const downloadRef = useRef<HTMLAnchorElement>(null);
   const [error, setError] = useState('');
 
@@ -36,9 +37,9 @@ const StrettoImportExportTab: React.FC = () => {
   }
 
   function handleExport() {
-    const csvHeader = COLUMNS.join(',') + '\n';
+    const csvHeader = columns.join(',') + '\n';
     const csvRows = rows.map(row =>
-      COLUMNS.map(col => `"${(row[col] || '').replace(/"/g, '""')}"`).join(',')
+      columns.map(col => `"${(row[col] || '').replace(/"/g, '""')}"`).join(',')
     ).join('\n') + '\n';
     const csv = csvHeader + csvRows;
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -61,11 +62,21 @@ const StrettoImportExportTab: React.FC = () => {
   }
 
   function handleAddRows(count = 1) {
-    setRows(rows => [...rows, ...Array(count).fill(0).map(() => Object.fromEntries(COLUMNS.map(c => [c, ''])) as RowType)]);
+    setRows(rows => [...rows, ...Array(count).fill(0).map(() => Object.fromEntries(columns.map(c => [c, ''])) as RowType)]);
   }
 
   function handleDeleteRow(idx: number) {
     setRows(rows => rows.filter((_, i) => i !== idx));
+  }
+
+  // Remove a column (field) from the table
+  function handleDeleteColumn(col: string) {
+    setColumns(cols => cols.filter(c => c !== col));
+    setRows(rows => rows.map(row => {
+      const newRow = { ...row };
+      delete newRow[col];
+      return newRow;
+    }));
   }
 
   return (
@@ -91,8 +102,18 @@ const StrettoImportExportTab: React.FC = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            {COLUMNS.map(col => (
-              <th key={col} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>{col}</th>
+            {columns.map(col => (
+              <th key={col} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
+                {col}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteColumn(col)}
+                  style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
+                  title={`Delete column ${col}`}
+                >
+                  ×
+                </button>
+              </th>
             ))}
             <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Actions</th>
           </tr>
@@ -100,14 +121,14 @@ const StrettoImportExportTab: React.FC = () => {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={COLUMNS.length + 1} style={{ textAlign: 'center', padding: 8 }}>
+              <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: 8 }}>
                 No data
               </td>
             </tr>
           ) : (
             rows.map((row, i) => (
               <tr key={i}>
-                {COLUMNS.map(col => (
+                {columns.map(col => (
                   <td key={col} style={{ border: '1px solid #ccc', padding: 4 }}>
                     <input
                       type="text"

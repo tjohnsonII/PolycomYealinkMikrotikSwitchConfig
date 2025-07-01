@@ -527,6 +527,17 @@ function App() {
   const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>(Array(10).fill(0).map(createEmptyFpbxRow));
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
+  // FBPX dynamic fields (columns)
+  const [fpbxFields, setFpbxFields] = useState([...FPBX_FIELDS]);
+  function handleFpbxDeleteField(field: string) {
+    setFpbxFields(fields => fields.filter(f => f !== field));
+    setFpbxRows(rows => rows.map(row => {
+      const newRow = { ...row };
+      delete newRow[field];
+      return newRow;
+    }));
+  }
+
   function handleFpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
     setFpbxRows(rows => {
       const updated = [...rows];
@@ -571,6 +582,17 @@ function App() {
   // State and handlers for VPBX import/export form (PBX CSV import/export)
   const [vpbxRows, setVpbxRows] = useState<VpbxFormType[]>(Array(10).fill(0).map(createEmptyVpbxRow));
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
+
+  // VPBX dynamic fields (columns)
+  const [vpbxFields, setVpbxFields] = useState([...VPBX_FIELDS]);
+  function handleVpbxDeleteField(field: string) {
+    setVpbxFields(fields => fields.filter(f => f !== field));
+    setVpbxRows(rows => rows.map(row => {
+      const newRow = { ...row };
+      delete newRow[field];
+      return newRow;
+    }));
+  }
 
   function handleVpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
     setVpbxRows(rows => {
@@ -1138,8 +1160,18 @@ function App() {
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
                 <tr style={{ background: '#f4f4f4' }}>
-                  {FPBX_FIELDS.map(f => (
-                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
+                  {fpbxFields.map(f => (
+                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc', position: 'relative' }}>
+                      {f}
+                      <button
+                        type="button"
+                        onClick={() => handleFpbxDeleteField(f)}
+                        style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
+                        title={`Delete column ${f}`}
+                      >
+                        ×
+                      </button>
+                    </th>
                   ))}
                   <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Actions</th>
                 </tr>
@@ -1147,13 +1179,13 @@ function App() {
               <tbody>
                 {fpbxRows.map((row, rowIdx) => (
                   <tr key={rowIdx}>
-                    {FPBX_FIELDS.map(f => (
+                    {fpbxFields.map(f => (
                       <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
                         <input
                           id={f + '-' + rowIdx}
                           name={f}
                           type="text"
-                          value={row[f]}
+                          value={row[f] || ''}
                           onChange={e => handleFpbxChange(rowIdx, e)}
                           style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
                         />
@@ -1188,8 +1220,18 @@ function App() {
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
                 <tr style={{ background: '#f4f4f4' }}>
-                  {VPBX_FIELDS.map(f => (
-                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
+                  {vpbxFields.map(f => (
+                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc', position: 'relative' }}>
+                      {f}
+                      <button
+                        type="button"
+                        onClick={() => handleVpbxDeleteField(f)}
+                        style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
+                        title={`Delete column ${f}`}
+                      >
+                        ×
+                      </button>
+                    </th>
                   ))}
                   <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Actions</th>
                 </tr>
@@ -1197,13 +1239,13 @@ function App() {
               <tbody>
                 {vpbxRows.map((row, rowIdx) => (
                   <tr key={rowIdx}>
-                    {VPBX_FIELDS.map(f => (
+                    {vpbxFields.map(f => (
                       <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
                         <input
                           id={f + '-' + rowIdx}
                           name={f}
                           type="text"
-                          value={row[f]}
+                          value={row[f] || ''}
                           onChange={e => handleVpbxChange(rowIdx, e)}
                           style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
                         />
