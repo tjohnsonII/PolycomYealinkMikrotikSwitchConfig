@@ -121,23 +121,8 @@ const FIELD_TOOLTIPS: Record<string, string> = {
   externalNumber: "Enter the external phone number this key will dial when pressed."
 };
 
-// Expansion Module Preview Icons
-const EXP_TYPE_ICONS: Record<string, string> = {
-  BLF: '📛',
-  SpeedDial: '📞',
-  default: '🔲',
-};
-
-const EXP_TYPE_TOOLTIPS: Record<string, string> = {
-  BLF: 'BLF (Busy Lamp Field): Monitors extension/park status, lights up when in use.',
-  SpeedDial: 'Speed Dial: Quick dial to a number or extension.',
-  default: 'Unassigned key.'
-};
-
-// Polycom expansion module preview settings
-const POLYCOM_PAGE_LABELS = ['Page 1', 'Page 2', 'Page 3'];
-const POLYCOM_KEYS_PER_PAGE = 28;
-const POLYCOM_TOTAL_KEYS = 84;
+// Expansion Module Preview Icons, Tooltips, and Polycom constants moved to constants/expansionModule.ts
+import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS, POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE, POLYCOM_TOTAL_KEYS } from './constants/expansionModule';
 
 function App() {
   // State for active tab selection
