@@ -1,97 +1,155 @@
 import React, { useState } from 'react';
 
-// Example columns and data for the Hosted Order Tracker
-const DEFAULT_COLUMNS = [
+// All fields as rows, columns are customers
+const DEFAULT_FIELDS = [
   'CUSTOMER ABBREV', 'CUSTOMER NAME', 'LOCATION', 'DEPLOY FROM (SF/GR)', 'PROJECT MANAGER',
   'SURVEY DATE', 'KICKOFF DATE', 'INSTALL DATE', 'ON-NET or OTT', 'ORDER ID', 'PON',
   'LINK TO CONTRACT', '# SEATS MINIMUM', 'PBX TYPE', 'PBX IP ADDRESS', 'PHONE MODEL / QTY',
   'SWITCH / ASSET #', 'UPS / ASSET #', 'SIDECAR / ASSET #', 'MIKROTIK / ASSET #', 'MIKROTIK IP',
-  'ATA / ASSET #', 'ALGO / ASSET #', 'Wall Mount | QTY', 'NOTES',
-  // Add more columns as needed
+  'ATA / ASSET #', 'ALGO / ASSET #', 'Wall Mount | QTY', 'NOTES', 'ORDER TASKS',
+  'HOSTED JOBVIEWER', 'CONFIRM INVENTORY', 'CHANGE VPBX PAGE TO PROVISIONING',
+  'INCREASE PARKING LOT TIMING TO 300 (OPTIONAL)', 'PROVISION SWITCH', 'SAVED CONFIG ON SWITCH',
+  'UPDATED SWITCH ASSET PAGE WITH CONFIG', 'CONFIGURED TIK (OTT)', 'CREATE SOFTPHONES',
+  'PROVISION PHONES AND TEST', 'PROGRAM ATA', 'ASSET LABEL ON ATA', 'UPLOAD ATA CONFIG TO ASSET PAGE',
+  'LABEL AND PLACE EQUIPMENT ON RACK', 'VERIFY ALL  EQUIPMENT ON ASSET PAGE',
+  'NOTIFY TECHS OF EQUIPMENT LOCATION', 'TURN UP DAY TASKS', 'ATA TESTED', 'ALGO TESTED',
+  'CONFIGURED TIK', 'INCREASE UDP TIMEOUT', 'WHITELISTED TIK AND DIA CIRCUIT',
+  'EXPORT FINAL TIK CONFIG AND UPLOAD TO ASSET PAGE', 'EXPORT FINAL SWITCH CONFIG / UPLOAD TO ASSET PAGE',
+  'ALL PHONES ONLINE', 'TN ORDERS', 'CHANGE VPBX PAGE TO PRODUCTION', 'CREATE TURNUP TICKET',
+  'SEND TRAINING MATERIALS', 'UPDATE TASKS IN ORDER WEB ADMIN', 'UPDATE SITE NOTES',
+  'UPDATE HOSTED JOB TRACKER',
 ];
 
-const DEFAULT_ROWS = [
-  // Add a single empty row for initial state
-  Object.fromEntries(DEFAULT_COLUMNS.map(col => [col, ''])),
-];
+const DEFAULT_CUSTOMERS = [''];
+
+const CHECKBOX_FIELDS = new Set([
+  'HOSTED JOBVIEWER', 'CONFIRM INVENTORY', 'CHANGE VPBX PAGE TO PROVISIONING',
+  'INCREASE PARKING LOT TIMING TO 300 (OPTIONAL)', 'PROVISION SWITCH', 'SAVED CONFIG ON SWITCH',
+  'UPDATED SWITCH ASSET PAGE WITH CONFIG', 'CONFIGURED TIK (OTT)', 'CREATE SOFTPHONES',
+  'PROVISION PHONES AND TEST', 'PROGRAM ATA', 'ASSET LABEL ON ATA', 'UPLOAD ATA CONFIG TO ASSET PAGE',
+  'LABEL AND PLACE EQUIPMENT ON RACK', 'VERIFY ALL  EQUIPMENT ON ASSET PAGE',
+  'NOTIFY TECHS OF EQUIPMENT LOCATION', 'TURN UP DAY TASKS', 'ATA TESTED', 'ALGO TESTED',
+  'CONFIGURED TIK', 'INCREASE UDP TIMEOUT', 'WHITELISTED TIK AND DIA CIRCUIT',
+  'EXPORT FINAL TIK CONFIG AND UPLOAD TO ASSET PAGE', 'EXPORT FINAL SWITCH CONFIG / UPLOAD TO ASSET PAGE',
+  'ALL PHONES ONLINE', 'TN ORDERS', 'CHANGE VPBX PAGE TO PRODUCTION', 'CREATE TURNUP TICKET',
+  'SEND TRAINING MATERIALS', 'UPDATE TASKS IN ORDER WEB ADMIN', 'UPDATE SITE NOTES',
+  'UPDATE HOSTED JOB TRACKER',
+]);
 
 const HostedOrderTrackerTab: React.FC = () => {
-  const [columns, setColumns] = useState([...DEFAULT_COLUMNS]);
-  const [rows, setRows] = useState([...DEFAULT_ROWS]);
+  const [fields, setFields] = useState([...DEFAULT_FIELDS]);
+  const [customers, setCustomers] = useState([...DEFAULT_CUSTOMERS]);
+  // Data: { [field]: { [customer]: value } }
+  const [data, setData] = useState<{ [field: string]: { [customer: string]: string } }>(
+    Object.fromEntries(DEFAULT_FIELDS.map(f => [f, { '': '' }]))
+  );
 
-  // Add row(s)
-  function handleAddRows(count = 1) {
-    setRows(rows => [...rows, ...Array(count).fill(0).map(() => Object.fromEntries(columns.map(c => [c, ''])))]);
+  function handleAddCustomer() {
+    const newName = prompt('Enter new customer abbreviation:') || '';
+    if (!newName || customers.includes(newName)) return;
+    setCustomers(custs => [...custs, newName]);
+    setData(d => {
+      const newData = { ...d };
+      for (const f of fields) newData[f] = { ...newData[f], [newName]: '' };
+      return newData;
+    });
   }
-
-  // Delete row
-  function handleDeleteRow(idx: number) {
-    setRows(rows => rows.filter((_, i) => i !== idx));
+  function handleDeleteCustomer(idx: number) {
+    const name = customers[idx];
+    setCustomers(custs => custs.filter((_, i) => i !== idx));
+    setData(d => {
+      const newData = { ...d };
+      for (const f of fields) {
+        const { [name]: _, ...rest } = newData[f];
+        newData[f] = rest;
+      }
+      return newData;
+    });
   }
-
-  // Delete column
-  function handleDeleteColumn(col: string) {
-    setColumns(cols => cols.filter(c => c !== col));
-    setRows(rows => rows.map(row => {
-      const newRow = { ...row };
-      delete newRow[col];
-      return newRow;
-    }));
+  function handleCellChange(field: string, customer: string, value: string) {
+    setData(d => ({ ...d, [field]: { ...d[field], [customer]: value } }));
   }
-
-  // Cell change
-  function handleCellChange(rowIdx: number, col: string, value: string) {
-    setRows(rows => {
-      const updated = [...rows];
-      updated[rowIdx] = { ...updated[rowIdx], [col]: value };
-      return updated;
+  function handleCheckboxChange(field: string, customer: string, checked: boolean) {
+    setData(d => ({ ...d, [field]: { ...d[field], [customer]: checked ? 'TRUE' : 'FALSE' } }));
+  }
+  function handleAddField() {
+    const newField = prompt('Enter new field name:') || '';
+    if (!newField || fields.includes(newField)) return;
+    setFields(f => [...f, newField]);
+    setData(d => ({ ...d, [newField]: Object.fromEntries(customers.map(c => [c, ''])) }));
+  }
+  function handleDeleteField(idx: number) {
+    const field = fields[idx];
+    setFields(f => f.filter((_, i) => i !== idx));
+    setData(d => {
+      const { [field]: _, ...rest } = d;
+      return rest;
     });
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
       <h2>Hosted Order Tracker</h2>
       <div style={{ marginBottom: 12 }}>
-        <button type="button" onClick={() => handleAddRows(1)} style={{ marginRight: 8 }}>Add 1 Row</button>
-        <button type="button" onClick={() => handleAddRows(5)} style={{ marginRight: 8 }}>Add 5 Rows</button>
-        <button type="button" onClick={() => handleAddRows(10)} style={{ marginRight: 8 }}>Add 10 Rows</button>
+        <button type="button" onClick={handleAddCustomer} style={{ marginRight: 8 }}>Add Customer</button>
+        <button type="button" onClick={handleAddField} style={{ marginRight: 8 }}>Add Field</button>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
           <thead>
             <tr>
-              {columns.map(col => (
-                <th key={col} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
-                  {col}
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteColumn(col)}
-                    style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
-                    title={`Delete column ${col}`}
-                  >
-                    ×
-                  </button>
+              <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Field</th>
+              {customers.map((c, i) => (
+                <th key={c} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
+                  {c || 'Customer'}
+                  {customers.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomer(i)}
+                      style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
+                      title={`Delete customer ${c}`}
+                    >
+                      ×
+                    </button>
+                  )}
                 </th>
               ))}
-              <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, i) => (
-              <tr key={i}>
-                {columns.map(col => (
-                  <td key={col} style={{ border: '1px solid #ccc', padding: 4 }}>
-                    <input
-                      type="text"
-                      value={row[col] || ''}
-                      onChange={e => handleCellChange(i, col, e.target.value)}
-                      style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                    />
+            {fields.map((field, i) => (
+              <tr key={field}>
+                <td style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
+                  {field}
+                  {fields.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteField(i)}
+                      style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
+                      title={`Delete field ${field}`}
+                    >
+                      ×
+                    </button>
+                  )}
+                </td>
+                {customers.map(cust => (
+                  <td key={cust} style={{ border: '1px solid #ccc', padding: 4 }}>
+                    {CHECKBOX_FIELDS.has(field) ? (
+                      <input
+                        type="checkbox"
+                        checked={data[field]?.[cust] === 'TRUE'}
+                        onChange={e => handleCheckboxChange(field, cust, e.target.checked)}
+                      />
+                    ) : (
+                      <input
+                        type="text"
+                        value={data[field]?.[cust] || ''}
+                        onChange={e => handleCellChange(field, cust, e.target.value)}
+                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                      />
+                    )}
                   </td>
                 ))}
-                <td style={{ border: '1px solid #ccc', padding: 4, textAlign: 'center' }}>
-                  <button type="button" onClick={() => handleDeleteRow(i)} style={{ color: 'red' }}>Delete</button>
-                </td>
               </tr>
             ))}
           </tbody>
