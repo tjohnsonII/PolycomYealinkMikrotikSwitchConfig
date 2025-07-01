@@ -237,6 +237,21 @@ function App() {
       let linekey = 6;
       for (let i = start; i <= end; i++, linekey++) {
         config += `linekey.${linekey}.extension=${i}\n`;
+        config += `linekey.${linekey}.label=Park ${linekey - 5}\n`;
+        config += `linekey.${linekey}.line=1\n`;
+        config += `linekey.${linekey}.type=10\n`;
+        config += `linekey.${linekey}.value=${i}@${ip}\n`;
+      }
+    } else if (model === 'SIP-T48S' || model === 'Yealink T57W') {
+      let linekey = 7;
+      for (let i = start; i <= end; i++, linekey++) {
+        config += `linekey.${linekey}.extension=${i}\n`;
+        config += `linekey.${linekey}.label=Park ${linekey - 6}\n`;
+        config += `linekey.${linekey}.line=1\n`;
+        config += `linekey.${linekey}.type=10\n`;
+        config += `linekey.${linekey}.value=${i}@${ip}\n`;
+      }
+    } else {
       let linekey = start;
       for (let i = start; i <= end; i++, linekey++) {
         config += `linekey.${linekey}.extension=${i}\n`;
@@ -1237,7 +1252,7 @@ function App() {
             </div>
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
-                <tr style={{ background: '#f4f4f4' }}>
+                <tr style={{ background: '#f4f4' }}>
                   {vpbxFields.map(f => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc', position: 'relative' }}>
                       {f}
