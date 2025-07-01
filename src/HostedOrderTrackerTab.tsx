@@ -21,7 +21,9 @@ const DEFAULT_FIELDS = [
   'UPDATE HOSTED JOB TRACKER',
 ];
 
-const DEFAULT_CUSTOMERS = [''];
+const DEFAULT_CUSTOMERS: string[] = [
+  'CUST1', 'CUST2', 'CUST3', 'CUST4', 'CUST5'
+];
 
 const CHECKBOX_FIELDS = new Set([
   'HOSTED JOBVIEWER', 'CONFIRM INVENTORY', 'CHANGE VPBX PAGE TO PROVISIONING',
@@ -107,18 +109,33 @@ const HostedOrderTrackerTab: React.FC = () => {
       return rest;
     });
   }
+  // Add a new blank customer column (handle is editable in header)
   function handleAddCustomer() {
-    let newName = '';
-    while (!newName || customers.includes(newName)) {
-      newName = prompt('Enter new customer abbreviation:')?.trim() || '';
-      if (!newName) return;
-      if (customers.includes(newName)) alert('Customer abbreviation already exists.');
-    }
-    setCustomers(custs => [...custs, newName]);
+    setCustomers(custs => [...custs, '']);
     setData(d => {
       const newData = { ...d };
-      for (const f of fields) newData[f] = { ...newData[f], [newName]: '' };
+      for (const f of fields) newData[f] = { ...newData[f], ['']: '' };
       return newData;
+    });
+  }
+  // Update customer handle (header cell input)
+  function handleCustomerHandleChange(idx: number, value: string) {
+    setCustomers(custs => {
+      const newCusts = [...custs];
+      const old = newCusts[idx];
+      newCusts[idx] = value;
+      // Update data keys for all fields
+      setData(d => {
+        const newData = { ...d };
+        for (const f of fields) {
+          const fieldData = { ...newData[f] };
+          fieldData[value] = fieldData[old] || '';
+          if (old !== '') delete fieldData[old];
+          newData[f] = fieldData;
+        }
+        return newData;
+      });
+      return newCusts;
     });
   }
   function handleDeleteCustomer(idx: number) {
@@ -140,7 +157,7 @@ const HostedOrderTrackerTab: React.FC = () => {
       <div style={{ marginBottom: 12 }}>
         <input type="file" accept=".csv" onChange={handleImport} />
         <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>Export as CSV</button>
-        <button type="button" onClick={handleAddCustomer} style={{ marginLeft: 8 }}>Add Customer</button>
+        <button type="button" onClick={handleAddCustomer} style={{ marginLeft: 8 }}>Add Column</button>
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       <div style={{ overflowX: 'auto' }}>
@@ -149,18 +166,26 @@ const HostedOrderTrackerTab: React.FC = () => {
             <tr>
               <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Field</th>
               {customers.map((c, i) => (
-                <th key={c} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
-                  {c || 'Customer'}
-                  {customers.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCustomer(i)}
-                      style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
-                      title={`Delete customer ${c}`}
-                    >
-                      ×
-                    </button>
-                  )}
+                <th key={i} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative', minWidth: 120 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <input
+                      type="text"
+                      value={c}
+                      onChange={e => handleCustomerHandleChange(i, e.target.value)}
+                      placeholder="Handle (e.g. WS7)"
+                      style={{ width: 70, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 2 }}
+                    />
+                    {customers.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomer(i)}
+                        style={{ background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer', marginLeft: 4 }}
+                        title={`Delete customer column`}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
