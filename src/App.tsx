@@ -443,7 +443,7 @@ function App() {
         'local_time.ntp_server1=pool.ntp.org',
         'local_time.summer_time=2',
         `local_time.time_format=0`,
-        `local_time.time_zone=${timeOffset}`,
+        `local_time.time_zone=${DEFAULT_TIME_OFFSET}`,
         'local_time.time_zone_name=United States-Eastern Time',
         'programablekey.2.label=Directory',
         'programablekey.2.line=%EMPTY%',
@@ -454,7 +454,7 @@ function App() {
         'static.auto_provision.custom.protect=1',
         'static.auto_provision.server.url= http://provisioner.123.net/',
         'voice_mail.number.1=*97',
-        `static.security.user_password=${adminPassword}`,
+        `static.security.user_password=${DEFAULT_ADMIN_PASSWORD}`,
         ''
       ].join('\n');
     } else if (phoneType === 'Yealink') {
@@ -475,7 +475,7 @@ function App() {
         'local_time.ntp_server1=pool.ntp.org',
         'local_time.summer_time=2',
         `local_time.time_format=0`,
-        `local_time.time_zone=${timeOffset}`,
+        `local_time.time_zone=${DEFAULT_TIME_OFFSET}`,
         'local_time.time_zone_name=United States-Eastern Time',
         'programablekey.2.label=Directory',
         'programablekey.2.line=%EMPTY%',
@@ -486,7 +486,7 @@ function App() {
         'static.auto_provision.custom.protect=1',
         'static.auto_provision.server.url=http://provisioner.123.net/',
         'voice_mail.number.1=*97',
-        `static.security.user_password=${adminPassword}`,
+        `static.security.user_password=${DEFAULT_ADMIN_PASSWORD}`,
         ''
       ].join('\n');
     } else if (phoneType === 'Polycom') {
@@ -499,7 +499,7 @@ function App() {
         'lcl.datetime.date.longformat=0',
         'tcpipapp.sntp.address=pool.ntp.org',
         'tcpipapp.sntp.address.overridedhcp=1',
-        `tcpipapp.sntp.gmtoffset=${parseInt(timeOffset) * 3600}`,
+        `tcpipapp.sntp.gmtoffset=${parseInt(DEFAULT_TIME_OFFSET) * 3600}`,
         'tcpipapp.sntp.gmtoffset.overridedhcp=1',
         'tcpipapp.sntp.gmtoffsetcityid=16',
         ''
@@ -641,6 +641,102 @@ function App() {
     }
   }
 
+  // --- Yealink/Polycom advanced options state (move to top, single source of truth) ---
+  const [yealinkLabelLength, setYealinkLabelLength] = useState(false);
+  const [yealinkDisableMissedCall, setYealinkDisableMissedCall] = useState(false);
+  const [yealinkCallStealing, setYealinkCallStealing] = useState(false);
+
+  // --- Polycom MWI generator state (single instance) ---
+  const [polycomMWI, setPolycomMWI] = useState({ ext: '', pbxIp: '', output: '' });
+  function generatePolycomMWI() {
+    setPolycomMWI(mwi => ({
+      ...mwi,
+      output:
+        `msg.mwi.1.callback=*98${mwi.ext}\n` +
+        `msg.mwi.1.callbackmode=contact\n` +
+        `msg.mwi.1.subscribe=${mwi.ext}@${mwi.pbxIp}\n`
+    }));
+  }
+
+  // --- Yealink/Polycom BLF/Speed/Transfer/Hotkey generator state (single instance) ---
+  const YEALINK_LINEKEY_TYPES = [
+    { code: 0, label: 'NA' },
+    { code: 1, label: 'Conference' },
+    { code: 2, label: 'Forward' },
+    { code: 3, label: 'Transfer' },
+    { code: 4, label: 'Hold' },
+    { code: 5, label: 'DND' },
+    { code: 7, label: 'Call Return' },
+    { code: 8, label: 'SMS' },
+    { code: 9, label: 'Directed Pickup' },
+    { code: 10, label: 'Call Park' },
+    { code: 11, label: 'DTMF' },
+    { code: 12, label: 'Voice Mail' },
+    { code: 13, label: 'Speed Dial' },
+    { code: 14, label: 'Intercom' },
+    { code: 15, label: 'Line' },
+    { code: 16, label: 'BLF' },
+    { code: 17, label: 'URL' },
+    { code: 18, label: 'Group Listening' },
+    { code: 20, label: 'Private Hold' },
+    { code: 22, label: 'XML Group' },
+    { code: 23, label: 'Group Pickup' },
+    { code: 24, label: 'Multicast Paging' },
+    { code: 25, label: 'Record' },
+    { code: 27, label: 'XML Browser' },
+    { code: 34, label: 'Hot Desking' },
+    { code: 35, label: 'URL Record' },
+    { code: 38, label: 'LDAP' },
+    { code: 39, label: 'BLF List' },
+    { code: 40, label: 'Prefix' },
+    { code: 41, label: 'Zero Touch' },
+    { code: 42, label: 'ACD' },
+    { code: 45, label: 'Local Group' },
+    { code: 46, label: 'Network Group' },
+    { code: 49, label: 'Custom Button' },
+    { code: 50, label: 'Keypad Lock' },
+    { code: 55, label: 'Meet-Me Conference' },
+    { code: 56, label: 'Retrieve Park' },
+    { code: 57, label: 'Hoteling' },
+    { code: 58, label: 'ACD Grace' },
+    { code: 59, label: 'Sisp Code' },
+    { code: 60, label: 'Emergency' },
+    { code: 61, label: 'Directory' },
+    { code: 73, label: 'MACRO' },
+  ];
+  const [linekeyGen, setLinekeyGen] = useState({
+    brand: 'Yealink',
+    lineNum: '',
+    label: '',
+    regLine: '1',
+    type: 16,
+    value: '',
+    efkIndex: '',
+    output: ''
+  });
+  function generateLinekey() {
+    if (linekeyGen.brand === 'Yealink') {
+      setLinekeyGen(lk => ({
+        ...lk,
+        output:
+          `linekey.${lk.lineNum}.label=${lk.label}\n` +
+          `linekey.${lk.lineNum}.line=${lk.regLine}\n` +
+          `linekey.${lk.lineNum}.type=${lk.type}\n` +
+          `linekey.${lk.lineNum}.value=${lk.value}\n`
+      }));
+    } else {
+      setLinekeyGen(lk => ({
+        ...lk,
+        output:
+          `attendant.resourcelist.${lk.efkIndex}.address=${lk.value}\n` +
+          `attendant.resourcelist.${lk.efkIndex}.label=${lk.label}\n` +
+          `attendant.resourcelist.${lk.efkIndex}.type=normal\n` +
+          `linekey.${lk.lineNum}.category=BLF\n` +
+          `linekey.${lk.lineNum}.index=${lk.efkIndex}\n`
+      }));
+    }
+  }
+
   // Main UI rendering
   return (
     <div className="container">
@@ -746,80 +842,125 @@ function App() {
       {/* Phone Configs Tab */}
       {activeTab === 'phone' && (
         <>
-          {/* Phone type/model/extension input form */}
-          <div className="form-group">
-            <label>Phone Type:</label>
-            <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
-              <option value="Polycom">Polycom</option>
-              <option value="Yealink">Yealink</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Model:</label>
-            <select value={model} onChange={e => setModel(e.target.value)}>
-              {MODEL_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>IP Address:</label>
-            <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
-          </div>
-          <div className="form-group">
-            <label>Start Extension:</label>
-            <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>End Extension:</label>
-            <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Label Prefix:</label>
-            <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Time Offset (e.g. -5):</label>
-            <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Admin Password:</label>
-            <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
-          </div>
-          <button onClick={generateConfig}>Generate Config</button>
-          <div className="output">
-            <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
-          </div>
-          {/* External Number Speed Dial Generator */}
-          <hr style={{ margin: '32px 0' }} />
-          <h3>External Number Speed Dial</h3>
-          <div className="form-group">
-            <label>Brand:</label>
-            <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))}>
-              <option value="Yealink">Yealink</option>
-              <option value="Polycom">Polycom</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Line Key Number:</label>
-            <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Label:</label>
-            <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>External Number:</label>
-            <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} />
-          </div>
-          {externalSpeed.brand === 'Polycom' && (
+          <h2 style={{marginTop:0}}>Phone Config Generator</h2>
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>Base Config Options</h3>
             <div className="form-group">
-              <label>EFK Index:</label>
-              <input type="text" value={externalSpeed.efkIndex} onChange={e => setExternalSpeed(s => ({ ...s, efkIndex: e.target.value }))} />
+              <label>Phone Type:</label>
+              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
+                <option value="Polycom">Polycom</option>
+                <option value="Yealink">Yealink</option>
+              </select>
+              <label style={{marginLeft:16}}>Model:</label>
+              <select value={model} onChange={e => setModel(e.target.value)}>
+                {MODEL_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
             </div>
-          )}
-          <button type="button" onClick={generateExternalSpeed}>Generate External Speed Dial</button>
-          <div className="output">
+            <div className="form-group">
+              <label>IP Address:</label>
+              <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
+              <label style={{marginLeft:16}}>Start Extension:</label>
+              <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} />
+              <label style={{marginLeft:16}}>End Extension:</label>
+              <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} />
+              <label style={{marginLeft:16}}>Label Prefix:</label>
+              <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label>Time Offset (e.g. -5):</label>
+              <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
+              <label style={{marginLeft:16}}>Admin Password:</label>
+              <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
+            </div>
+            <div className="form-group">
+              <label><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels</label>
+              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification</label>
+              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing</label>
+            </div>
+            <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
+            <div className="output">
+              <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+            </div>
+          </div>
+          <hr />
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>Polycom MWI (Message Waiting Indicator)</h3>
+            <div className="form-group">
+              <label>Extension:</label>
+              <input type="text" value={polycomMWI.ext} onChange={e => setPolycomMWI(mwi => ({ ...mwi, ext: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>PBX IP:</label>
+              <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} />
+              <button type="button" onClick={generatePolycomMWI} style={{ marginLeft: 16 }}>Generate MWI</button>
+            </div>
+            <textarea value={polycomMWI.output} readOnly rows={3} style={{ width: '100%', marginTop: 8 }} />
+          </div>
+          <hr />
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>Linekey/BLF/Speed/Transfer/Hotkey Generator</h3>
+            <div className="form-group">
+              <label>Brand:</label>
+              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))}>
+                <option value="Yealink">Yealink</option>
+                <option value="Polycom">Polycom</option>
+              </select>
+              <label style={{ marginLeft: 16 }}>Line Key Number:</label>
+              <input type="text" value={linekeyGen.lineNum} onChange={e => setLinekeyGen(lk => ({ ...lk, lineNum: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:</label>
+              <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} />
+            </div>
+            <div className="form-group">
+              {linekeyGen.brand === 'Yealink' && (
+                <>
+                  <label>Registered Line:</label>
+                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} />
+                  <label style={{ marginLeft: 16 }}>Type:</label>
+                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))}>
+                    {YEALINK_LINEKEY_TYPES.map(t => (
+                      <option key={t.code} value={t.code}>{t.code} - {t.label}</option>
+                    ))}
+                  </select>
+                  <label style={{ marginLeft: 16 }}>Value:</label>
+                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
+                </>
+              )}
+              {linekeyGen.brand === 'Polycom' && (
+                <>
+                  <label>EFK/Resourcelist Index:</label>
+                  <input type="text" value={linekeyGen.efkIndex} onChange={e => setLinekeyGen(lk => ({ ...lk, efkIndex: e.target.value }))} />
+                  <label style={{ marginLeft: 16 }}>Value (address):</label>
+                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
+                </>
+              )}
+              <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate</button>
+            </div>
+            <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
+          </div>
+          <hr />
+          {/* External Number Speed Dial Generator */}
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>External Number Speed Dial</h3>
+            <div className="form-group">
+              <label>Brand:</label>
+              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))}>
+                <option value="Yealink">Yealink</option>
+                <option value="Polycom">Polycom</option>
+              </select>
+              <label style={{ marginLeft: 16 }}>Line Key Number:</label>
+              <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:</label>
+              <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>External Number:</label>
+              <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} />
+              {externalSpeed.brand === 'Polycom' && (
+                <>
+                  <label style={{ marginLeft: 16 }}>EFK Index:</label>
+                  <input type="text" value={externalSpeed.efkIndex} onChange={e => setExternalSpeed(s => ({ ...s, efkIndex: e.target.value }))} />
+                </>
+              )}
+              <button type="button" onClick={generateExternalSpeed} style={{ marginLeft: 16 }}>Generate External Speed Dial</button>
+            </div>
             <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
         </>
