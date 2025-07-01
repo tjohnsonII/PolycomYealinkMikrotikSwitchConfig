@@ -859,25 +859,37 @@ function App() {
       {/* FBPX Import Template Tab */}
       {activeTab === 'fbpx' && (
         <div>
-          {/* FBPX import/export form UI */}
+          {/* FBPX import/export form UI as a table */}
           <h2>FBPX Import Template</h2>
-          <form style={{ maxWidth: 500 }} onSubmit={e => e.preventDefault()}>
+          <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
               <input type="file" accept=".csv" onChange={handleFpbxImport} />
             </div>
-            {FPBX_FIELDS.map(f => (
-              <div className="form-group" key={f} style={{ marginBottom: 8 }}>
-                <label htmlFor={f}>{f}</label>
-                <input
-                  id={f}
-                  name={f}
-                  type="text"
-                  value={fpbxForm[f]}
-                  onChange={handleFpbxChange}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            ))}
+            <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+              <thead>
+                <tr style={{ background: '#f4f4f4' }}>
+                  {FPBX_FIELDS.map(f => (
+                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {FPBX_FIELDS.map(f => (
+                    <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
+                      <input
+                        id={f}
+                        name={f}
+                        type="text"
+                        value={fpbxForm[f]}
+                        onChange={handleFpbxChange}
+                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
             <button type="button" onClick={handleFpbxExport} style={{ marginTop: 12 }}>
               Export as CSV
             </button>
@@ -888,25 +900,37 @@ function App() {
       {/* VPBX Import Template Tab */}
       {activeTab === 'vpbx' && (
         <div>
-          {/* VPBX import/export form UI */}
+          {/* VPBX import/export form UI as a table */}
           <h2>VPBX Import Template</h2>
-          <form style={{ maxWidth: 500 }} onSubmit={e => e.preventDefault()}>
+          <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
               <input type="file" accept=".csv" onChange={handleVpbxImport} />
             </div>
-            {VPBX_FIELDS.map(f => (
-              <div className="form-group" key={f} style={{ marginBottom: 8 }}>
-                <label htmlFor={f}>{f}</label>
-                <input
-                  id={f}
-                  name={f}
-                  type="text"
-                  value={vpbxForm[f]}
-                  onChange={handleVpbxChange}
-                  style={{ width: '100%' }}
-                />
-              </div>
-            ))}
+            <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
+              <thead>
+                <tr style={{ background: '#f4f4f4' }}>
+                  {VPBX_FIELDS.map(f => (
+                    <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {VPBX_FIELDS.map(f => (
+                    <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
+                      <input
+                        id={f}
+                        name={f}
+                        type="text"
+                        value={vpbxForm[f]}
+                        onChange={handleVpbxChange}
+                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
             <button type="button" onClick={handleVpbxExport} style={{ marginTop: 12 }}>
               Export as CSV
             </button>
