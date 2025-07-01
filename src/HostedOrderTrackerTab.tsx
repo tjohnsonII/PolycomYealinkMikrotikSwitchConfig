@@ -107,6 +107,32 @@ const HostedOrderTrackerTab: React.FC = () => {
       return rest;
     });
   }
+  function handleAddCustomer() {
+    let newName = '';
+    while (!newName || customers.includes(newName)) {
+      newName = prompt('Enter new customer abbreviation:')?.trim() || '';
+      if (!newName) return;
+      if (customers.includes(newName)) alert('Customer abbreviation already exists.');
+    }
+    setCustomers(custs => [...custs, newName]);
+    setData(d => {
+      const newData = { ...d };
+      for (const f of fields) newData[f] = { ...newData[f], [newName]: '' };
+      return newData;
+    });
+  }
+  function handleDeleteCustomer(idx: number) {
+    const name = customers[idx];
+    setCustomers(custs => custs.filter((_, i) => i !== idx));
+    setData(d => {
+      const newData = { ...d };
+      for (const f of fields) {
+        const { [name]: _, ...rest } = newData[f];
+        newData[f] = rest;
+      }
+      return newData;
+    });
+  }
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto' }}>
@@ -114,6 +140,7 @@ const HostedOrderTrackerTab: React.FC = () => {
       <div style={{ marginBottom: 12 }}>
         <input type="file" accept=".csv" onChange={handleImport} />
         <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>Export as CSV</button>
+        <button type="button" onClick={handleAddCustomer} style={{ marginLeft: 8 }}>Add Customer</button>
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       <div style={{ overflowX: 'auto' }}>
