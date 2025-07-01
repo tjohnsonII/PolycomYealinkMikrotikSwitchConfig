@@ -133,6 +133,11 @@ const EXP_TYPE_TOOLTIPS: Record<string, string> = {
   default: 'Unassigned key.'
 };
 
+// Polycom expansion module preview settings
+const POLYCOM_PAGE_LABELS = ['Page 1', 'Page 2', 'Page 3'];
+const POLYCOM_KEYS_PER_PAGE = 28;
+const POLYCOM_TOTAL_KEYS = 84;
+
 function App() {
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
@@ -1324,14 +1329,15 @@ function App() {
               <h3>Polycom VVX Color Expansion Module</h3>
               <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
               <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
-                <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key for details.
+                <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout for each page (1–3). Hover over any key for details. <br />
+                <b>Linekey Index:</b> The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.
               </div>
               {/* Polycom Form */}
               <div className="form-group" style={{ marginBottom: 16 }}>
-                <label>Linekey Index (1-28):
-                  <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The button number on the Polycom expansion module (1-28).">ℹ️</span>
+                <label>Linekey Index (1-84):
+                  <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.">ℹ️</span>
                 </label>
-                <input type="number" min="1" max="28" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
+                <input type="number" min="1" max="84" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
               </div>
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label>Address (e.g. 1001@ip):
@@ -1361,17 +1367,28 @@ function App() {
               <div className="output" style={{ marginBottom: 16 }}>
                 <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
-              {/* Polycom Preview Grid */}
+              {/* Polycom Preview Grid with page toggles */}
               <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-                <div style={{ marginBottom: 8 }}><b>Preview:</b> 28 keys (2 columns × 14 rows)</div>
+                <div style={{ marginBottom: 8 }}>
+                  <b>Preview:</b>
+                  {POLYCOM_PAGE_LABELS.map((label, i) => (
+                    <button
+                      key={label}
+                      type="button"
+                      style={{ margin: '0 4px', background: polycomSection.activePage === i ? '#0078d4' : '#eee', color: polycomSection.activePage === i ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}
+                      onClick={() => setPolycomSection(s => ({ ...s, activePage: i }))}
+                    >{label}</button>
+                  ))}
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
-                  {Array.from({ length: 28 }).map((_, idx) => {
-                    const isCurrent = parseInt(polycomSection.linekeyIndex) === idx + 1;
+                  {Array.from({ length: POLYCOM_KEYS_PER_PAGE }).map((_, idx) => {
+                    const globalIdx = polycomSection.activePage * POLYCOM_KEYS_PER_PAGE + idx + 1;
+                    const isCurrent = parseInt(polycomSection.linekeyIndex) === globalIdx;
                     const label = isCurrent ? polycomSection.label : '';
                     const value = isCurrent ? polycomSection.address : '';
                     const type = isCurrent ? polycomSection.type : '';
                     const icon = EXP_TYPE_ICONS[type === 'automata' ? 'BLF' : type === 'normal' ? 'SpeedDial' : 'default'];
-                    const tooltip = label ? `Index: ${polycomSection.linekeyIndex}\nType: ${type}\nLabel: ${label}\nValue: ${value}` : 'Empty';
+                    const tooltip = label ? `Index: ${globalIdx}\nType: ${type}\nLabel: ${label}\nValue: ${value}` : 'Empty';
                     return (
                       <div
                         key={idx}
