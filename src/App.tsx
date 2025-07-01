@@ -9,6 +9,7 @@ import SwitchDynamicTemplate from './SwitchDynamicTemplate';
 import Switch24DynamicTemplate from './Switch24DynamicTemplate';
 import Switch8DynamicTemplate from './Switch8DynamicTemplate';
 import StrettoImportExportTab from './StrettoImportExportTab';
+import HostedOrderTrackerTab from './HostedOrderTrackerTab';
 
 // Import Mikrotik template modules
 import { mikrotik5009Bridge } from './mikrotik5009BridgeTemplate';
@@ -39,6 +40,7 @@ const TABS = [
   { key: 'mikrotik', label: 'Mikrotik Template' },
   { key: 'switch', label: 'Switch Template' },
   { key: 'reference', label: 'Reference' }, // Dedicated reference/legend tab
+  { key: 'ordertracker', label: 'Order Tracker' },
 ];
 
 // Field definitions for FBPX import/export template (PBX user fields)
@@ -1368,6 +1370,10 @@ function App() {
           <hr style={{ margin: '32px 0' }} />
           <Switch8DynamicTemplate />
         </>
+      )}
+      {/* Hosted Order Tracker Tab */}
+      {activeTab === 'ordertracker' && (
+        <HostedOrderTrackerTab />
       )}
     </div>
   );
