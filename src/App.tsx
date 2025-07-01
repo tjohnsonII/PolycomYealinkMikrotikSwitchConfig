@@ -24,6 +24,7 @@ const MODEL_OPTIONS = [
 // Tab definitions for navigation, including the Reference tab
 const TABS = [
   { key: 'phone', label: 'Phone Configs' },
+  { key: 'expansion', label: 'Expansion Modules' },
   { key: 'fbpx', label: 'FBPX Import Template' },
   { key: 'vpbx', label: 'VPBX Import Template' },
   { key: 'streeto', label: 'Streeto Import Template' },
@@ -667,219 +668,81 @@ function App() {
           <div className="output">
             <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
           </div>
-
-          {/* Yealink Expansion Module Section */}
-          <hr />
-          <h2>Yealink Expansion Module</h2>
-          <div className="form-group">
-            <label>Template Type:</label>
-            <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
-              <option value="BLF">BLF</option>
-              <option value="SpeedDial">SpeedDial</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Sidecar Page (Y):</label>
-            <input type="number" value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Sidecar Line (Z):</label>
-            <input type="number" value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Label:</label>
-            <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Value (Phone/Ext):</label>
-            <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
-          </div>
-          {yealinkSection.templateType === 'BLF' && (
-            <div className="form-group">
-              <label>PBX IP:</label>
-              <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
-            </div>
-          )}
-          <button onClick={generateYealinkExpansion}>Generate Yealink Expansion Config</button>
-          <div className="output">
-            <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
-          </div>
-
-          {/* Polycom Expansion Module Section */}
-          <hr />
-          <h2>Polycom Expansion Module</h2>
-          <div className="form-group">
-            <label>Linekey Index:</label>
-            <input type="number" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Address (e.g. 1001@ip):</label>
-            <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Label:</label>
-            <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Type:</label>
-            <input type="text" value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Linekey Category:</label>
-            <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
-          </div>
-          <button onClick={generatePolycomExpansion}>Generate Polycom Expansion Config</button>
-          <div className="output">
-            <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
-          </div>
-
-          {/* Feature Key Template Section */}
-          <hr />
-          <h2>Feature Key Template</h2>
-          <div className="form-group">
-            <label>Brand:</label>
-            <select value={featureKey.brand} onChange={e => setFeatureKey(s => ({ ...s, brand: e.target.value }))}>
-              <option value="Yealink">Yealink</option>
-              <option value="Polycom">Polycom</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Line Number:</label>
-            <input type="text" value={featureKey.lineNum} onChange={e => setFeatureKey(s => ({ ...s, lineNum: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Button Label:</label>
-            <input type="text" value={featureKey.buttonLabel} onChange={e => setFeatureKey(s => ({ ...s, buttonLabel: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Feature Code:</label>
-            <input type="text" value={featureKey.featureCode} onChange={e => setFeatureKey(s => ({ ...s, featureCode: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Prompt Label:</label>
-            <input type="text" value={featureKey.promptLabel} onChange={e => setFeatureKey(s => ({ ...s, promptLabel: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Prompt Title:</label>
-            <input type="text" value={featureKey.promptTitle} onChange={e => setFeatureKey(s => ({ ...s, promptTitle: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Prompt Length:</label>
-            <input type="text" value={featureKey.promptLength} onChange={e => setFeatureKey(s => ({ ...s, promptLength: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>EFK Index:</label>
-            <input type="text" value={featureKey.efkIndex} onChange={e => setFeatureKey(s => ({ ...s, efkIndex: e.target.value }))} />
-          </div>
-          <button onClick={generateFeatureKeyConfig}>Generate Feature Key Config</button>
-          <div className="output">
-            <textarea value={featureKeyOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
-          </div>
-
-          {/* Record Template Section */}
-          <hr />
-          <h2>Record Template</h2>
-          <div className="form-group">
-            <label>Brand:</label>
-            <select value={recordTemplate.brand} onChange={e => setRecordTemplate(s => ({ ...s, brand: e.target.value }))}>
-              <option value="Yealink">Yealink</option>
-              <option value="Polycom">Polycom</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Line Number:</label>
-            <input type="text" value={recordTemplate.lineNum} onChange={e => setRecordTemplate(s => ({ ...s, lineNum: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Macro Number (Polycom only):</label>
-            <input type="text" value={recordTemplate.macroNum} onChange={e => setRecordTemplate(s => ({ ...s, macroNum: e.target.value }))} />
-          </div>
-          <div className="form-group">
-            <label>Template:</label>
-            <select value={recordTemplate.templateIdx} onChange={e => setRecordTemplate(s => ({ ...s, templateIdx: parseInt(e.target.value, 10) }))}>
-              {yealinkRecordTemplates.map((t, idx) => (
-                <option key={idx} value={idx}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Label:</label>
-            <input type="text" value={recordTemplate.label} onChange={e => setRecordTemplate(s => ({ ...s, label: e.target.value }))} />
-          </div>
-          <button onClick={generateRecordConfig}>Generate Record Config</button>
-          <div className="output">
-            <textarea value={recordOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
-          </div>
-
-          {/* Feature Templates Section */}
-          <hr />
-          <h2>Feature Templates</h2>
-          <div className="form-group">
-            <label>Select Feature Template:</label>
-            <select value={selectedFeature} onChange={e => setSelectedFeature(e.target.value)}>
-              <option value="">-- Select --</option>
-              <option value="YealinkTransferToVM">Yealink Transfer to VM</option>
-              <option value="YealinkSpeedDial">Yealink Speed Dial</option>
-              <option value="PolycomExternal">Polycom External Number</option>
-            </select>
-          </div>
-          {selectedFeature === 'YealinkTransferToVM' && (
-            <>
-              <div className="form-group">
-                <label>Line Number:</label>
-                <input type="text" value={featureInputs.lineNum} onChange={e => setFeatureInputs(s => ({ ...s, lineNum: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Extension Number:</label>
-                <input type="text" value={featureInputs.extNum} onChange={e => setFeatureInputs(s => ({ ...s, extNum: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>PBX IP:</label>
-                <input type="text" value={featureInputs.pbxIp} onChange={e => setFeatureInputs(s => ({ ...s, pbxIp: e.target.value }))} />
-              </div>
-            </>
-          )}
-          {selectedFeature === 'YealinkSpeedDial' && (
-            <>
-              <div className="form-group">
-                <label>Line Number:</label>
-                <input type="text" value={featureInputs.lineNum} onChange={e => setFeatureInputs(s => ({ ...s, lineNum: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Label:</label>
-                <input type="text" value={featureInputs.label} onChange={e => setFeatureInputs(s => ({ ...s, label: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Value:</label>
-                <input type="text" value={featureInputs.value} onChange={e => setFeatureInputs(s => ({ ...s, value: e.target.value }))} />
-              </div>
-            </>
-          )}
-          {selectedFeature === 'PolycomExternal' && (
-            <>
-              <div className="form-group">
-                <label>Line Number:</label>
-                <input type="text" value={featureInputs.lineNum} onChange={e => setFeatureInputs(s => ({ ...s, lineNum: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Macro Number:</label>
-                <input type="text" value={featureInputs.macroNum} onChange={e => setFeatureInputs(s => ({ ...s, macroNum: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>Label:</label>
-                <input type="text" value={featureInputs.label} onChange={e => setFeatureInputs(s => ({ ...s, label: e.target.value }))} />
-              </div>
-              <div className="form-group">
-                <label>External Number:</label>
-                <input type="text" value={featureInputs.externalNum} onChange={e => setFeatureInputs(s => ({ ...s, externalNum: e.target.value }))} />
-              </div>
-            </>
-          )}
-          <button onClick={handleFeatureGenerate}>Generate Feature Config</button>
-          <div className="output">
-            <textarea value={featureOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
-          </div>
         </>
+      )}
+      {/* Expansion Modules Tab */}
+      {activeTab === 'expansion' && (
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2>Expansion Module Code Generators</h2>
+          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', marginBottom: 32 }}>
+            <div style={{ flex: 1, minWidth: 320 }}>
+              <h3>Yealink Expansion Module</h3>
+              <img src="/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+              <img src="/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+              <div className="form-group">
+                <label>Template Type:</label>
+                <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
+                  <option value="BLF">BLF</option>
+                  <option value="SpeedDial">SpeedDial</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Sidecar Page (Y):</label>
+                <input type="number" value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Sidecar Line (Z):</label>
+                <input type="number" value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Label:</label>
+                <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Value (Phone/Ext):</label>
+                <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
+              </div>
+              {yealinkSection.templateType === 'BLF' && (
+                <div className="form-group">
+                  <label>PBX IP:</label>
+                  <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
+                </div>
+              )}
+              <button onClick={generateYealinkExpansion}>Generate Yealink Expansion Config</button>
+              <div className="output">
+                <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 320 }}>
+              <h3>Polycom VVX Color Expansion Module</h3>
+              <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+              <div className="form-group">
+                <label>Linekey Index:</label>
+                <input type="number" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Address (e.g. 1001@ip):</label>
+                <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Label:</label>
+                <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Type:</label>
+                <input type="text" value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))} />
+              </div>
+              <div className="form-group">
+                <label>Linekey Category:</label>
+                <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
+              </div>
+              <button onClick={generatePolycomExpansion}>Generate Polycom Expansion Config</button>
+              <div className="output">
+                <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
       {/* FBPX Import Template Tab */}
       {activeTab === 'fbpx' && (
