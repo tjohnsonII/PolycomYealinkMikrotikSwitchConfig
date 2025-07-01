@@ -524,7 +524,7 @@ function App() {
   };
 
   // State and handlers for FBPX import/export form (PBX CSV import/export)
-  const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>([createEmptyFpbxRow()]);
+  const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>(Array(10).fill(0).map(createEmptyFpbxRow));
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
   function handleFpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
@@ -569,7 +569,7 @@ function App() {
   }
 
   // State and handlers for VPBX import/export form (PBX CSV import/export)
-  const [vpbxRows, setVpbxRows] = useState<VpbxFormType[]>([createEmptyVpbxRow()]);
+  const [vpbxRows, setVpbxRows] = useState<VpbxFormType[]>(Array(10).fill(0).map(createEmptyVpbxRow));
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
   function handleVpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {

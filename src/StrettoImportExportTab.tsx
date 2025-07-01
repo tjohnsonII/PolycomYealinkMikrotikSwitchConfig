@@ -15,7 +15,8 @@ const COLUMNS = [
 type RowType = Record<(typeof COLUMNS)[number], string>;
 
 const StrettoImportExportTab: React.FC = () => {
-  const [rows, setRows] = useState<RowType[]>([]);
+  // Start with 10 rows by default
+  const [rows, setRows] = useState<RowType[]>(Array(10).fill(0).map(() => Object.fromEntries(COLUMNS.map(c => [c, ''])) as RowType));
   const downloadRef = useRef<HTMLAnchorElement>(null);
   const [error, setError] = useState('');
 
@@ -59,8 +60,8 @@ const StrettoImportExportTab: React.FC = () => {
     });
   }
 
-  function handleAddRow() {
-    setRows(rows => [...rows, Object.fromEntries(COLUMNS.map(c => [c, ''])) as RowType]);
+  function handleAddRows(count = 1) {
+    setRows(rows => [...rows, ...Array(count).fill(0).map(() => Object.fromEntries(COLUMNS.map(c => [c, ''])) as RowType)]);
   }
 
   function handleDeleteRow(idx: number) {
@@ -75,8 +76,14 @@ const StrettoImportExportTab: React.FC = () => {
         <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>
           Export as CSV
         </button>
-        <button type="button" onClick={handleAddRow} style={{ marginLeft: 8 }}>
-          Add Row
+        <button type="button" onClick={() => handleAddRows(1)} style={{ marginLeft: 8 }}>
+          Add 1 Row
+        </button>
+        <button type="button" onClick={() => handleAddRows(5)} style={{ marginLeft: 8 }}>
+          Add 5 Rows
+        </button>
+        <button type="button" onClick={() => handleAddRows(10)} style={{ marginLeft: 8 }}>
+          Add 10 Rows
         </button>
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
