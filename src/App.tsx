@@ -122,7 +122,7 @@ const FIELD_TOOLTIPS: Record<string, string> = {
 };
 
 // Expansion Module Preview Icons, Tooltips, and Polycom constants moved to constants/expansionModule.ts
-import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS, POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE, POLYCOM_TOTAL_KEYS } from './constants/expansionModule';
+import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS } from './constants/expansionModule';
 
 function App() {
   // State for active tab selection
@@ -171,28 +171,7 @@ function App() {
   };
 
   // State for Polycom expansion module section
-  const [polycomSection, setPolycomSection] = useState({
-    address: '',
-    label: '',
-    type: 'automata',
-    linekeyCategory: 'BLF',
-    linekeyIndex: '',
-    activePage: 0, // Add activePage for Polycom expansion module preview
-  });
-  // State for Polycom expansion config output
-  const [polycomOutput, setPolycomOutput] = useState('');
-
-  // Generate Polycom expansion module config (sidecar keys)
-  const generatePolycomExpansion = () => {
-    const { address, label, type, linekeyCategory, linekeyIndex } = polycomSection;
-    let config = '';
-    config += `attendant.resourcelist.${linekeyIndex}.address=${address}\n`;
-    config += `attendant.resourcelist.${linekeyIndex}.label=${label}\n`;
-    config += `attendant.resourcelist.${linekeyIndex}.type=${type}\n`;
-    config += `linekey.${linekeyIndex}.category=${linekeyCategory}\n`;
-    config += `linekey.${linekeyIndex}.index=${linekeyIndex}\n`;
-    setPolycomOutput(config);
-  };
+  // ...existing code...
 
   // Helper: Generate Polycom park lines config for selected model
   function generatePolycomParkLines(model: string, start: number, end: number, ip: string) {
@@ -226,14 +205,14 @@ function App() {
       const keys = [13, 14, 15];
       let idx = 0;
       for (let i = start; i <= end; i++, idx++) {
-        let linekey = keys[idx];
+        const linekey = keys[idx];
         config += `attendant.resourcelist.${linekey}.address=${i}@${ip}\n`;
         config += `attendant.resourcelist.${linekey}.calladdress=*85${i}@${ip}\n`;
         config += `attendant.resourcelist.${linekey}.label=Park ${idx + 1}\n`;
         config += `attendant.resourcelist.${linekey}.type=automata\n`;
       }
       for (let j = 0; j < idx; j++) {
-        let linekey = keys[j];
+        const linekey = keys[j];
         config += `linekey.${linekey}.category=BLF\n`;
         config += `linekey.${linekey}.index=${linekey}\n`;
       }
@@ -311,46 +290,7 @@ function App() {
   }
 
   // State for feature key template section (advanced programmable keys)
-  const [featureKey, setFeatureKey] = useState({
-    brand: 'Yealink',
-    lineNum: '',
-    buttonLabel: '',
-    featureCode: '',
-    promptLabel: '',
-    promptTitle: '',
-    promptLength: '',
-    efkIndex: '',
-  });
-  // State for feature key config output
-  const [featureKeyOutput, setFeatureKeyOutput] = useState('');
-
-  // Generate feature key config for Yealink or Polycom (macros, prompts)
-  function generateFeatureKeyConfig() {
-    if (featureKey.brand === 'Yealink') {
-      setFeatureKeyOutput(
-        'features.enhanced_dss_keys.enable=1\n' +
-        'feature.enhancedFeatureKeys.enabled=1\n' +
-        `linekey.${featureKey.lineNum}.label=${featureKey.buttonLabel}\n` +
-        `linekey.${featureKey.lineNum}.line=0\n` +
-        'linekey.' + featureKey.lineNum + '.type=73\n' +
-        `linekey.${featureKey.lineNum}.value=${featureKey.featureCode}$P${featureKey.promptLabel}&T${featureKey.promptTitle}&C${featureKey.promptLength}&N$$Tinvite$\n`
-      );
-    } else {
-      setFeatureKeyOutput(
-        'feature.enhancedFeatureKeys.enabled=1\n' +
-        'feature.EFKLineKey.enabled=1\n' +
-        `efk.efklist.${featureKey.efkIndex}.mname=${featureKey.buttonLabel}\n` +
-        `efk.efklist.${featureKey.efkIndex}.status=1\n` +
-        `efk.efklist.${featureKey.efkIndex}.action.string=${featureKey.featureCode}$P${featureKey.promptLength}$$Tinvite$\n` +
-        `efk.efklist.${featureKey.efkIndex}.label=${featureKey.promptTitle}\n` +
-        `efk.efkprompt.${featureKey.efkIndex}.label=${featureKey.promptLabel}\n` +
-        `efk.efkprompt.${featureKey.efkIndex}.status=1\n` +
-        `efk.efkprompt.${featureKey.efkIndex}.type=numeric\n` +
-        `linekey.${featureKey.lineNum}.category=EFK\n` +
-        `linekey.${featureKey.lineNum}.index=${featureKey.efkIndex}\n`
-      );
-    }
-  }
+  // ...existing code...
 
   // Yealink record templates for quick config (voicemail, busy, etc)
   const yealinkRecordTemplates = [
@@ -369,40 +309,7 @@ function App() {
   ];
 
   // State for record template section (quick record macros)
-  const [recordTemplate, setRecordTemplate] = useState({
-    brand: 'Yealink',
-    lineNum: '',
-    macroNum: '', // Polycom only
-    label: '',
-    templateIdx: 0,
-  });
-  // State for record config output
-  const [recordOutput, setRecordOutput] = useState('');
-
-  // Generate record config for Yealink or Polycom (quick record macros)
-  function generateRecordConfig() {
-    if (recordTemplate.brand === 'Yealink') {
-      const t = yealinkRecordTemplates[recordTemplate.templateIdx];
-      setRecordOutput(
-        'features.enhanced_dss_keys.enable=1\n' +
-        `linekey.${recordTemplate.lineNum}.label=${t.label}\n` +
-        `linekey.${recordTemplate.lineNum}.line=0\n` +
-        'linekey.' + recordTemplate.lineNum + '.type=73\n' +
-        `linekey.${recordTemplate.lineNum}.value=${t.value}\n`
-      );
-    } else {
-      const t = polycomRecordTemplates[recordTemplate.templateIdx];
-      setRecordOutput(
-        'feature.efklinekey.enabled=1\n' +
-        'feature.enhancedfeaturekeys.enabled=1\n' +
-        `efk.efklist.${recordTemplate.macroNum}.action.string=${t.value}\n` +
-        `efk.efklist.${recordTemplate.macroNum}.mname=${t.label}\n` +
-        `efk.efklist.${recordTemplate.macroNum}.status=1\n` +
-        `linekey.${recordTemplate.lineNum}.category=EFK\n` +
-        `linekey.${recordTemplate.lineNum}.index=${recordTemplate.macroNum}\n`
-      );
-    }
-  }
+  // ...existing code...
 
   // Helper: Generate Yealink transfer-to-VM config (special feature)
   function generateYealinkTransferToVM(lineNum: string, extNum: string, pbxIp: string) {
@@ -439,25 +346,7 @@ function App() {
   }
 
   // State for selected feature template and its inputs (for advanced features)
-  const [selectedFeature, setSelectedFeature] = useState('');
-  const [featureInputs, setFeatureInputs] = useState({
-    lineNum: '',
-    extNum: '',
-    pbxIp: '',
-    label: '',
-    value: '',
-    macroNum: '',
-    externalNum: '',
-  });
-  // State for feature template config output
-  const [featureOutput, setFeatureOutput] = useState('');
-
-  // Generate config for selected feature template (advanced feature generator)
-  function handleFeatureGenerate() {
-    let out = '';
-    switch (selectedFeature) {
-      case 'YealinkTransferToVM':
-        out = generateYealinkTransferToVM(featureInputs.lineNum, featureInputs.extNum, featureInputs.pbxIp);
+  // ...existing code...
         break;
       case 'YealinkSpeedDial':
         out = generateYealinkSpeedDial(featureInputs.lineNum, featureInputs.label, featureInputs.value);

@@ -95,12 +95,7 @@ const HostedOrderTrackerTab: React.FC = () => {
   function handleCheckboxChange(field: string, customer: string, checked: boolean) {
     setData(d => ({ ...d, [field]: { ...d[field], [customer]: checked ? 'TRUE' : 'FALSE' } }));
   }
-  function handleAddField() {
-    const newField = prompt('Enter new field name:') || '';
-    if (!newField || fields.includes(newField)) return;
-    setFields(f => [...f, newField]);
-    setData(d => ({ ...d, [newField]: Object.fromEntries(customers.map(c => [c, ''])) }));
-  }
+  // ...existing code...
   function handleDeleteField(idx: number) {
     const field = fields[idx];
     setFields(f => f.filter((_, i) => i !== idx));

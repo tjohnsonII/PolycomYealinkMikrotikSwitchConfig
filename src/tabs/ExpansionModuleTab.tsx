@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 // Expansion module preview icons, tooltips, and Polycom constants
-import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS, POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE } from '../constants/expansionModule';
+import { EXP_TYPE_ICONS, EXP_TYPE_TOOLTIPS, POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE } from '../constants/expansionModule'; // POLYCOM_PAGE_LABELS, POLYCOM_KEYS_PER_PAGE are used in Polycom preview
 // ...import any other shared components or icons as needed
 
 // Polycom expansion module state shape
