@@ -67,6 +67,11 @@ const VPBX_FIELDS = [
 type FpbxFormType = Record<typeof FPBX_FIELDS[number], string>;
 type VpbxFormType = Record<typeof VPBX_FIELDS[number], string>;
 
+// Helper to create an empty FBPX row
+const createEmptyFpbxRow = (): FpbxFormType => FPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType);
+// Helper to create an empty VPBX row
+const createEmptyVpbxRow = (): VpbxFormType => VPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as VpbxFormType);
+
 function App() {
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
@@ -432,17 +437,21 @@ function App() {
   };
 
   // State and handlers for FBPX import/export form (PBX CSV import/export)
-  const [fpbxForm, setFpbxForm] = useState<FpbxFormType>(() => FPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType));
+  const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>([createEmptyFpbxRow()]);
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
-  function handleFpbxChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setFpbxForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  function handleFpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
+    setFpbxRows(rows => {
+      const updated = [...rows];
+      updated[rowIdx] = { ...updated[rowIdx], [e.target.name]: e.target.value };
+      return updated;
+    });
   }
 
   function handleFpbxExport() {
     const csvHeader = FPBX_FIELDS.join(',') + '\n';
-    const csvRow = FPBX_FIELDS.map(f => `"${(fpbxForm[f] || '').replace(/"/g, '""')}"`).join(',') + '\n';
-    const csv = csvHeader + csvRow;
+    const csvRows = fpbxRows.map(row => FPBX_FIELDS.map(f => `"${(row[f] || '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n';
+    const csv = csvHeader + csvRows;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     if (fpbxDownloadRef.current) {
@@ -459,33 +468,35 @@ function App() {
     Papa.parse(file, {
       header: true,
       complete: (results: Papa.ParseResult<Record<string, string>>) => {
-        const row = results.data[0];
-        if (row) {
-          // Only assign known fields, default to empty string if missing
-          setFpbxForm(f => {
-            const updated: FpbxFormType = { ...f };
-            FPBX_FIELDS.forEach(field => {
-              updated[field] = row[field] ?? '';
-            });
-            return updated;
-          });
-        }
+        const rows = (results.data as FpbxFormType[]).filter(row => row && Object.values(row).some(Boolean));
+        setFpbxRows(rows.length ? rows : [createEmptyFpbxRow()]);
       },
     });
   }
 
+  function handleFpbxAddRow(count = 1) {
+    setFpbxRows(rows => [...rows, ...Array(count).fill(0).map(createEmptyFpbxRow)]);
+  }
+  function handleFpbxDeleteRow(idx: number) {
+    setFpbxRows(rows => rows.length === 1 ? rows : rows.filter((_, i) => i !== idx));
+  }
+
   // State and handlers for VPBX import/export form (PBX CSV import/export)
-  const [vpbxForm, setVpbxForm] = useState<VpbxFormType>(() => VPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as VpbxFormType));
+  const [vpbxRows, setVpbxRows] = useState<VpbxFormType[]>([createEmptyVpbxRow()]);
   const vpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
-  function handleVpbxChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setVpbxForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  function handleVpbxChange(rowIdx: number, e: React.ChangeEvent<HTMLInputElement>) {
+    setVpbxRows(rows => {
+      const updated = [...rows];
+      updated[rowIdx] = { ...updated[rowIdx], [e.target.name]: e.target.value };
+      return updated;
+    });
   }
 
   function handleVpbxExport() {
     const csvHeader = VPBX_FIELDS.join(',') + '\n';
-    const csvRow = VPBX_FIELDS.map(f => `"${(vpbxForm[f] || '').replace(/"/g, '""')}"`).join(',') + '\n';
-    const csv = csvHeader + csvRow;
+    const csvRows = vpbxRows.map(row => VPBX_FIELDS.map(f => `"${(row[f] || '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n';
+    const csv = csvHeader + csvRows;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     if (vpbxDownloadRef.current) {
@@ -502,18 +513,17 @@ function App() {
     Papa.parse(file, {
       header: true,
       complete: (results: Papa.ParseResult<Record<string, string>>) => {
-        const row = results.data[0];
-        if (row) {
-          setVpbxForm(f => {
-            const updated: VpbxFormType = { ...f };
-            VPBX_FIELDS.forEach(field => {
-              updated[field] = row[field] ?? '';
-            });
-            return updated;
-          });
-        }
+        const rows = (results.data as VpbxFormType[]).filter(row => row && Object.values(row).some(Boolean));
+        setVpbxRows(rows.length ? rows : [createEmptyVpbxRow()]);
       },
     });
+  }
+
+  function handleVpbxAddRow(count = 1) {
+    setVpbxRows(rows => [...rows, ...Array(count).fill(0).map(createEmptyVpbxRow)]);
+  }
+  function handleVpbxDeleteRow(idx: number) {
+    setVpbxRows(rows => rows.length === 1 ? rows : rows.filter((_, i) => i !== idx));
   }
 
   // Main UI rendering
@@ -879,6 +889,9 @@ function App() {
           <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
               <input type="file" accept=".csv" onChange={handleFpbxImport} />
+              <button type="button" onClick={() => handleFpbxAddRow(1)} style={{ marginLeft: 8 }}>Add Row</button>
+              <button type="button" onClick={() => handleFpbxAddRow(5)} style={{ marginLeft: 8 }}>Add 5 Rows</button>
+              <button type="button" onClick={() => handleFpbxAddRow(10)} style={{ marginLeft: 8 }}>Add 10 Rows</button>
             </div>
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
@@ -886,23 +899,29 @@ function App() {
                   {FPBX_FIELDS.map(f => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
                   ))}
+                  <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  {FPBX_FIELDS.map(f => (
-                    <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
-                      <input
-                        id={f}
-                        name={f}
-                        type="text"
-                        value={fpbxForm[f]}
-                        onChange={handleFpbxChange}
-                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                      />
+                {fpbxRows.map((row, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {FPBX_FIELDS.map(f => (
+                      <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
+                        <input
+                          id={f + '-' + rowIdx}
+                          name={f}
+                          type="text"
+                          value={row[f]}
+                          onChange={e => handleFpbxChange(rowIdx, e)}
+                          style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                        />
+                      </td>
+                    ))}
+                    <td>
+                      <button type="button" onClick={() => handleFpbxDeleteRow(rowIdx)} style={{ color: 'red' }}>Delete</button>
                     </td>
-                  ))}
-                </tr>
+                  </tr>
+                ))}
               </tbody>
             </table>
             <button type="button" onClick={handleFpbxExport} style={{ marginTop: 12 }}>
@@ -920,6 +939,9 @@ function App() {
           <form style={{ maxWidth: 900 }} onSubmit={e => e.preventDefault()}>
             <div style={{ marginBottom: 12 }}>
               <input type="file" accept=".csv" onChange={handleVpbxImport} />
+              <button type="button" onClick={() => handleVpbxAddRow(1)} style={{ marginLeft: 8 }}>Add Row</button>
+              <button type="button" onClick={() => handleVpbxAddRow(5)} style={{ marginLeft: 8 }}>Add 5 Rows</button>
+              <button type="button" onClick={() => handleVpbxAddRow(10)} style={{ marginLeft: 8 }}>Add 10 Rows</button>
             </div>
             <table className="import-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 16 }}>
               <thead>
@@ -927,23 +949,29 @@ function App() {
                   {VPBX_FIELDS.map(f => (
                     <th key={f} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>{f}</th>
                   ))}
+                  <th style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '2px solid #ccc' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  {VPBX_FIELDS.map(f => (
-                    <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
-                      <input
-                        id={f}
-                        name={f}
-                        type="text"
-                        value={vpbxForm[f]}
-                        onChange={handleVpbxChange}
-                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                      />
+                {vpbxRows.map((row, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {VPBX_FIELDS.map(f => (
+                      <td key={f} style={{ padding: '6px 12px', borderBottom: '1px solid #eee' }}>
+                        <input
+                          id={f + '-' + rowIdx}
+                          name={f}
+                          type="text"
+                          value={row[f]}
+                          onChange={e => handleVpbxChange(rowIdx, e)}
+                          style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                        />
+                      </td>
+                    ))}
+                    <td>
+                      <button type="button" onClick={() => handleVpbxDeleteRow(rowIdx)} style={{ color: 'red' }}>Delete</button>
                     </td>
-                  ))}
-                </tr>
+                  </tr>
+                ))}
               </tbody>
             </table>
             <button type="button" onClick={handleVpbxExport} style={{ marginTop: 12 }}>
@@ -1055,6 +1083,61 @@ set pptp disabled=yes
 set udplite disabled=yes
 set dccp disabled=yes
 set sctp disabled=yes`}
+          />
+          <hr style={{ margin: '32px 0' }} />
+          <h2>Mikrotik 10-Port Switch (On Net) Config</h2>
+          <textarea
+            readOnly
+            rows={28}
+            style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+            value={`/interface ethernet
+set [ find default-name=ether9 ] comment="Uplink to 123Net Switch"
+/interface vlan
+add interface=ether9 name=vlan102 vlan-id=102
+add interface=ether9 name=vlan202 vlan-id=202
+/ip dhcp-server option
+add code=2 name="GMT Offset -5" value=0xFFFFB9B0
+add code=42 name=NTP value="'184.105.182.16'"
+add code=160 name=prov_160 value="'http://provisioner.123.net'"
+add code=66 name=prov_66 value="'http://provisioner.123.net'"
+add code=202 name=Phone_vlan value="'VLAN-A=202'"
+/ip dhcp-server option sets
+add name=Phones_Options options="GMT Offset -5,NTP,prov_66,prov_160,Phone_vlan"
+/ip pool
+add name=Phones_IP_Pool ranges=172.16.1.30-172.16.1.250
+/ip dhcp-server
+add address-pool=Phones_IP_Pool authoritative=after-2sec-delay dhcp-option-set=Phones_Options disabled=no interface=vlan202 name=\
+    "Phones DHCP"
+/ip address
+add address=192.168.10.1/24 interface=vlan102 network=192.168.10.0
+add address=172.16.1.1/24 interface=vlan202 network=172.16.1.0
+/ip dhcp-server network
+add address=172.16.1.0/24 dhcp-option-set=Phones_Options dns-server=8.8.8.8,216.234.97.2,216.234.97.3 gateway=172.16.1.1 \
+    netmask=24 ntp-server=184.105.182.16
+/ip firewall address-list
+add address=192.168.10.0/24 list=MGMT
+add address=172.16.1.0/24 list=PHONEVLAN
+add address=205.251.183.0/24 list=PBX
+add address=69.39.69.0/24 list=PBX
+add address=216.109.194.50 list=PBX
+add address=184.105.182.16 comment=NTP list=PBX
+/ip firewall filter
+add action=accept chain=input comment=ALLOW_PBX src-address-list=PBX
+add action=accept chain=input comment=ALLOW_PHONES src-address-list=PHONEVLAN
+/ip firewall nat
+add action=masquerade chain=srcnat src-address=172.16.1.0/24
+/ip firewall service-port
+set ftp disabled=yes
+set tftp disabled=yes
+set irc disabled=yes
+set h323 disabled=yes
+set sip disabled=yes
+set pptp disabled=yes
+set udplite disabled=yes
+set dccp disabled=yes
+set sctp disabled=yes
+/ip firewall connection tracking
+set udp-timeout=1m30s`}
           />
         </>
       )}
