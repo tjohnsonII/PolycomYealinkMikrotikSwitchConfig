@@ -191,6 +191,7 @@ function App() {
     type: 'automata',
     linekeyCategory: 'BLF',
     linekeyIndex: '',
+    activePage: 0, // Add activePage for Polycom expansion module preview
   });
   // State for Polycom expansion config output
   const [polycomOutput, setPolycomOutput] = useState('');
