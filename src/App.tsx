@@ -90,17 +90,33 @@ const DEFAULT_ADMIN_PASSWORD = 'admin:08520852';
 
 // Tooltips for Phone Config tab fields
 const FIELD_TOOLTIPS: Record<string, string> = {
-  phoneType: 'Select the phone brand (Polycom or Yealink) for which you want to generate configuration.',
-  model: 'Choose the specific phone model. This affects the generated config format and options.',
-  ip: 'The IP address of the PBX or SIP server the phone will register to.',
-  startExt: 'The starting extension number for park/BLF keys.',
-  endExt: 'The ending extension number for park/BLF keys.',
-  labelPrefix: 'Prefix for the label on each park/BLF key (e.g., "Park").',
-  timeOffset: 'Time zone offset from GMT (e.g., -5 for Eastern Time).',
-  adminPassword: 'The admin password to set on the phone for web access.',
-  yealinkLabelLength: 'Enable longer DSS key labels on Yealink phones.',
-  yealinkDisableMissedCall: 'Disable missed call notifications on Yealink phones.',
-  yealinkCallStealing: 'Enable BLF call stealing (pickup) on Yealink phones.'
+  // Base Config Options
+  ip: "Enter the IP address of the phone you are configuring. Used to identify the device on the network.",
+  phoneType: "Select the brand of phone (Polycom or Yealink) you are generating the configuration for.",
+  model: "Choose the specific model of the phone. This determines the correct configuration format.",
+  startExt: "Enter the starting extension number. Used to auto-fill settings across multiple phones.",
+  endExt: "Enter the ending extension number. Used to generate config for a range of extensions.",
+  labelPrefix: "Prefix added to the label shown on each phone’s screen (e.g., company name or department).",
+  timeOffset: "Adjusts the phone’s time display relative to UTC (e.g., -5 for EST).",
+  adminPassword: "Sets the admin password for the phone’s web interface. Ensure it meets your security requirements.",
+  yealinkLabelLength: "When checked, uses the full label text for BLF/speed dial keys. May affect layout on small screens.",
+  yealinkDisableMissedCall: "Prevents the phone from displaying missed call alerts. Useful in shared environments.",
+  yealinkCallStealing: "Allows users to pick up active calls from another BLF-monitored extension.",
+  // Polycom MWI
+  polycomMWIExt: "Enter the extension number whose voicemail status should be monitored.",
+  polycomMWIPbxIp: "Enter the IP address of the PBX server that the phone will connect to for MWI.",
+  // Linekey/BLF/Speed/Transfer/Hotkey Generator
+  linekeyBrand: "Select the phone brand (Yealink or Polycom) for which the key will be configured.",
+  linekeyNum: "The key/button number on the phone to assign this function (usually starts at 1).",
+  linekeyLabel: "Text label that will appear on the phone’s display for this key.",
+  linekeyRegLine: "Select the line (account) this key should be associated with, usually Line 1.",
+  linekeyType: "Choose the key function type (e.g., BLF, speed dial, transfer, etc.).",
+  linekeyValue: "The target number, extension, or function code to assign to the key.",
+  // External Number Speed Dial
+  externalBrand: "Choose the phone brand for which you are creating the external dial key.",
+  externalLineNum: "The programmable key/button number to assign this speed dial.",
+  externalLabel: "Label to display for the external number on the phone’s screen.",
+  externalNumber: "Enter the external phone number this key will dial when pressed."
 };
 
 function App() {
@@ -1017,45 +1033,47 @@ function App() {
               <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
             </div>
           </div>
+          {/* Polycom MWI Section */}
           <hr />
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Polycom MWI (Message Waiting Indicator)</h3>
             <div className="form-group">
-              <label>Extension:</label>
-              <input type="text" value={polycomMWI.ext} onChange={e => setPolycomMWI(mwi => ({ ...mwi, ext: e.target.value }))} />
-              <label style={{ marginLeft: 16 }}>PBX IP:</label>
-              <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} />
+              <label title={FIELD_TOOLTIPS.polycomMWIExt}>Extension:</label>
+              <input type="text" value={polycomMWI.ext} onChange={e => setPolycomMWI(mwi => ({ ...mwi, ext: e.target.value }))} title={FIELD_TOOLTIPS.polycomMWIExt} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.polycomMWIPbxIp}>PBX IP:</label>
+              <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} title={FIELD_TOOLTIPS.polycomMWIPbxIp} />
               <button type="button" onClick={generatePolycomMWI} style={{ marginLeft: 16 }}>Generate MWI</button>
             </div>
             <textarea value={polycomMWI.output} readOnly rows={3} style={{ width: '100%', marginTop: 8 }} />
           </div>
+          {/* Linekey/BLF/Speed/Transfer/Hotkey Generator Section */}
           <hr />
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Linekey/BLF/Speed/Transfer/Hotkey Generator</h3>
             <div className="form-group">
-              <label>Brand:</label>
-              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))}>
+              <label title={FIELD_TOOLTIPS.linekeyBrand}>Brand:</label>
+              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))} title={FIELD_TOOLTIPS.linekeyBrand}>
                 <option value="Yealink">Yealink</option>
                 <option value="Polycom">Polycom</option>
               </select>
-              <label style={{ marginLeft: 16 }}>Line Key Number:</label>
-              <input type="text" value={linekeyGen.lineNum} onChange={e => setLinekeyGen(lk => ({ ...lk, lineNum: e.target.value }))} />
-              <label style={{ marginLeft: 16 }}>Label:</label>
-              <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyNum}>Line Key Number:</label>
+              <input type="text" value={linekeyGen.lineNum} onChange={e => setLinekeyGen(lk => ({ ...lk, lineNum: e.target.value }))} title={FIELD_TOOLTIPS.linekeyNum} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyLabel}>Label:</label>
+              <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} title={FIELD_TOOLTIPS.linekeyLabel} />
             </div>
             <div className="form-group">
               {linekeyGen.brand === 'Yealink' && (
                 <>
-                  <label>Registered Line:</label>
-                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} />
-                  <label style={{ marginLeft: 16 }}>Type:</label>
-                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))}>
+                  <label title={FIELD_TOOLTIPS.linekeyRegLine}>Registered Line:</label>
+                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} title={FIELD_TOOLTIPS.linekeyRegLine} />
+                  <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyType}>Type:</label>
+                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))} title={FIELD_TOOLTIPS.linekeyType}>
                     {YEALINK_LINEKEY_TYPES.map(t => (
                       <option key={t.code} value={t.code}>{t.code} - {t.label}</option>
                     ))}
                   </select>
-                  <label style={{ marginLeft: 16 }}>Value:</label>
-                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
+                  <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.linekeyValue}>Value:</label>
+                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} title={FIELD_TOOLTIPS.linekeyValue} />
                 </>
               )}
               {linekeyGen.brand === 'Polycom' && (
@@ -1068,23 +1086,24 @@ function App() {
               )}
               <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate</button>
             </div>
+            <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
+          {/* External Number Speed Dial Section */}
           <hr />
-          {/* External Number Speed Dial Generator */}
           <div className="form-section" style={{marginBottom:24}}>
             <h3>External Number Speed Dial</h3>
             <div className="form-group">
-              <label>Brand:</label>
-              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))}>
+              <label title={FIELD_TOOLTIPS.externalBrand}>Brand:</label>
+              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))} title={FIELD_TOOLTIPS.externalBrand}>
                 <option value="Yealink">Yealink</option>
                 <option value="Polycom">Polycom</option>
               </select>
-              <label style={{ marginLeft: 16 }}>Line Key Number:</label>
-              <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} />
-              <label style={{ marginLeft: 16 }}>Label:</label>
-              <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} />
-              <label style={{ marginLeft: 16 }}>External Number:</label>
-              <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalLineNum}>Line Key Number:</label>
+              <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} title={FIELD_TOOLTIPS.externalLineNum} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalLabel}>Label:</label>
+              <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} title={FIELD_TOOLTIPS.externalLabel} />
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.externalNumber}>External Number:</label>
+              <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} title={FIELD_TOOLTIPS.externalNumber} />
               {externalSpeed.brand === 'Polycom' && (
                 <>
                   <label style={{ marginLeft: 16 }}>EFK Index:</label>
@@ -1198,7 +1217,7 @@ function App() {
                       {f}
                       <button
                         type="button"
-                        onClick={() => handleFpbxDeleteField(f)}
+                                               onClick={() => handleFpbxDeleteField(f)}
                         style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
                         title={`Delete column ${f}`}
                       >
