@@ -16,6 +16,7 @@ import { mikrotik5009Passthrough } from './mikrotik5009PassthroughTemplate';
 import { onNetMikrotikConfigTemplate } from './onNetMikrotikConfigTemplate';
 import { ottMikrotikTemplate } from './ottMikrotikTemplate';
 import { mikrotikStandAloneATATemplate } from './mikrotikStandAloneATATemplate';
+import { mikrotikDhcpOptions } from './mikrotikDhcpOptionsTemplate';
 
 // List of supported phone models for config generation
 const MODEL_OPTIONS = [
@@ -1090,7 +1091,6 @@ function App() {
               <div className="output">
                 <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
-            </div>
             <div style={{ flex: 1, minWidth: 320 }}>
               <h3>Polycom VVX Color Expansion Module</h3>
               <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
