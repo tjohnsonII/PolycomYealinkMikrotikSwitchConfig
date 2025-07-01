@@ -73,6 +73,10 @@ const createEmptyFpbxRow = (): FpbxFormType => FPBX_FIELDS.reduce((acc, f) => ({
 // Helper to create an empty VPBX row
 const createEmptyVpbxRow = (): VpbxFormType => VPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as VpbxFormType);
 
+// --- Static config blocks for Yealink/Polycom ---
+const DEFAULT_TIME_OFFSET = '-5';
+const DEFAULT_ADMIN_PASSWORD = 'admin:08520852';
+
 function App() {
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
@@ -153,9 +157,9 @@ function App() {
         config += `attendant.resourcelist.${linekey}.label=Park ${linekey - 6}\n`;
         config += `attendant.resourcelist.${linekey}.type=automata\n`;
       }
-      for (let linekey = 7; linekey < 7 + (end - start + 1); linekey++) {
-        config += `linekey.${linekey}.category=BLF\n`;
-        config += `linekey.${linekey}.index=${linekey}\n`;
+      for (let l = 7; l < linekey; l++) {
+        config += `linekey.${l}.category=BLF\n`;
+        config += `linekey.${l}.index=${l}\n`;
       }
     } else if (model === 'VVX 500') {
       let linekey = 9;
@@ -165,36 +169,36 @@ function App() {
         config += `attendant.resourcelist.${linekey}.label=Park ${linekey - 8}\n`;
         config += `attendant.resourcelist.${linekey}.type=automata\n`;
       }
-      for (let linekey = 9; linekey < 9 + (end - start + 1); linekey++) {
-        config += `linekey.${linekey}.category=BLF\n`;
-        config += `linekey.${linekey}.index=${linekey}\n`;
+      for (let l = 9; l < linekey; l++) {
+        config += `linekey.${l}.category=BLF\n`;
+        config += `linekey.${l}.index=${l}\n`;
       }
     } else if (model === 'VVX 600') {
-      let linekeys = [13, 14, 15];
-      let exts = [];
-      for (let i = start; i <= end; i++) exts.push(i);
-      for (let idx = 0; idx < exts.length; idx++) {
-        let linekey = linekeys[idx];
-        let ext = exts[idx];
-        config += `attendant.resourcelist.${linekey}.address=${ext}@${ip}\n`;
-        config += `attendant.resourcelist.${linekey}.calladdress=*85${ext}@${ip}\n`;
+      // 13,14,15 for 71,72,73
+      const keys = [13, 14, 15];
+      let idx = 0;
+      for (let i = start; i <= end; i++, idx++) {
+        let linekey = keys[idx];
+        config += `attendant.resourcelist.${linekey}.address=${i}@${ip}\n`;
+        config += `attendant.resourcelist.${linekey}.calladdress=*85${i}@${ip}\n`;
         config += `attendant.resourcelist.${linekey}.label=Park ${idx + 1}\n`;
         config += `attendant.resourcelist.${linekey}.type=automata\n`;
       }
-      for (let idx = 0; idx < exts.length; idx++) {
-        let linekey = linekeys[idx];
+      for (let j = 0; j < idx; j++) {
+        let linekey = keys[j];
         config += `linekey.${linekey}.category=BLF\n`;
         config += `linekey.${linekey}.index=${linekey}\n`;
       }
     } else {
-      // Default Polycom template
-      for (let i = start; i <= end; i++) {
-        config += `attendant.resourcelist.${i}.address=${i}@${ip}\n`;
-        config += `attendant.resourcelist.${i}.calladdress=*85${i}@${ip}\n`;
-        config += `attendant.resourcelist.${i}.label=Park${i - start + 1}\n`;
-        config += `attendant.resourcelist.${i}.type=automata\n`;
-        config += `linekey.${i}.category=BLF\n`;
-        config += `linekey.${i}.index=${i}\n`;
+      // Generic Polycom template
+      let linekey = start;
+      for (let i = start; i <= end; i++, linekey++) {
+        config += `attendant.resourcelist.${linekey}.address=${i}@${ip}\n`;
+        config += `attendant.resourcelist.${linekey}.calladdress=${i}@${ip}\n`;
+        config += `attendant.resourcelist.${linekey}.label=Park\n`;
+        config += `attendant.resourcelist.${linekey}.type=automata\n`;
+        config += `linekey.${linekey}.category=BLF\n`;
+        config += `linekey.${linekey}.index=${linekey}\n`;
       }
     }
     return config;
@@ -222,13 +226,13 @@ function App() {
         config += `linekey.${linekey}.value=${i}@${ip}\n`;
       }
     } else {
-      // Default Yealink template
-      for (let i = start; i <= end; i++) {
-        config += `linekey.${i}.extension=${i}\n`;
-        config += `linekey.${i}.label=Park ${i - start + 1}\n`;
-        config += `linekey.${i}.line=1\n`;
-        config += `linekey.${i}.type=10\n`;
-        config += `linekey.${i}.value=${i}@${ip}\n`;
+      let linekey = start;
+      for (let i = start; i <= end; i++, linekey++) {
+        config += `linekey.${linekey}.extension=${i}\n`;
+        config += `linekey.${linekey}.label=Park\n`;
+        config += `linekey.${linekey}.line=1\n`;
+        config += `linekey.${linekey}.type=10\n`;
+        config += `linekey.${linekey}.value=${i}@${ip}\n`;
       }
     }
     return config;
@@ -428,6 +432,80 @@ function App() {
       return;
     }
     let config = `# Model: ${model}\n`;
+    // --- Insert static config blocks for W56P/W60P, Yealink, Polycom ---
+    if (model === 'Yealink W56P' || model === 'Yealink W60P' || model === 'Yealink 56h Dect w/ 60p Base' || model === 'Yealink 56h Dect w/ 76p Base' || model === 'Yealink 56h Dect Handset') {
+      config += [
+        'account.1.subscribe_mwi_to_vm=1',
+        'custom.handset.time_format=0',
+        'features.remote_phonebook.enable=1',
+        'features.remote_phonebook.flash_time=3600',
+        'local_time.dhcp_time=0',
+        'local_time.ntp_server1=pool.ntp.org',
+        'local_time.summer_time=2',
+        `local_time.time_format=0`,
+        `local_time.time_zone=${timeOffset}`,
+        'local_time.time_zone_name=United States-Eastern Time',
+        'programablekey.2.label=Directory',
+        'programablekey.2.line=%EMPTY%',
+        'programablekey.2.type=47',
+        'programablekey.2.xml_phonebook=-1',
+        'sip.mac_in_ua=1',
+        'sip.trust_ctrl=1',
+        'static.auto_provision.custom.protect=1',
+        'static.auto_provision.server.url= http://provisioner.123.net/',
+        'voice_mail.number.1=*97',
+        `static.security.user_password=${adminPassword}`,
+        ''
+      ].join('\n');
+    } else if (phoneType === 'Yealink') {
+      config += [
+        'static.network.ip_address_mode=0',
+        'static.network.static_dns_enable=1',
+        'static.network.primary_dns=8.8.8.8',
+        'static.network.secondary_dns=8.8.4.4',
+        'account.1.subscribe_mwi_to_vm=1',
+        'account.1.cid_source=1',
+        'custom.handset.time_format=0',
+        'features.remote_phonebook.enable=1',
+        'features.remote_phonebook.flash_time=3600',
+        'features.call_log_show_num=2',
+        'features.enhanced_dss_keys.enable=1',
+        'feature.enhancedFeatureKeys.enabled=1',
+        'local_time.dhcp_time=0',
+        'local_time.ntp_server1=pool.ntp.org',
+        'local_time.summer_time=2',
+        `local_time.time_format=0`,
+        `local_time.time_zone=${timeOffset}`,
+        'local_time.time_zone_name=United States-Eastern Time',
+        'programablekey.2.label=Directory',
+        'programablekey.2.line=%EMPTY%',
+        'programablekey.2.type=47',
+        'programablekey.2.xml_phonebook=-1',
+        'sip.mac_in_ua=1',
+        'sip.trust_ctrl=1',
+        'static.auto_provision.custom.protect=1',
+        'static.auto_provision.server.url=http://provisioner.123.net/',
+        'voice_mail.number.1=*97',
+        `static.security.user_password=${adminPassword}`,
+        ''
+      ].join('\n');
+    } else if (phoneType === 'Polycom') {
+      config += [
+        'device.sntp.gmtoffsetcityid=16',
+        'device.sntp.gmtoffsetcityid.set=1',
+        'device.sntp.servername=north-america.pool.ntp.org',
+        'device.sntp.servername.set=1',
+        'lcl.datetime.date.format=D,dM',
+        'lcl.datetime.date.longformat=0',
+        'tcpipapp.sntp.address=pool.ntp.org',
+        'tcpipapp.sntp.address.overridedhcp=1',
+        `tcpipapp.sntp.gmtoffset=${parseInt(timeOffset) * 3600}`,
+        'tcpipapp.sntp.gmtoffset.overridedhcp=1',
+        'tcpipapp.sntp.gmtoffsetcityid=16',
+        ''
+      ].join('\n');
+    }
+    // --- End static config blocks ---
     if (phoneType === 'Polycom') {
       config += generatePolycomParkLines(model, start, end, ip);
     } else {
@@ -525,6 +603,42 @@ function App() {
   }
   function handleVpbxDeleteRow(idx: number) {
     setVpbxRows(rows => rows.length === 1 ? rows : rows.filter((_, i) => i !== idx));
+  }
+
+  // New state for time offset and admin password
+  const [timeOffset, setTimeOffset] = useState('-5');
+  const [adminPassword, setAdminPassword] = useState('admin:08520852');
+
+  // New state for external number speed dial
+  const [externalSpeed, setExternalSpeed] = useState({
+    brand: 'Yealink',
+    lineNum: '',
+    label: '',
+    number: '',
+    efkIndex: '',
+  });
+  const [externalSpeedOutput, setExternalSpeedOutput] = useState('');
+
+  // Generate external number speed dial config
+  function generateExternalSpeed() {
+    if (externalSpeed.brand === 'Yealink') {
+      setExternalSpeedOutput(
+        `linekey.${externalSpeed.lineNum}.line=1\n` +
+        `linekey.${externalSpeed.lineNum}.label=${externalSpeed.label}\n` +
+        `linekey.${externalSpeed.lineNum}.type=13\n` +
+        `linekey.${externalSpeed.lineNum}.value=${externalSpeed.number}\n`
+      );
+    } else {
+      setExternalSpeedOutput(
+        'feature.enhancedFeatureKeys.enabled=1\n' +
+        'feature.EFKLineKey.enabled=1\n' +
+        `efk.efklist.${externalSpeed.efkIndex}.mname=${externalSpeed.label}\n` +
+        `efk.efklist.${externalSpeed.efkIndex}.status=1\n` +
+        `efk.efklist.${externalSpeed.efkIndex}.action.string=${externalSpeed.number}$Tinvite$\n` +
+        `linekey.${externalSpeed.lineNum}.category=EFK\n` +
+        `linekey.${externalSpeed.lineNum}.index=${externalSpeed.efkIndex}\n`
+      );
+    }
   }
 
   // Main UI rendering
@@ -664,9 +778,49 @@ function App() {
             <label>Label Prefix:</label>
             <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
           </div>
+          <div className="form-group">
+            <label>Time Offset (e.g. -5):</label>
+            <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Admin Password:</label>
+            <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
+          </div>
           <button onClick={generateConfig}>Generate Config</button>
           <div className="output">
             <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+          </div>
+          {/* External Number Speed Dial Generator */}
+          <hr style={{ margin: '32px 0' }} />
+          <h3>External Number Speed Dial</h3>
+          <div className="form-group">
+            <label>Brand:</label>
+            <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))}>
+              <option value="Yealink">Yealink</option>
+              <option value="Polycom">Polycom</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Line Key Number:</label>
+            <input type="text" value={externalSpeed.lineNum} onChange={e => setExternalSpeed(s => ({ ...s, lineNum: e.target.value }))} />
+          </div>
+          <div className="form-group">
+            <label>Label:</label>
+            <input type="text" value={externalSpeed.label} onChange={e => setExternalSpeed(s => ({ ...s, label: e.target.value }))} />
+          </div>
+          <div className="form-group">
+            <label>External Number:</label>
+            <input type="text" value={externalSpeed.number} onChange={e => setExternalSpeed(s => ({ ...s, number: e.target.value }))} />
+          </div>
+          {externalSpeed.brand === 'Polycom' && (
+            <div className="form-group">
+              <label>EFK Index:</label>
+              <input type="text" value={externalSpeed.efkIndex} onChange={e => setExternalSpeed(s => ({ ...s, efkIndex: e.target.value }))} />
+            </div>
+          )}
+          <button type="button" onClick={generateExternalSpeed}>Generate External Speed Dial</button>
+          <div className="output">
+            <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
         </>
       )}
