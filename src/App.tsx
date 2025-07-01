@@ -1091,6 +1091,7 @@ function App() {
               <div className="output">
                 <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
               </div>
+            </div>
             <div style={{ flex: 1, minWidth: 320 }}>
               <h3>Polycom VVX Color Expansion Module</h3>
               <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
@@ -1270,6 +1271,7 @@ function App() {
           <div style={{ marginBottom: 32 }}>
             <h3>Mikrotik 5009 Bridge Template</h3>
             <textarea
+
               readOnly
               rows={10}
               style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
@@ -1301,6 +1303,15 @@ function App() {
               rows={10}
               style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
               value={mikrotikStandAloneATATemplate}
+            />
+          </div>
+          <div style={{ marginBottom: 32 }}>
+            <h3>Mikrotik DHCP Options</h3>
+            <textarea
+              readOnly
+              rows={8}
+              style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+              value={mikrotikDhcpOptions}
             />
           </div>
         </div>
