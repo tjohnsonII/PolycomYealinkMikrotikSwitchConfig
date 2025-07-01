@@ -520,14 +520,29 @@ function App() {
   return (
     <div className="container">
       {/* App title and tab navigation */}
-      <h1>Configuration Generator</h1>
-      <div className="tabs">
-        {TABS.map(tab => (
+      <h1>Hosted Config Generator</h1>
+      <div className="tabs" style={{ display: 'flex', gap: 0, marginBottom: 16 }}>
+        {TABS.map((tab, idx) => (
           <button
             key={tab.key}
             className={activeTab === tab.key ? 'active' : ''}
             onClick={() => setActiveTab(tab.key)}
-            style={{ marginRight: 8 }}
+            style={{
+              border: 'none',
+              borderBottom: activeTab === tab.key ? '3px solid #0078d4' : '2px solid #ccc',
+              background: activeTab === tab.key ? '#f7fbff' : '#f4f4f4',
+              color: activeTab === tab.key ? '#0078d4' : '#333',
+              fontWeight: activeTab === tab.key ? 600 : 400,
+              padding: '10px 24px',
+              borderTopLeftRadius: idx === 0 ? 8 : 0,
+              borderTopRightRadius: idx === TABS.length - 1 ? 8 : 0,
+              marginRight: 2,
+              outline: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.2s, color 0.2s, border-bottom 0.2s',
+              boxShadow: activeTab === tab.key ? '0 2px 8px rgba(0,0,0,0.04)' : 'none',
+              minWidth: 120,
+            }}
           >
             {tab.label}
           </button>
