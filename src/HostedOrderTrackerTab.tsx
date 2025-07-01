@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import * as Papa from 'papaparse';
 
 // All fields as rows, columns are customers
 const DEFAULT_FIELDS = [
@@ -39,33 +40,53 @@ const CHECKBOX_FIELDS = new Set([
 const HostedOrderTrackerTab: React.FC = () => {
   const [fields, setFields] = useState([...DEFAULT_FIELDS]);
   const [customers, setCustomers] = useState([...DEFAULT_CUSTOMERS]);
-  // Data: { [field]: { [customer]: value } }
   const [data, setData] = useState<{ [field: string]: { [customer: string]: string } }>(
     Object.fromEntries(DEFAULT_FIELDS.map(f => [f, { '': '' }]))
   );
+  const downloadRef = useRef<HTMLAnchorElement>(null);
 
-  function handleAddCustomer() {
-    const newName = prompt('Enter new customer abbreviation:') || '';
-    if (!newName || customers.includes(newName)) return;
-    setCustomers(custs => [...custs, newName]);
-    setData(d => {
-      const newData = { ...d };
-      for (const f of fields) newData[f] = { ...newData[f], [newName]: '' };
-      return newData;
+  // CSV Import
+  function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results: Papa.ParseResult<Record<string, string>>) => {
+        const csvData = results.data as Record<string, string>[];
+        if (!csvData.length) return;
+        // First column is field, rest are customers
+        const csvFields = csvData.map(row => row['Field'] || row['field'] || Object.values(row)[0]);
+        const csvCustomers = Object.keys(csvData[0]).filter(k => k !== 'Field' && k !== 'field');
+        const newData: { [field: string]: { [customer: string]: string } } = {};
+        csvFields.forEach((f, i) => {
+          newData[f] = {};
+          csvCustomers.forEach(c => {
+            newData[f][c] = csvData[i][c] || '';
+          });
+        });
+        setFields(csvFields);
+        setCustomers(csvCustomers);
+        setData(newData);
+      },
     });
   }
-  function handleDeleteCustomer(idx: number) {
-    const name = customers[idx];
-    setCustomers(custs => custs.filter((_, i) => i !== idx));
-    setData(d => {
-      const newData = { ...d };
-      for (const f of fields) {
-        const { [name]: _, ...rest } = newData[f];
-        newData[f] = rest;
-      }
-      return newData;
-    });
+
+  // CSV Export
+  function handleExport() {
+    const csvHeader = ['Field', ...customers].join(',') + '\n';
+    const csvRows = fields.map(f => [f, ...customers.map(c => data[f]?.[c] || '')].map(v => `"${(v || '').replace(/"/g, '""')}"`).join(',')).join('\n') + '\n';
+    const csv = csvHeader + csvRows;
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    if (downloadRef.current) {
+      downloadRef.current.href = url;
+      downloadRef.current.download = 'order_tracker.csv';
+      downloadRef.current.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
   }
+
   function handleCellChange(field: string, customer: string, value: string) {
     setData(d => ({ ...d, [field]: { ...d[field], [customer]: value } }));
   }
@@ -91,8 +112,9 @@ const HostedOrderTrackerTab: React.FC = () => {
     <div style={{ maxWidth: 1400, margin: '0 auto' }}>
       <h2>Hosted Order Tracker</h2>
       <div style={{ marginBottom: 12 }}>
-        <button type="button" onClick={handleAddCustomer} style={{ marginRight: 8 }}>Add Customer</button>
-        <button type="button" onClick={handleAddField} style={{ marginRight: 8 }}>Add Field</button>
+        <input type="file" accept=".csv" onChange={handleImport} />
+        <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>Export as CSV</button>
+        <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
