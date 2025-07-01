@@ -1,12 +1,14 @@
 # PolycomYealinkMikrotikSwitchConfig
 
-A web app for generating configuration code for Polycom and Yealink phones, as well as templates for FBPX, VPBX, Streeto, Mikrotik, and Switch devices. Built with React, TypeScript, and Vite, this app features dynamic forms, CSV import/export, and customizable static/dynamic templates for various network devices and phone models.
+A modular web app for generating configuration code for Polycom and Yealink phones, as well as templates for FBPX, VPBX, Streeto, Mikrotik, and Switch devices. Built with React, TypeScript, and Vite, this app features dynamic forms, CSV import/export, and customizable static/dynamic templates for various network devices and phone models.
 
 ---
 
 ## Table of Contents
 - [Features](#features)
 - [How It Works](#how-it-works)
+- [Modular Project Structure](#modular-project-structure)
+- [How to Contribute](#how-to-contribute)
 - [File-by-File Technical Overview](#file-by-file-technical-overview)
 - [Development](#development)
 - [Automated Start Script](#automated-start-script)
@@ -20,7 +22,8 @@ A web app for generating configuration code for Polycom and Yealink phones, as w
 - **Model-specific templates** for Polycom and Yealink (including expansion modules and feature keys)
 - **CSV import/export** for FBPX, VPBX, and Streeto tabs (using papaparse)
 - **Editable static/dynamic templates** for Mikrotik and Switch devices
-- **Fully commented code** for maintainability
+- **Graphical preview** for Yealink and Polycom expansion modules (with tooltips and user guidance)
+- **Fully commented, modular code** for maintainability and easy contribution
 
 ---
 
@@ -40,6 +43,45 @@ The app uses a tabbed interface to separate configuration generators for differe
   - Editable templates for Mikrotik routers and Switches (8/24 port), with fields for hostname and asset tag.
 - **Reference Tab:**
   - Dedicated legend for Polycom and Yealink configuration settings, with tables and feature explanations for both brands.
+
+---
+
+## Modular Project Structure
+
+```
+src/
+  components/         # Reusable UI (InfoIcon, EditableTable, etc.)
+  tabs/               # Each main tab as a component (ExpansionModuleTab, PhoneConfigTab, etc.)
+  templates/          # Static config templates (mikrotik, switch, etc.)
+  types/              # TypeScript types/interfaces
+  utils/              # Shared logic (CSV, config generation, etc.)
+  constants/          # Shared constants (icons, tooltips, etc.)
+  App.tsx             # Main app, handles layout and tab switching
+  main.tsx            # Entry point
+```
+
+- Each tab/component manages its own state and logic.
+- Shared UI and logic should be imported from `components/`, `utils/`, or `constants/`.
+- `App.tsx` should only handle layout, navigation, and tab switching.
+
+---
+
+## How to Contribute
+
+1. **Fork the repo and create a new branch.**
+2. **Add or update features:**
+   - Add a new tab: create a file in `src/tabs/` and add it to the tab navigation in `App.tsx`.
+   - Add shared UI: place reusable components in `src/components/`.
+   - Add config templates: place static templates in `src/templates/`.
+   - Add shared logic: place utility functions in `src/utils/`.
+   - Add or update types: place TypeScript interfaces/types in `src/types/`.
+   - Add shared constants: place icons, tooltips, and other constants in `src/constants/`.
+3. **Use TypeScript and React best practices.**
+4. **Keep components small and focused.**
+5. **Use Prettier and ESLint for formatting and linting.**
+6. **Add comments for complex logic and UI.**
+7. **Submit a pull request with a clear description.**
+8. **See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for more details and guidelines.**
 
 ---
 
