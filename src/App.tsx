@@ -33,6 +33,7 @@ const MODEL_OPTIONS = [
 // Tab definitions for navigation, including the Reference tab
 const TABS = [
   { key: 'phone', label: 'Phone Configs' },
+  { key: 'fullconfig', label: 'Full Config' },
   { key: 'expansion', label: 'Expansion Modules' },
   { key: 'fbpx', label: 'FBPX Import Template' },
   { key: 'vpbx', label: 'VPBX Import Template' },
@@ -988,9 +989,6 @@ function App() {
               <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing</label>
             </div>
             <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
-            <div className="output">
-              <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
-            </div>
           </div>
           <hr />
           <div className="form-section" style={{marginBottom:24}}>
@@ -1043,7 +1041,6 @@ function App() {
               )}
               <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate</button>
             </div>
-            <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
           <hr />
           {/* External Number Speed Dial Generator */}
@@ -1072,6 +1069,13 @@ function App() {
             <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
         </>
+      )}
+      {/* Full Config Tab */}
+      {activeTab === 'fullconfig' && (
+        <div style={{ maxWidth: 900, margin: '0 auto' }}>
+          <h2>Full Phone Config Output</h2>
+          <textarea value={output} readOnly rows={20} style={{ width: '100%', fontFamily: 'monospace', fontSize: 13, marginTop: 8 }} />
+        </div>
       )}
       {/* Expansion Modules Tab */}
       {activeTab === 'expansion' && (
