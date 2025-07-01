@@ -88,6 +88,21 @@ const createEmptyVpbxRow = (): VpbxFormType => VPBX_FIELDS.reduce((acc, f) => ({
 const DEFAULT_TIME_OFFSET = '-5';
 const DEFAULT_ADMIN_PASSWORD = 'admin:08520852';
 
+// Tooltips for Phone Config tab fields
+const FIELD_TOOLTIPS: Record<string, string> = {
+  phoneType: 'Select the phone brand (Polycom or Yealink) for which you want to generate configuration.',
+  model: 'Choose the specific phone model. This affects the generated config format and options.',
+  ip: 'The IP address of the PBX or SIP server the phone will register to.',
+  startExt: 'The starting extension number for park/BLF keys.',
+  endExt: 'The ending extension number for park/BLF keys.',
+  labelPrefix: 'Prefix for the label on each park/BLF key (e.g., "Park").',
+  timeOffset: 'Time zone offset from GMT (e.g., -5 for Eastern Time).',
+  adminPassword: 'The admin password to set on the phone for web access.',
+  yealinkLabelLength: 'Enable longer DSS key labels on Yealink phones.',
+  yealinkDisableMissedCall: 'Disable missed call notifications on Yealink phones.',
+  yealinkCallStealing: 'Enable BLF call stealing (pickup) on Yealink phones.'
+};
+
 function App() {
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
@@ -222,21 +237,6 @@ function App() {
       let linekey = 6;
       for (let i = start; i <= end; i++, linekey++) {
         config += `linekey.${linekey}.extension=${i}\n`;
-        config += `linekey.${linekey}.label=Park ${linekey - 5}\n`;
-        config += `linekey.${linekey}.line=1\n`;
-        config += `linekey.${linekey}.type=10\n`;
-        config += `linekey.${linekey}.value=${i}@${ip}\n`;
-      }
-    } else if (model === 'SIP-T48S' || model === 'Yealink T57W') {
-      let linekey = 7;
-      for (let i = start; i <= end; i++, linekey++) {
-        config += `linekey.${linekey}.extension=${i}\n`;
-        config += `linekey.${linekey}.label=Park ${linekey - 6}\n`;
-        config += `linekey.${linekey}.line=1\n`;
-        config += `linekey.${linekey}.type=10\n`;
-        config += `linekey.${linekey}.value=${i}@${ip}\n`;
-      }
-    } else {
       let linekey = start;
       for (let i = start; i <= end; i++, linekey++) {
         config += `linekey.${linekey}.extension=${i}\n`;
@@ -952,43 +952,55 @@ function App() {
       {activeTab === 'phone' && (
         <>
           <h2 style={{marginTop:0}}>Phone Config Generator</h2>
+          <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 24, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' }}>
+            <h3 style={{ marginTop: 0 }}>What does each config generator do?</h3>
+            <ul style={{ marginLeft: 20 }}>
+              <li><b>Base Config Options:</b> Generates the main configuration for Polycom or Yealink phones, including park/BLF keys, static settings, and model-specific options.</li>
+              <li><b>Polycom MWI (Message Waiting Indicator):</b> Generates config lines to enable voicemail message waiting light for a specific extension and PBX IP.</li>
+              <li><b>Linekey/BLF/Speed/Transfer/Hotkey Generator:</b> Creates config for individual programmable keys (BLF, speed dial, transfer, macros) for Yealink or Polycom phones.</li>
+              <li><b>External Number Speed Dial:</b> Generates config for a button that dials an external number directly from the phone.</li>
+            </ul>
+          </div>
           <div className="form-section" style={{marginBottom:24}}>
             <h3>Base Config Options</h3>
             <div className="form-group">
-              <label>Phone Type:</label>
-              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
+              <label title={FIELD_TOOLTIPS.phoneType}>Phone Type:</label>
+              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')} title={FIELD_TOOLTIPS.phoneType}>
                 <option value="Polycom">Polycom</option>
                 <option value="Yealink">Yealink</option>
               </select>
-              <label style={{marginLeft:16}}>Model:</label>
-              <select value={model} onChange={e => setModel(e.target.value)}>
+              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.model}>Model:</label>
+              <select value={model} onChange={e => setModel(e.target.value)} title={FIELD_TOOLTIPS.model}>
                 {MODEL_OPTIONS.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
             </div>
             <div className="form-group">
-              <label>IP Address:</label>
-              <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
-              <label style={{marginLeft:16}}>Start Extension:</label>
-              <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} />
-              <label style={{marginLeft:16}}>End Extension:</label>
-              <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} />
-              <label style={{marginLeft:16}}>Label Prefix:</label>
-              <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
+              <label title={FIELD_TOOLTIPS.ip}>IP Address:</label>
+              <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" title={FIELD_TOOLTIPS.ip} />
+              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.startExt}>Start Extension:</label>
+              <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} title={FIELD_TOOLTIPS.startExt} />
+              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.endExt}>End Extension:</label>
+              <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} title={FIELD_TOOLTIPS.endExt} />
+              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.labelPrefix}>Label Prefix:</label>
+              <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} title={FIELD_TOOLTIPS.labelPrefix} />
             </div>
             <div className="form-group">
-              <label>Time Offset (e.g. -5):</label>
-              <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
-              <label style={{marginLeft:16}}>Admin Password:</label>
-              <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
+              <label title={FIELD_TOOLTIPS.timeOffset}>Time Offset (e.g. -5):</label>
+              <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} title={FIELD_TOOLTIPS.timeOffset} />
+              <label style={{marginLeft:16}} title={FIELD_TOOLTIPS.adminPassword}>Admin Password:</label>
+              <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} title={FIELD_TOOLTIPS.adminPassword} />
             </div>
             <div className="form-group">
-              <label><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels</label>
-              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification</label>
-              <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing</label>
+              <label title={FIELD_TOOLTIPS.yealinkLabelLength}><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels</label>
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.yealinkDisableMissedCall}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification</label>
+              <label style={{ marginLeft: 16 }} title={FIELD_TOOLTIPS.yealinkCallStealing}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing</label>
             </div>
             <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
+            <div className="output">
+              <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+            </div>
           </div>
           <hr />
           <div className="form-section" style={{marginBottom:24}}>
