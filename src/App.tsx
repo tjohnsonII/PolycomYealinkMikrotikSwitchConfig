@@ -965,7 +965,34 @@ function App() {
             {referenceSubtab === 'pbx' && (
               <div style={{ width: '100%', textAlign: 'left' }}>
                 <h3>PBX Reference</h3>
-                <p>Include PBX import/export and config explanation here.</p>
+                <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 32 }}>
+                  <h4 style={{ marginTop: 0 }}>PBX Import/Export and Config Types</h4>
+                  <ul style={{ marginLeft: 20 }}>
+                    <li>
+                      <b>FreePBX:</b>
+                      <br />
+                      FreePBX is an open-source PBX platform based on Asterisk. The FBPX and VPBX import templates in this app are designed to help you bulk import user/extension data into FreePBX systems, making onboarding and configuration faster and less error-prone.
+                    </li>
+                    <li>
+                      <b>UCaaS (Unified Communications as a Service):</b>
+                      <br />
+                      UCaaS platforms provide cloud-based PBX and collaboration features. Use the import/export templates to prepare user and device data for onboarding to various UCaaS providers.
+                    </li>
+                    <li>
+                      <b>Fusion:</b>
+                      <br />
+                      Fusion is a hosted PBX/UCaaS platform. The import templates can be adapted to Fusion’s requirements for bulk provisioning of phones and users.
+                    </li>
+                    <li>
+                      <b>Intermedia:</b>
+                      <br />
+                      Intermedia is a popular cloud PBX and UCaaS provider. Use the provided templates as a starting point for preparing user and device data for Intermedia’s provisioning tools.
+                    </li>
+                  </ul>
+                </div>
+                <p>
+                  Use the FBPX and VPBX Import Template tabs to generate and export CSV files for bulk provisioning of users, extensions, and devices on these PBX platforms.
+                </p>
               </div>
             )}
           </div>
