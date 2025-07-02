@@ -171,6 +171,28 @@ function App() {
     setYealinkOutput(config);
   };
 
+  // Generate all 20 Yealink expansion keys for the selected page
+  function generateYealinkExpansionAll() {
+    const { templateType, sidecarPage, label, value, pbxIp } = yealinkSection;
+    let config = '';
+    for (let i = 1; i <= 20; i++) {
+      const keyLabel = label || `Key ${i}`;
+      const keyValue = value || '';
+      if (templateType === 'SpeedDial') {
+        config += `expansion_module.${sidecarPage}.key.${i}.label=${keyLabel}\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.type=13\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.value=${keyValue}\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.line=1\n`;
+      } else {
+        config += `expansion_module.${sidecarPage}.key.${i}.label=${keyLabel}\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.type=16\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.value=${keyValue}@${pbxIp}\n`;
+        config += `expansion_module.${sidecarPage}.key.${i}.line=1\n`;
+      }
+    }
+    setYealinkOutput(config);
+  }
+
   // Polycom expansion module state
   const [polycomSection, setPolycomSection] = useState({
     address: '',
@@ -190,6 +212,22 @@ function App() {
     config += `linekey.${linekeyIndex}.index=${linekeyIndex}\n`;
     setPolycomOutput(config);
   };
+
+  // Generate all 28 Polycom expansion keys
+  function generatePolycomExpansionAll() {
+    const { address, label, type, linekeyCategory } = polycomSection;
+    let config = '';
+    for (let i = 1; i <= 28; i++) {
+      const keyLabel = label || `Key ${i}`;
+      const keyAddress = address || `100${i}@pbx`;
+      config += `attendant.resourcelist.${i}.address=${keyAddress}\n`;
+      config += `attendant.resourcelist.${i}.label=${keyLabel}\n`;
+      config += `attendant.resourcelist.${i}.type=${type}\n`;
+      config += `linekey.${i}.category=${linekeyCategory}\n`;
+      config += `linekey.${i}.index=${i}\n`;
+    }
+    setPolycomOutput(config);
+  }
 
   // Polycom MWI (Message Waiting Indicator) state and generator
   const [polycomMWI, setPolycomMWI] = useState({
@@ -675,7 +713,7 @@ function App() {
     { code: 25, label: 'Record' },
     { code: 27, label: 'XML Browser' },
     { code: 34, label: 'Hot Desking' },
-    // { code: 35, ... } <-- Remove this incomplete entry
+    { code: 35, label: 'URL Record' }, // <-- Added
     { code: 38, label: 'LDAP' },
     { code: 39, label: 'BLF List' },
     { code: 40, label: 'Prefix' },
@@ -713,7 +751,7 @@ function App() {
           `linekey.${lk.lineNum}.line=${lk.regLine}\n` +
           `linekey.${lk.lineNum}.type=${lk.type}\n` +
           `linekey.${lk.lineNum}.value=${lk.value}\n`
-      }));
+    }));
     } else {
       setLinekeyGen(lk => ({
         ...lk,
@@ -1214,7 +1252,8 @@ function App() {
               <label style={{ marginLeft: 16 }}>PBX IP:</label>
               <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
             </div>
-            <button onClick={generateYealinkExpansion} style={{ marginTop: 8 }}>Generate Yealink Expansion Config</button>
+            <button onClick={generateYealinkExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
+            <button onClick={generateYealinkExpansionAll} style={{ marginTop: 8 }}>Generate All 20 Keys</button>
             <div className="output" style={{ marginTop: 16 }}>
               <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
             </div>
@@ -1238,7 +1277,8 @@ function App() {
               <label style={{ marginLeft: 16 }}>Linekey Index:</label>
               <input type="text" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
             </div>
-            <button onClick={generatePolycomExpansion} style={{ marginTop: 8 }}>Generate Polycom Expansion Config</button>
+            <button onClick={generatePolycomExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
+            <button onClick={generatePolycomExpansionAll} style={{ marginTop: 8 }}>Generate All 28 Keys</button>
             <div className="output" style={{ marginTop: 16 }}>
               <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
             </div>
@@ -1391,7 +1431,8 @@ function App() {
                 </label>
                 <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
               </div>
-              <button onClick={generateYealinkExpansion} style={{ marginTop: 8 }}>Generate Yealink Expansion Config</button>
+              <button onClick={generateYealinkExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
+              <button onClick={generateYealinkExpansionAll} style={{ marginTop: 8 }}>Generate All 20 Keys</button>
               <div className="output" style={{ marginTop: 12 }}>
                 <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
               </div>
@@ -1444,7 +1485,8 @@ function App() {
                 <label style={{ marginLeft: 16 }}>Linekey Category:</label>
                 <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
               </div>
-              <button onClick={generatePolycomExpansion} style={{ marginTop: 8 }}>Generate Polycom Expansion Config</button>
+              <button onClick={generatePolycomExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
+              <button onClick={generatePolycomExpansionAll} style={{ marginTop: 8 }}>Generate All 28 Keys</button>
               <div className="output" style={{ marginTop: 12 }}>
                 <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
               </div>
