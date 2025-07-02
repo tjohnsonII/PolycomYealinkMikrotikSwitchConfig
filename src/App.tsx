@@ -518,6 +518,15 @@ function App() {
       ].join('\n');
       config += generatePolycomParkLines(model, start, end, ip);
     }
+    // Append expansion config if model supports it
+    if (phoneType === 'Polycom' && ['VVX 400', 'VVX 500', 'VVX 600'].includes(model)) {
+      config += '\n# Polycom Expansion Module\n';
+      config += polycomOutput; // or call generatePolycomExpansionAll() if you want all keys
+    }
+    if (phoneType === 'Yealink' && ['Yealink T54W', 'Yealink T57W', 'Yealink SIP-T46S', 'SIP-T48S', 'SIP-T48U'].includes(model)) {
+      config += '\n# Yealink Expansion Module\n';
+      config += yealinkOutput; // or call generateYealinkExpansionAll() if you want all keys
+    }
     setOutput(config);
   };
 
@@ -1508,6 +1517,121 @@ function App() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+      {activeTab === 'fullconfig' && (
+        <div>
+          <h2>Full Config</h2>
+          <p>This tab should generate a complete phone config for all supported models. (Restore your previous UI here.)</p>
+          <button onClick={generateConfig}>Generate Full Config</button>
+          <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+        </div>
+      )}
+      {activeTab === 'fbpx' && (
+        <div>
+          <h2>FBPX Import</h2>
+          <input type="file" accept=".csv" onChange={handleFpbxImport} />
+          <button onClick={handleFpbxExport}>Export CSV</button>
+          <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
+          <table>
+            <thead>
+              <tr>
+                {FPBX_FIELDS.map(f => <th key={f}>{f}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {fpbxRows.map((row, idx) => (
+                <tr key={idx}>
+                  {FPBX_FIELDS.map(f => (
+                    <td key={f}>
+                      <input
+                        name={f}
+                        value={row[f] || ''}
+                        onChange={e => handleFpbxChange(idx, e)}
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <button onClick={() => handleFpbxDeleteRow(idx)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={() => handleFpbxAddRow(1)}>Add Row</button>
+        </div>
+      )}
+      {activeTab === 'vpbx' && (
+        <div>
+          <h2>VPBX Import</h2>
+          <input type="file" accept=".csv" onChange={handleVpbxImport} />
+          <button onClick={handleVpbxExport}>Export CSV</button>
+          <a ref={vpbxDownloadRef} style={{ display: 'none' }}>Download</a>
+          <table>
+            <thead>
+              <tr>
+                {VPBX_FIELDS.map(f => <th key={f}>{f}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {vpbxRows.map((row, idx) => (
+                <tr key={idx}>
+                  {VPBX_FIELDS.map(f => (
+                    <td key={f}>
+                      <input
+                        name={f}
+                        value={row[f] || ''}
+                        onChange={e => handleVpbxChange(idx, e)}
+                      />
+                    </td>
+                  ))}
+                  <td>
+                    <button onClick={() => handleVpbxDeleteRow(idx)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <button onClick={() => handleVpbxAddRow(1)}>Add Row</button>
+        </div>
+      )}
+      {activeTab === 'mikrotik' && (
+        <div>
+          <h2>Mikrotik Templates</h2>
+          <div>
+            <h3>5009 Bridge</h3>
+            <textarea value={mikrotik5009Bridge} readOnly rows={10} style={{ width: '100%' }} />
+            <h3>5009 Passthrough</h3>
+            <textarea value={mikrotik5009Passthrough} readOnly rows={10} style={{ width: '100%' }} />
+            <h3>OnNet Config</h3>
+            <textarea value={onNetMikrotikConfigTemplate} readOnly rows={10} style={{ width: '100%' }} />
+            <h3>OTT Template (Editable)</h3>
+            <textarea value={getOttTemplate(ottFields)} readOnly rows={10} style={{ width: '100%' }} />
+            <h3>Standalone ATA</h3>
+            <textarea value={mikrotikStandAloneATATemplate} readOnly rows={10} style={{ width: '100%' }} />
+            <h3>DHCP Options</h3>
+            <textarea value={mikrotikDhcpOptions} readOnly rows={10} style={{ width: '100%' }} />
+          </div>
+        </div>
+      )}
+      {activeTab === 'switch' && (
+        <div>
+          <h2>Switch Templates</h2>
+          <SwitchDynamicTemplate />
+          <Switch24DynamicTemplate />
+          <Switch8DynamicTemplate />
+        </div>
+      )}
+      {activeTab === 'ordertracker' && (
+        <div>
+          <h2>Order Tracker</h2>
+          <HostedOrderTrackerTab />
+        </div>
+      )}
+      {activeTab === 'streeto' && (
+        <div>
+          <h2>Stretto Import</h2>
+          <StrettoImportExportTab />
         </div>
       )}
     </div>
