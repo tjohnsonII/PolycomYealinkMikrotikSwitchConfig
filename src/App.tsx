@@ -909,26 +909,42 @@ function App() {
                   <ul style={{ marginLeft: 20 }}>
                     <li>
                       <b>OTT Mikrotik Template (Editable):</b>
-                      This template is designed for Over-The-Top (OTT) deployments. You can fill in customer-specific fields (IP, name, address, etc.) and generate a ready-to-use config for provisioning a Mikrotik router for remote VoIP or data services.
+                      <br />
+                      This configuration template is designed for Over-The-Top (OTT) VoIP or data deployments, where the Mikrotik router is installed at a customer location and connects back to the service provider over a public or third-party WAN. It allows users to fill in site-specific variables (IP addresses, customer info, gateway, etc.) and generates a fully pre-configured, drop-in-ready script for provisioning.
+                      <ul>
+                        <li><b>WAN and LAN Setup:</b> Configures ether10 as the uplink to the customer’s internet router and assigns a static WAN IP. Internal VLANs (e.g., VLAN 202 for phones, VLAN 102 for local management) are trunked through ether9 back to 123Net.</li>
+                        <li><b>DHCP Services for VoIP Phones:</b> Provides DHCP on the phone VLAN with custom DHCP options (66, 160, 202) for provisioning server URLs, VLAN tagging, and NTP synchronization. This enables plug-and-play VoIP phone deployment.</li>
+                        <li><b>Firewall Rules and Filtering:</b> Includes security policies that allow only trusted IPs to manage the router, permit traffic from the phone VLAN, management subnets, and PBX networks, and block all other inbound connections by default. SIP helper services are disabled for improved SIP handling.</li>
+                        <li><b>Address Lists for Management & Services:</b> Pre-defined address lists for management (MGMT), phone VLANs, PBX access, and backend tools (BT) simplify rule creation and policy enforcement.</li>
+                        <li><b>SNMP and Time Settings:</b> Enables SNMP with customer-specific metadata, sets local timezone, NTP servers, and router hostname to reflect site identity.</li>
+                        <li><b>Connection Tracking Optimization:</b> Sets a reduced UDP timeout (1m30s) to improve VoIP call stability and avoid lingering sessions.</li>
+                        <li><b>Pre-Built NAT Rules:</b> Configures masquerading for the VoIP phone subnet to allow internet access for phones or remote provisioning.</li>
+                      </ul>
+                      <b>Use Case:</b> Ideal for remote site deployments where full routing/NAT is handled by an upstream customer router. This template simplifies the process of deploying and managing Mikrotik routers for hosted VoIP or data services without requiring manual configuration each time.
                     </li>
                     <li>
                       <b>Mikrotik 5009 Bridge Template:</b>
+                      <br />
                       Provides a configuration for the Mikrotik RB5009 router in bridge mode, typically used to transparently bridge two network segments or connect customer equipment to the core network.
                     </li>
                     <li>
                       <b>Mikrotik 5009 Passthrough Template:</b>
+                      <br />
                       Sets up the RB5009 in passthrough mode, allowing traffic to pass through the device with minimal intervention—useful for troubleshooting or when the router should not perform NAT/routing.
                     </li>
                     <li>
                       <b>OnNet Mikrotik Config Template:</b>
+                      <br />
                       Used for "OnNet" (on-network) deployments, this template configures the Mikrotik for integration with the provider’s core network, including VLANs, routing, and security settings.
                     </li>
                     <li>
                       <b>Mikrotik StandAlone ATA Template:</b>
+                      <br />
                       Provides configuration for using a Mikrotik router with a stand-alone Analog Telephone Adapter (ATA), ensuring proper voice VLAN, QoS, and network isolation for analog phone devices.
                     </li>
                     <li>
                       <b>Mikrotik DHCP Options:</b>
+                      <br />
                       Contains DHCP option settings for Mikrotik routers, such as custom options for VoIP phones (e.g., provisioning server, VLAN assignment) to automate device configuration on the network.
                     </li>
                   </ul>
@@ -1176,11 +1192,9 @@ function App() {
                 <>
                   <label>EFK/Resourcelist Index:</label>
                   <input type="text" value={linekeyGen.efkIndex} onChange={e => setLinekeyGen(lk => ({ ...lk, efkIndex: e.target.value }))} />
-                  <label style={{ marginLeft: 16 }}>Value (address):</label>
-                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
                 </>
               )}
-              <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate</button>
+              <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate Linekey Config</button>
             </div>
             <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
