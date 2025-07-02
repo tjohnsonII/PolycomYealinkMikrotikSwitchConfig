@@ -173,23 +173,14 @@ function App() {
 
   // Generate all 20 Yealink expansion keys for the selected page
   function generateYealinkExpansionAll() {
-    const { templateType, sidecarPage, label, value, pbxIp } = yealinkSection;
     let config = '';
-    for (let i = 1; i <= 20; i++) {
-      const keyLabel = label || `Key ${i}`;
-      const keyValue = value || '';
-      if (templateType === 'SpeedDial') {
-        config += `expansion_module.${sidecarPage}.key.${i}.label=${keyLabel}\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.type=13\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.value=${keyValue}\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.line=1\n`;
-      } else {
-        config += `expansion_module.${sidecarPage}.key.${i}.label=${keyLabel}\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.type=16\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.value=${keyValue}@${pbxIp}\n`;
-        config += `expansion_module.${sidecarPage}.key.${i}.line=1\n`;
-      }
-    }
+    yealinkKeys.forEach((key, i) => {
+      const idx = i + 1;
+      config += `expansion_module.1.key.${idx}.label=${key.label}\n`;
+      config += `expansion_module.1.key.${idx}.type=16\n`; // or 13 for SpeedDial
+      config += `expansion_module.1.key.${idx}.value=${key.value}${key.ip ? '@' + key.ip : ''}\n`;
+      config += `expansion_module.1.key.${idx}.line=1\n`;
+    });
     setYealinkOutput(config);
   }
 
@@ -215,17 +206,15 @@ function App() {
 
   // Generate all 28 Polycom expansion keys
   function generatePolycomExpansionAll() {
-    const { address, label, type, linekeyCategory } = polycomSection;
     let config = '';
-    for (let i = 1; i <= 28; i++) {
-      const keyLabel = label || `Key ${i}`;
-      const keyAddress = address || `100${i}@pbx`;
-      config += `attendant.resourcelist.${i}.address=${keyAddress}\n`;
-      config += `attendant.resourcelist.${i}.label=${keyLabel}\n`;
-      config += `attendant.resourcelist.${i}.type=${type}\n`;
-      config += `linekey.${i}.category=${linekeyCategory}\n`;
-      config += `linekey.${i}.index=${i}\n`;
-    }
+    polycomKeys.forEach((key, i) => {
+      const idx = i + 1;
+      config += `attendant.resourcelist.${idx}.address=${key.address}\n`;
+      config += `attendant.resourcelist.${idx}.label=${key.label}\n`;
+      config += `attendant.resourcelist.${idx}.type=automata\n`;
+      config += `linekey.${idx}.category=BLF\n`;
+      config += `linekey.${idx}.index=${idx}\n`;
+    });
     setPolycomOutput(config);
   }
 
