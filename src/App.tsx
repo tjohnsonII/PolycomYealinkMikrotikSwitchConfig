@@ -951,7 +951,43 @@ function App() {
                     <li>
                       <b>Mikrotik 5009 Passthrough Template:</b>
                       <br />
-                      Sets up the RB5009 in passthrough mode, allowing traffic to pass through the device with minimal intervention—useful for troubleshooting or when the router should not perform NAT/routing.
+                      This configuration template sets up the MikroTik RB5009 router in passthrough mode, enabling transparent traffic forwarding between customer devices and the core network. It is ideal for scenarios where routing, NAT, or complex processing is not required at the customer edge, but DHCP tagging, service segregation, and firewall policy enforcement are still needed.
+                      <ul>
+                        <li><b>Tagged VLAN Configuration (Trunk Port):</b> VLANs 102 and 202 are configured on a shared physical interface (typically ether7) to separate traffic into logical segments:
+                          <ul>
+                            <li><b>vlan102:</b> Management traffic (e.g., local admin access)</li>
+                            <li><b>vlan202:</b> Hosted VoIP phones and services</li>
+                          </ul>
+                        </li>
+                        <li><b>Advanced DHCP Option Support:</b> Implements custom DHCP option sets for phones using options 66, 160, 202, and more to automate provisioning:
+                          <ul>
+                            <li><b>Option 66/160:</b> Points phones to the provisioning server</li>
+                            <li><b>Option 202:</b> Injects VLAN tagging info for phone boot VLANs</li>
+                            <li><b>Option 42/2:</b> NTP and GMT offset settings</li>
+                          </ul>
+                        </li>
+                        <li><b>DHCP Server and IP Pool for VoIP Phones:</b> Assigns phones in VLAN 202 addresses from 172.16.1.30–172.16.1.250 and handles DNS, NTP, and gateway assignment via DHCP.</li>
+                        <li><b>IP Addressing for Management and VoIP VLANs:</b> Static IPs are assigned to each VLAN interface (e.g., 192.168.10.1/24 on VLAN 102, 172.16.1.1/24 on VLAN 202) for interface-level control and monitoring.</li>
+                        <li><b>Firewall Address Lists for Policy Enforcement:</b> Pre-defined address lists group management (MGMT), phone (PHONEVLAN), and PBX servers (PBX), simplifying rules and securing control plane access.</li>
+                        <li><b>Firewall Rules:</b>
+                          <ul>
+                            <li>Allows passthrough traffic (forward chain) from customer to core</li>
+                            <li>Explicitly allows traffic from phones and PBX servers</li>
+                            <li>Drops everything else by default (best practice: add drop rule at end if not already defined)</li>
+                          </ul>
+                        </li>
+                        <li><b>NAT Masquerading for Phone Subnet:</b> Ensures phones behind the RB5009 can reach the internet (e.g., for provisioning) even without upstream NAT configuration.</li>
+                        <li><b>UDP Timeout Optimization for SIP:</b> Sets a reduced UDP timeout of 1m30s, improving SIP call handling and avoiding dropped sessions due to inactive UDP bindings.</li>
+                        <li><b>Disabled Legacy Service Ports:</b> FTP, TFTP, SIP ALG, and other protocols that interfere with hosted VoIP are fully disabled to enhance security and ensure compatibility with SIP endpoints.</li>
+                      </ul>
+                      <b>Use Case:</b> The 5009 Passthrough Template is ideal for drop-in deployments where:
+                      <ul>
+                        <li>The RB5009 is acting as a bridge or VLAN-aware switch at the edge.</li>
+                        <li>No customer-side NAT/routing is needed.</li>
+                        <li>The device must enforce DHCP option tagging and basic security policies.</li>
+                        <li>Hosted VoIP phones or segmented VLAN services are in use.</li>
+                        <li>You need a "touchless" provisioning-ready passthrough router that’s easy to deploy and manage remotely.</li>
+                      </ul>
                     </li>
                     <li>
                       <b>OnNet Mikrotik Config Template:</b>
@@ -1151,20 +1187,68 @@ function App() {
                 </span>
               </label>
               <input type="text" value={polycomMWI.pbxIp} onChange={e => setPolycomMWI(mwi => ({ ...mwi, pbxIp: e.target.value }))} />
-              <button type="button" onClick={generatePolycomMWI} style={{ marginLeft: 16 }}>Generate MWI</button>
             </div>
-            <textarea value={polycomMWI.output} readOnly rows={3} style={{ width: '100%', marginTop: 8 }} />
+            <button onClick={generatePolycomMWI} style={{ marginTop: 8 }}>Generate Polycom MWI Config</button>
+            <div className="output" style={{ marginTop: 16 }}>
+              <textarea value={polycomMWI.output} readOnly rows={5} style={{ width: '100%' }} />
+            </div>
           </div>
-          {/* Linekey/BLF/Speed/Transfer/Hotkey Generator Section */}
+          {/* Yealink Expansion Module Section */}
           <hr />
           <div className="form-section" style={{marginBottom:24}}>
-            <h3>Linekey/BLF/Speed/Transfer/Hotkey Generator</h3>
+            <h3>Yealink Expansion Module Config</h3>
             <div className="form-group">
-              <label>Brand:
-                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyBrand}>
-                  <FaInfoCircle />
-                </span>
-              </label>
+              <label>Template Type:</label>
+              <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
+                <option value="BLF">BLF</option>
+                <option value="SpeedDial">Speed Dial</option>
+              </select>
+              <label style={{ marginLeft: 16 }}>Sidecar Page:</label>
+              <input type="text" value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Sidecar Line:</label>
+              <input type="text" value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:</label>
+              <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Value:</label>
+              <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>PBX IP:</label>
+              <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
+            </div>
+            <button onClick={generateYealinkExpansion} style={{ marginTop: 8 }}>Generate Yealink Expansion Config</button>
+            <div className="output" style={{ marginTop: 16 }}>
+              <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
+            </div>
+          </div>
+          {/* Polycom Expansion Module Section */}
+          <hr />
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>Polycom Expansion Module Config</h3>
+            <div className="form-group">
+              <label>Address:</label>
+              <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Label:</label>
+              <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Type:</label>
+              <select value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))}>
+                <option value="automata">Automata</option>
+                <option value="normal">Normal</option>
+              </select>
+              <label style={{ marginLeft: 16 }}>Linekey Category:</label>
+              <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Linekey Index:</label>
+              <input type="text" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
+            </div>
+            <button onClick={generatePolycomExpansion} style={{ marginTop: 8 }}>Generate Polycom Expansion Config</button>
+            <div className="output" style={{ marginTop: 16 }}>
+              <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
+            </div>
+          </div>
+          {/* Linekey Generator Section */}
+          <hr />
+          <div className="form-section" style={{marginBottom:24}}>
+            <h3>Linekey/BLF/Speed Dial Generator</h3>
+            <div className="form-group">
+              <label>Brand:</label>
               <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))}>
                 <option value="Yealink">Yealink</option>
                 <option value="Polycom">Polycom</option>
@@ -1181,43 +1265,33 @@ function App() {
                 </span>
               </label>
               <input type="text" value={linekeyGen.label} onChange={e => setLinekeyGen(lk => ({ ...lk, label: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Register Line:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyRegLine}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} />
+              <label style={{ marginLeft: 16 }}>Type:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyType}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))}>
+                {YEALINK_LINEKEY_TYPES.map(t => (
+                  <option key={t.code} value={t.code}>{t.code} - {t.label}</option>
+                ))}
+              </select>
+              <label style={{ marginLeft: 16 }}>Value:
+                <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyValue}>
+                  <FaInfoCircle />
+                </span>
+              </label>
+              <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
             </div>
-            <div className="form-group">
-              {linekeyGen.brand === 'Yealink' && (
-                <>
-                  <label>Registered Line:
-                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyRegLine}>
-                      <FaInfoCircle />
-                    </span>
-                  </label>
-                  <input type="text" value={linekeyGen.regLine} onChange={e => setLinekeyGen(lk => ({ ...lk, regLine: e.target.value }))} />
-                  <label style={{ marginLeft: 16 }}>Type:
-                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyType}>
-                      <FaInfoCircle />
-                    </span>
-                  </label>
-                  <select value={linekeyGen.type} onChange={e => setLinekeyGen(lk => ({ ...lk, type: parseInt(e.target.value) }))}>
-                    {YEALINK_LINEKEY_TYPES.map(t => (
-                      <option key={t.code} value={t.code}>{t.code} - {t.label}</option>
-                    ))}
-                  </select>
-                  <label style={{ marginLeft: 16 }}>Value:
-                    <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyValue}>
-                      <FaInfoCircle />
-                    </span>
-                  </label>
-                  <input type="text" value={linekeyGen.value} onChange={e => setLinekeyGen(lk => ({ ...lk, value: e.target.value }))} />
-                </>
-              )}
-              {linekeyGen.brand === 'Polycom' && (
-                <>
-                  <label>EFK/Resourcelist Index:</label>
-                  <input type="text" value={linekeyGen.efkIndex} onChange={e => setLinekeyGen(lk => ({ ...lk, efkIndex: e.target.value }))} />
-                </>
-              )}
-              <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate Linekey Config</button>
+            <button type="button" onClick={generateLinekey} style={{ marginLeft: 16 }}>Generate Linekey Config</button>
+            <div className="output" style={{ marginTop: 16 }}>
+              <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%' }} />
             </div>
-            <textarea value={linekeyGen.output} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
           {/* External Number Speed Dial Section */}
           <hr />
@@ -1259,7 +1333,9 @@ function App() {
               )}
               <button type="button" onClick={generateExternalSpeed} style={{ marginLeft: 16 }}>Generate External Speed Dial</button>
             </div>
-            <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
+            <div className="output" style={{ marginTop: 16 }}>
+              <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%' }} />
+            </div>
           </div>
         </>
       )}
