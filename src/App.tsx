@@ -904,7 +904,36 @@ function App() {
             {referenceSubtab === 'mikrotik' && (
               <div style={{ width: '100%', textAlign: 'left' }}>
                 <h3>Mikrotik Reference</h3>
-                <p>Include Mikrotik config and explanation here.</p>
+                <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 32 }}>
+                  <h4 style={{ marginTop: 0 }}>What does each Mikrotik config template do?</h4>
+                  <ul style={{ marginLeft: 20 }}>
+                    <li>
+                      <b>OTT Mikrotik Template (Editable):</b>
+                      This template is designed for Over-The-Top (OTT) deployments. You can fill in customer-specific fields (IP, name, address, etc.) and generate a ready-to-use config for provisioning a Mikrotik router for remote VoIP or data services.
+                    </li>
+                    <li>
+                      <b>Mikrotik 5009 Bridge Template:</b>
+                      Provides a configuration for the Mikrotik RB5009 router in bridge mode, typically used to transparently bridge two network segments or connect customer equipment to the core network.
+                    </li>
+                    <li>
+                      <b>Mikrotik 5009 Passthrough Template:</b>
+                      Sets up the RB5009 in passthrough mode, allowing traffic to pass through the device with minimal intervention—useful for troubleshooting or when the router should not perform NAT/routing.
+                    </li>
+                    <li>
+                      <b>OnNet Mikrotik Config Template:</b>
+                      Used for "OnNet" (on-network) deployments, this template configures the Mikrotik for integration with the provider’s core network, including VLANs, routing, and security settings.
+                    </li>
+                    <li>
+                      <b>Mikrotik StandAlone ATA Template:</b>
+                      Provides configuration for using a Mikrotik router with a stand-alone Analog Telephone Adapter (ATA), ensuring proper voice VLAN, QoS, and network isolation for analog phone devices.
+                    </li>
+                    <li>
+                      <b>Mikrotik DHCP Options:</b>
+                      Contains DHCP option settings for Mikrotik routers, such as custom options for VoIP phones (e.g., provisioning server, VLAN assignment) to automate device configuration on the network.
+                    </li>
+                  </ul>
+                </div>
+                <p>Use the Mikrotik tab to view and generate these configuration templates.</p>
               </div>
             )}
             {referenceSubtab === 'switches' && (
