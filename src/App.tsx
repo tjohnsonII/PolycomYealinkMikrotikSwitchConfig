@@ -939,7 +939,27 @@ function App() {
             {referenceSubtab === 'switches' && (
               <div style={{ width: '100%', textAlign: 'left' }}>
                 <h3>Switches Reference</h3>
-                <p>Include Switches config and explanation here.</p>
+                <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 32 }}>
+                  <h4 style={{ marginTop: 0 }}>What does each Switch config template do?</h4>
+                  <ul style={{ marginLeft: 20 }}>
+                    <li>
+                      <b>Dynamic Switch Template:</b>
+                      <br />
+                      This template allows you to generate switch configuration code dynamically based on user input. It is useful for customizing VLANs, port assignments, and other switch features for a variety of deployment scenarios.
+                    </li>
+                    <li>
+                      <b>24-Port Switch Template:</b>
+                      <br />
+                      Provides a ready-to-use configuration for a standard 24-port managed switch. It typically includes default VLAN assignments, trunk/access port settings, and recommended security options for VoIP and data networks.
+                    </li>
+                    <li>
+                      <b>8-Port Switch Template:</b>
+                      <br />
+                      Supplies configuration for an 8-port managed switch, optimized for small deployments or edge locations. It includes basic VLAN setup, port roles, and example settings for voice/data separation.
+                    </li>
+                  </ul>
+                </div>
+                <p>Use the Switch Templates tab to view and generate these configuration templates for your network switches.</p>
               </div>
             )}
             {referenceSubtab === 'pbx' && (
