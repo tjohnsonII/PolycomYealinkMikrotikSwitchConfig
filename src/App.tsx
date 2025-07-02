@@ -128,7 +128,6 @@ function App() {
       .replace('"CITY"', fields.city || '"CITY"')
       .replace('"XIP"', fields.xip || '"XIP"')
       .replace('"HANDLE-CUSTOMERADDRESS"', fields.handle || '"HANDLE-CUSTOMERADDRESS"');
-  }
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
   // State for phone type (Polycom or Yealink)
