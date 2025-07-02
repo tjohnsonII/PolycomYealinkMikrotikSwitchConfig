@@ -1339,6 +1339,146 @@ function App() {
           </div>
         </>
       )}
+      {activeTab === 'expansion' && (
+        <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
+          <h2 style={{ marginBottom: 24 }}>Expansion Module Code Generators</h2>
+          <div style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            {/* Yealink Section */}
+            <div style={{ flex: 1, minWidth: 350 }}>
+              <img src="/expansion/yealink-expansion.jpg" alt="Yealink Expansion Module" style={{ maxWidth: 220, marginBottom: 8, borderRadius: 8 }} />
+              <img src="/expansion/yealink-expansion2.jpg" alt="Yealink Expansion Module Alt" style={{ maxWidth: 220, marginBottom: 8, borderRadius: 8 }} />
+              <div style={{ background: '#eef6fb', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+                <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page &amp; line to preview the key visually. Hover over any icon for field details.
+              </div>
+              <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
+                <label>Template Type:
+                  <span title="BLF for Busy Lamp Field, Speed Dial for quick dial keys" style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
+                  <option value="BLF">BLF</option>
+                  <option value="SpeedDial">Speed Dial</option>
+                </select>
+                <label style={{ marginLeft: 16 }}>Sidecar Page:
+                  <span title="Sidecar page number (1, 2, etc.)" style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <input type="number" min={1} max={3} value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} style={{ width: 60 }} />
+                <label style={{ marginLeft: 16 }}>Sidecar Line:
+                  <span title="Button position on the sidecar (1-20)" style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <input type="number" min={1} max={20} value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} style={{ width: 60 }} />
+                <label style={{ marginLeft: 16 }}>Label:
+                  <span title="Text label shown on the phone's display for this key." style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
+                <label style={{ marginLeft: 16 }}>Value (Phone/ext):
+                  <span title="Extension, number, or SIP URI for this key." style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
+                <label style={{ marginLeft: 16 }}>PBX IP:
+                  <span title="PBX IP address for BLF keys (required for BLF type)." style={{ marginLeft: 4, color: '#0078d4', cursor: 'pointer' }}>
+                    <FaInfoCircle />
+                  </span>
+                </label>
+                <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
+              </div>
+              <button onClick={generateYealinkExpansion} style={{ marginTop: 8 }}>Generate Yealink Expansion Config</button>
+              <div className="output" style={{ marginTop: 12 }}>
+                <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
+              </div>
+              {/* Yealink Preview Grid */}
+              <div style={{ marginTop: 16, background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12 }}>
+                <b>Preview: Page {yealinkSection.sidecarPage}</b>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 40px)', gap: 8, justifyContent: 'center', marginTop: 8 }}>
+                  {Array.from({ length: 20 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        width: 38,
+                        height: 38,
+                        border: '1.5px solid #bbb',
+                        borderRadius: 6,
+                        background: (parseInt(yealinkSection.sidecarLine) === idx + 1) ? '#cce1fa' : '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: (parseInt(yealinkSection.sidecarLine) === idx + 1) ? 700 : 400,
+                        color: (parseInt(yealinkSection.sidecarLine) === idx + 1) ? '#0078d4' : '#333',
+                        boxShadow: (parseInt(yealinkSection.sidecarLine) === idx + 1) ? '0 0 6px #0078d4' : 'none'
+                      }}
+                      title={`Key ${idx + 1}${parseInt(yealinkSection.sidecarLine) === idx + 1 ? ' (Selected)' : ''}`}
+                    >
+                      {idx + 1}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Polycom Section */}
+            <div style={{ flex: 1, minWidth: 350 }}>
+              <img src="/expansion/polycom-expansion.jpg" alt="Polycom VVX Color Expansion Module" style={{ maxWidth: 220, marginBottom: 8, borderRadius: 8 }} />
+              <div style={{ background: '#eef6fb', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+                <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key for details.
+              </div>
+              <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
+                <label>Linekey Index (1-28):</label>
+                <input type="number" min={1} max={28} value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
+                <label style={{ marginLeft: 16 }}>Address (e.g. 100@PBX):</label>
+                <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
+                <label style={{ marginLeft: 16 }}>Label:</label>
+                <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
+                <label style={{ marginLeft: 16 }}>Type:</label>
+                <select value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))}>
+                  <option value="automata">Automata</option>
+                  <option value="normal">Normal</option>
+                </select>
+                <label style={{ marginLeft: 16 }}>Linekey Category:</label>
+                <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
+              </div>
+              <button onClick={generatePolycomExpansion} style={{ marginTop: 8 }}>Generate Polycom Expansion Config</button>
+              <div className="output" style={{ marginTop: 12 }}>
+                <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
+              </div>
+              {/* Polycom Preview Grid */}
+              <div style={{ marginTop: 16, background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12 }}>
+                <b>Preview: 28 keys (4 columns × 7 rows)</b>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 40px)', gap: 8, justifyContent: 'center', marginTop: 8 }}>
+                  {Array.from({ length: 28 }).map((_, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        width: 38,
+                        height: 38,
+                        border: '1.5px solid #bbb',
+                        borderRadius: 6,
+                        background: (parseInt(polycomSection.linekeyIndex) === idx + 1) ? '#cce1fa' : '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: (parseInt(polycomSection.linekeyIndex) === idx + 1) ? 700 : 400,
+                        color: (parseInt(polycomSection.linekeyIndex) === idx + 1) ? '#0078d4' : '#333',
+                        boxShadow: (parseInt(polycomSection.linekeyIndex) === idx + 1) ? '0 0 6px #0078d4' : 'none'
+                      }}
+                      title={`Key ${idx + 1}${parseInt(polycomSection.linekeyIndex) === idx + 1 ? ' (Selected)' : ''}`}
+                    >
+                      {idx + 1}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
