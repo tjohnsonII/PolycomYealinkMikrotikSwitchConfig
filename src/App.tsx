@@ -925,7 +925,28 @@ function App() {
                     <li>
                       <b>Mikrotik 5009 Bridge Template:</b>
                       <br />
-                      Provides a configuration for the Mikrotik RB5009 router in bridge mode, typically used to transparently bridge two network segments or connect customer equipment to the core network.
+                      This template provides a configuration for the MikroTik RB5009 router operating in bridge mode, ideal for transparent network pass-through or segmentation without performing NAT or routing. It is commonly used to connect customer premises equipment to the core network or to isolate VoIP traffic via dedicated interfaces.
+                      <ul>
+                        <li><b>Bridge Interface Creation:</b> A logical bridge interface named <code>Phones</code> aggregates multiple physical interfaces and VLANs, simplifying management and centralizing DHCP and firewall control.</li>
+                        <li><b>Interface Assignment for VoIP:</b> Ports <code>ether4</code> and <code>ether5</code> are assigned for hosted VoIP devices and labeled for clarity. These ports are added to the Phones bridge to allow devices on either port to share the same Layer 2 network.</li>
+                        <li><b>VLAN Support:</b> A VLAN interface (<code>vlan202</code>) with ID 202 is created on the Phones bridge, allowing for traffic segmentation and service-specific policies (e.g., dedicated VoIP traffic pathing).</li>
+                        <li><b>DHCP Services:</b> A small IP pool (172.16.1.3–172.16.1.10) and DHCP server are configured on the Phones bridge to provide automatic addressing to VoIP endpoints. DNS servers (e.g., 1.1.1.1 and 8.8.8.8) and a gateway (172.16.1.1) are assigned to ensure basic internet and provisioning access.</li>
+                        <li><b>Static IP Assignment for Bridge Gateway:</b> The bridge interface is given a static IP of 172.16.1.1/24, serving as the default gateway for connected phones.</li>
+                        <li><b>Firewall Address Lists and NAT:</b>
+                          <ul>
+                            <li>An address list for management (MGMT) includes the local subnet and specific remote management IPs.</li>
+                            <li>A masquerade rule ensures that devices behind the bridge can reach external networks (e.g., for provisioning) without requiring upstream NAT configuration.</li>
+                          </ul>
+                        </li>
+                        <li><b>Connection Tracking Optimization:</b> The UDP timeout is shortened to 1m30s, which helps prevent stale SIP sessions and improves call reliability.</li>
+                        <li><b>Service Port Hardening:</b> SIP helper services and legacy protocols like FTP, TFTP, and PPTP are explicitly disabled to reduce unwanted interference and attack surface.</li>
+                      </ul>
+                      <b>Use Case:</b> This template is ideal for transparently bridging VoIP phones or customer hardware through the MikroTik RB5009 to an upstream switch or router. It is especially useful when:
+                      <ul>
+                        <li>You need to segment VoIP traffic but avoid routing/NAT on-site.</li>
+                        <li>You want central DHCP and firewall control.</li>
+                        <li>You’re deploying hosted phones that require isolated Layer 2 environments.</li>
+                      </ul>
                     </li>
                     <li>
                       <b>Mikrotik 5009 Passthrough Template:</b>
@@ -1241,6 +1262,77 @@ function App() {
             <textarea value={externalSpeedOutput} readOnly rows={5} style={{ width: '100%', marginTop: 8 }} />
           </div>
         </>
+      )}      {referenceSubtab === 'mikrotik' && (
+        <div style={{ width: '100%', textAlign: 'left' }}>
+          <h3>Mikrotik Reference</h3>
+          <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 32 }}>
+            <h4 style={{ marginTop: 0 }}>What does each Mikrotik config template do?</h4>
+            <ul style={{ marginLeft: 20 }}>
+              <li>
+                <b>OTT Mikrotik Template (Editable):</b>
+                <br />
+                This configuration template is designed for Over-The-Top (OTT) VoIP or data deployments, where the Mikrotik router is installed at a customer location and connects back to the service provider over a public or third-party WAN. It allows users to fill in site-specific variables (IP addresses, customer info, gateway, etc.) and generates a fully pre-configured, drop-in-ready script for provisioning.
+                <ul>
+                  <li><b>WAN and LAN Setup:</b> Configures ether10 as the uplink to the customer’s internet router and assigns a static WAN IP. Internal VLANs (e.g., VLAN 202 for phones, VLAN 102 for local management) are trunked through ether9 back to 123Net.</li>
+                  <li><b>DHCP Services for VoIP Phones:</b> Provides DHCP on the phone VLAN with custom DHCP options (66, 160, 202) for provisioning server URLs, VLAN tagging, and NTP synchronization. This enables plug-and-play VoIP phone deployment.</li>
+                  <li><b>Firewall Rules and Filtering:</b> Includes security policies that allow only trusted IPs to manage the router, permit traffic from the phone VLAN, management subnets, and PBX networks, and block all other inbound connections by default. SIP helper services are disabled for improved SIP handling.</li>
+                  <li><b>Address Lists for Management & Services:</b> Pre-defined address lists for management (MGMT), phone VLANs, PBX access, and backend tools (BT) simplify rule creation and policy enforcement.</li>
+                  <li><b>SNMP and Time Settings:</b> Enables SNMP with customer-specific metadata, sets local timezone, NTP servers, and router hostname to reflect site identity.</li>
+                  <li><b>Connection Tracking Optimization:</b> Sets a reduced UDP timeout (1m30s) to improve VoIP call stability and avoid lingering sessions.</li>
+                  <li><b>Pre-Built NAT Rules:</b> Configures masquerading for the VoIP phone subnet to allow internet access for phones or remote provisioning.</li>
+                </ul>
+                <b>Use Case:</b> Ideal for remote site deployments where full routing/NAT is handled by an upstream customer router. This template simplifies the process of deploying and managing Mikrotik routers for hosted VoIP or data services without requiring manual configuration each time.
+              </li>
+              <li>
+                <b>Mikrotik 5009 Bridge Template:</b>
+                <br />
+                This template provides a configuration for the MikroTik RB5009 router operating in bridge mode, ideal for transparent network pass-through or segmentation without performing NAT or routing. It is commonly used to connect customer premises equipment to the core network or to isolate VoIP traffic via dedicated interfaces.
+                <ul>
+                  <li><b>Bridge Interface Creation:</b> A logical bridge interface named <code>Phones</code> aggregates multiple physical interfaces and VLANs, simplifying management and centralizing DHCP and firewall control.</li>
+                  <li><b>Interface Assignment for VoIP:</b> Ports <code>ether4</code> and <code>ether5</code> are assigned for hosted VoIP devices and labeled for clarity. These ports are added to the Phones bridge to allow devices on either port to share the same Layer 2 network.</li>
+                  <li><b>VLAN Support:</b> A VLAN interface (<code>vlan202</code>) with ID 202 is created on the Phones bridge, allowing for traffic segmentation and service-specific policies (e.g., dedicated VoIP traffic pathing).</li>
+                  <li><b>DHCP Services:</b> A small IP pool (172.16.1.3–172.16.1.10) and DHCP server are configured on the Phones bridge to provide automatic addressing to VoIP endpoints. DNS servers (e.g., 1.1.1.1 and 8.8.8.8) and a gateway (172.16.1.1) are assigned to ensure basic internet and provisioning access.</li>
+                  <li><b>Static IP Assignment for Bridge Gateway:</b> The bridge interface is given a static IP of 172.16.1.1/24, serving as the default gateway for connected phones.</li>
+                  <li><b>Firewall Address Lists and NAT:</b>
+                    <ul>
+                      <li>An address list for management (MGMT) includes the local subnet and specific remote management IPs.</li>
+                      <li>A masquerade rule ensures that devices behind the bridge can reach external networks (e.g., for provisioning) without requiring upstream NAT configuration.</li>
+                    </ul>
+                  </li>
+                  <li><b>Connection Tracking Optimization:</b> The UDP timeout is shortened to 1m30s, which helps prevent stale SIP sessions and improves call reliability.</li>
+                  <li><b>Service Port Hardening:</b> SIP helper services and legacy protocols like FTP, TFTP, and PPTP are explicitly disabled to reduce unwanted interference and attack surface.</li>
+                </ul>
+                <b>Use Case:</b> This template is ideal for transparently bridging VoIP phones or customer hardware through the MikroTik RB5009 to an upstream switch or router. It is especially useful when:
+                <ul>
+                  <li>You need to segment VoIP traffic but avoid routing/NAT on-site.</li>
+                  <li>You want central DHCP and firewall control.</li>
+                  <li>You’re deploying hosted phones that require isolated Layer 2 environments.</li>
+                </ul>
+              </li>
+              <li>
+                <b>Mikrotik 5009 Passthrough Template:</b>
+                <br />
+                Sets up the RB5009 in passthrough mode, allowing traffic to pass through the device with minimal intervention—useful for troubleshooting or when the router should not perform NAT/routing.
+              </li>
+              <li>
+                <b>OnNet Mikrotik Config Template:</b>
+                <br />
+                Used for "OnNet" (on-network) deployments, this template configures the Mikrotik for integration with the provider’s core network, including VLANs, routing, and security settings.
+              </li>
+              <li>
+                <b>Mikrotik StandAlone ATA Template:</b>
+                <br />
+                Provides configuration for using a Mikrotik router with a stand-alone Analog Telephone Adapter (ATA), ensuring proper voice VLAN, QoS, and network isolation for analog phone devices.
+              </li>
+              <li>
+                <b>Mikrotik DHCP Options:</b>
+                <br />
+                Contains DHCP option settings for Mikrotik routers, such as custom options for VoIP phones (e.g., provisioning server, VLAN assignment) to automate device configuration on the network.
+              </li>
+            </ul>
+          </div>
+          <p>Use the Mikrotik tab to view and generate these configuration templates.</p>
+        </div>
       )}
       {/* Full Config Tab */}
       {activeTab === 'fullconfig' && (
