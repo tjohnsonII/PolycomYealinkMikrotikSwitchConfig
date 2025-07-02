@@ -371,22 +371,16 @@ function App() {
   }
 
   // Helper: Generate Polycom external number config (special feature)
-  function generatePolycomExternal(lineNum: string, macroNum: string, label: string, externalNum: string) {
+  function generatePolycomExternal(lineNum: string, efkIndex: string, label: string, externalNum: string) {
     return (
       'feature.enhancedFeatureKeys.enabled=1\n' +
       'feature.EFKLineKey.enabled=1\n' +
-      `efk.efklist.${macroNum}.mname=${label}\n` +
-      `efk.efklist.${macroNum}.status=1\n` +
-      `efk.efklist.${macroNum}.action.string=${externalNum}$Tinvite$\n` +
+      `efk.efklist.${efkIndex}.mname=${label}\n` +
+      `efk.efklist.${efkIndex}.status=1\n` +
+      `efk.efklist.${efkIndex}.action.string=${externalNum}$Tinvite$\n` +
       `linekey.${lineNum}.category=EFK\n` +
-      `linekey.${lineNum}.index=${macroNum}\n`
+      `linekey.${lineNum}.index=${efkIndex}\n`
     );
-  }
-
-  // State for selected feature template and its inputs (for advanced features)
-  // ...existing code...
-        // ...existing code removed due to missing dependencies...
-        // All feature generation logic removed for now to resolve errors.
   }
 
   // Generate main config for Polycom or Yealink park lines (main output)
@@ -398,8 +392,15 @@ function App() {
       return;
     }
     let config = `# Model: ${model}\n`;
+
     // --- Insert static config blocks for W56P/W60P, Yealink, Polycom ---
-    if (model === 'Yealink W56P' || model === 'Yealink W60P' || model === 'Yealink 56h Dect w/ 60p Base' || model === 'Yealink 56h Dect w/ 76p Base' || model === 'Yealink 56h Dect Handset') {
+    if (
+      model === 'Yealink W56P' ||
+      model === 'Yealink W60P' ||
+      model === 'Yealink 56h Dect w/ 60p Base' ||
+      model === 'Yealink 56h Dect w/ 76p Base' ||
+      model === 'Yealink 56h Dect Handset'
+    ) {
       config += [
         'account.1.subscribe_mwi_to_vm=1',
         'custom.handset.time_format=0',
@@ -408,8 +409,8 @@ function App() {
         'local_time.dhcp_time=0',
         'local_time.ntp_server1=pool.ntp.org',
         'local_time.summer_time=2',
-        `local_time.time_format=0`,
-        `local_time.time_zone=${DEFAULT_TIME_OFFSET}`,
+        'local_time.time_format=0',
+        `local_time.time_zone=${timeOffset}`,
         'local_time.time_zone_name=United States-Eastern Time',
         'programablekey.2.label=Directory',
         'programablekey.2.line=%EMPTY%',
@@ -418,9 +419,9 @@ function App() {
         'sip.mac_in_ua=1',
         'sip.trust_ctrl=1',
         'static.auto_provision.custom.protect=1',
-        'static.auto_provision.server.url= http://provisioner.123.net/',
+        'static.auto_provision.server.url=http://provisioner.123.net/',
         'voice_mail.number.1=*97',
-        `static.security.user_password=${DEFAULT_ADMIN_PASSWORD}`,
+        `static.security.user_password=${adminPassword}`,
         ''
       ].join('\n');
     } else if (phoneType === 'Yealink') {
@@ -440,8 +441,8 @@ function App() {
         'local_time.dhcp_time=0',
         'local_time.ntp_server1=pool.ntp.org',
         'local_time.summer_time=2',
-        `local_time.time_format=0`,
-        `local_time.time_zone=${DEFAULT_TIME_OFFSET}`,
+        'local_time.time_format=0',
+        `local_time.time_zone=${timeOffset}`,
         'local_time.time_zone_name=United States-Eastern Time',
         'programablekey.2.label=Directory',
         'programablekey.2.line=%EMPTY%',
@@ -452,9 +453,11 @@ function App() {
         'static.auto_provision.custom.protect=1',
         'static.auto_provision.server.url=http://provisioner.123.net/',
         'voice_mail.number.1=*97',
-        `static.security.user_password=${DEFAULT_ADMIN_PASSWORD}`,
+        `static.security.user_password=${adminPassword}`,
         ''
       ].join('\n');
+      config += getYealinkGlobalAttributes(yealinkOptions);
+      config += generateYealinkParkLines(model, start, end, ip);
     } else if (phoneType === 'Polycom') {
       config += [
         'device.sntp.gmtoffsetcityid=16',
@@ -465,18 +468,12 @@ function App() {
         'lcl.datetime.date.longformat=0',
         'tcpipapp.sntp.address=pool.ntp.org',
         'tcpipapp.sntp.address.overridedhcp=1',
-        `tcpipapp.sntp.gmtoffset=${parseInt(DEFAULT_TIME_OFFSET) * 3600}`,
+        `tcpipapp.sntp.gmtoffset=${parseInt(timeOffset) * 3600}`,
         'tcpipapp.sntp.gmtoffset.overridedhcp=1',
         'tcpipapp.sntp.gmtoffsetcityid=16',
         ''
       ].join('\n');
-    }
-    // --- End static config blocks ---
-    if (phoneType === 'Polycom') {
       config += generatePolycomParkLines(model, start, end, ip);
-    } else {
-      config += getYealinkGlobalAttributes(yealinkOptions);
-      config += generateYealinkParkLines(model, start, end, ip);
     }
     setOutput(config);
   };
@@ -1227,10 +1224,14 @@ function App() {
                         <input
                           id={f + '-' + rowIdx}
                           name={f}
-                          type="text"
+                                                   type="text"
                           value={row[f] || ''}
                           onChange={e => handleFpbxChange(rowIdx, e)}
                           style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                                               />
+                      </td>
+                    ))}
+                    <td>
                                                />
                       </td>
                     ))}
