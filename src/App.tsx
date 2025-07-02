@@ -187,22 +187,22 @@ function App() {
   };
 
   // Generate Yealink expansion module config (sidecar keys)
-  const generateYealinkExpansion = () => {
-    const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
-    let config = '';
-    if (templateType === 'SpeedDial') {
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.type=13\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${value}\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1\n`;
-    } else {
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.type=16\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${value}@${pbxIp}\n`;
-      config += `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1\n`;
-    }
-    setYealinkOutput(config);
-  };
+  // const generateYealinkExpansion = () => {
+  //   const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
+  //   let config = '';
+  //   if (templateType === 'SpeedDial') {
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.type=13\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${value}\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1\n`;
+  //   } else {
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.type=16\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${value}@${pbxIp}\n`;
+  //     config += `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1\n`;
+  //   }
+  //   setYealinkOutput(config);
+  // };
 
   // State for Polycom expansion module section
   // ...existing code...
@@ -301,9 +301,9 @@ function App() {
 
   // Global/Required attributes for Yealink phones (toggle advanced features)
   const yealinkOptions = {
-    callStealing: false,
-    labelLength: false,
-    disableMissedCall: false,
+    callStealing: yealinkCallStealing,
+    labelLength: yealinkLabelLength,
+    disableMissedCall: yealinkDisableMissedCall,
   };
 
   // Helper: Generate Yealink global attributes config
@@ -665,7 +665,7 @@ function App() {
     { code: 25, label: 'Record' },
     { code: 27, label: 'XML Browser' },
     { code: 34, label: 'Hot Desking' },
-    { code: 35, label: 'URL Record' },
+    { code: 35,
     { code: 38, label: 'LDAP' },
     { code: 39, label: 'BLF List' },
     { code: 40, label: 'Prefix' },
@@ -917,7 +917,10 @@ function App() {
                   <FaInfoCircle />
                 </span>
               </label>
-              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')} />
+              <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
+                <option value="Polycom">Polycom</option>
+                <option value="Yealink">Yealink</option>
+              </select>
               <label style={{marginLeft:16}}>Model:
                 <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.model}>
                   <FaInfoCircle />
@@ -1022,7 +1025,10 @@ function App() {
                   <FaInfoCircle />
                 </span>
               </label>
-              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))} />
+              <select value={linekeyGen.brand} onChange={e => setLinekeyGen(lk => ({ ...lk, brand: e.target.value }))}>
+                <option value="Yealink">Yealink</option>
+                <option value="Polycom">Polycom</option>
+              </select>
               <label style={{ marginLeft: 16 }}>Line Key Number:
                 <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.linekeyNum}>
                   <FaInfoCircle />
@@ -1085,7 +1091,10 @@ function App() {
                   <FaInfoCircle />
                 </span>
               </label>
-              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))} />
+              <select value={externalSpeed.brand} onChange={e => setExternalSpeed(s => ({ ...s, brand: e.target.value }))}>
+                <option value="Yealink">Yealink</option>
+                <option value="Polycom">Polycom</option>
+              </select>
               <label style={{ marginLeft: 16 }}>Line Key Number:
                 <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.externalLineNum}>
                   <FaInfoCircle />
@@ -1225,7 +1234,7 @@ function App() {
                           value={row[f] || ''}
                           onChange={e => handleFpbxChange(rowIdx, e)}
                           style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                        />
+                                               />
                       </td>
                     ))}
                     <td>
@@ -1235,15 +1244,12 @@ function App() {
                 ))}
               </tbody>
             </table>
-              </tbody>
-            </table>
             <button type="button" onClick={handleFpbxExport} style={{ marginTop: 12 }}>
-              Export as CSV
-            </button>
-            <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
-          </form>
-        </div>
-      )}
+            Export as CSV
+          </button>
+          <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
+        </form>
+      </div>
       {/* VPBX Import Template Tab */}
       {activeTab === 'vpbx' && (
         <div>
