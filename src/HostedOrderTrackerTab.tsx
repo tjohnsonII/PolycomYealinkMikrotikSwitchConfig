@@ -100,7 +100,7 @@ const HostedOrderTrackerTab: React.FC = () => {
     const field = fields[idx];
     setFields(f => f.filter((_, i) => i !== idx));
     setData(d => {
-      const { [field]: _, ...rest } = d;
+      const { [field]: _removed, ...rest } = d;
       return rest;
     });
   }
@@ -139,7 +139,7 @@ const HostedOrderTrackerTab: React.FC = () => {
     setData(d => {
       const newData = { ...d };
       for (const f of fields) {
-        const { [name]: _, ...rest } = newData[f];
+        const { [name]: _removed, ...rest } = newData[f];
         newData[f] = rest;
       }
       return newData;

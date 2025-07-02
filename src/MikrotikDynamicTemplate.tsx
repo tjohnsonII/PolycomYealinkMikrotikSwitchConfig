@@ -127,11 +127,11 @@ const MikrotikDynamicTemplate: React.FC = () => {
   const [identity, setIdentity] = useState('');
 
   const filled = defaultTemplate
-    .replace(/\{WAN_IP\}/g, wanIp)
-    .replace(/\{NETWORK_IP\}/g, networkIp)
-    .replace(/\{OFFNET_IP\}/g, offnetIp)
-    .replace(/\{LOCATION\}/g, location)
-    .replace(/\{IDENTITY\}/g, identity);
+    .replace(/{WAN_IP}/g, wanIp)
+    .replace(/{NETWORK_IP}/g, networkIp)
+    .replace(/{OFFNET_IP}/g, offnetIp)
+    .replace(/{LOCATION}/g, location)
+    .replace(/{IDENTITY}/g, identity);
 
   return (
     <div>
