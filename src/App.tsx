@@ -120,7 +120,7 @@ function App() {
     xip: '',
     handle: '',
   });
-  function getOttTemplate(fields: typeof ottFields) {
+  function getOttTemplate(fields: typeof ottFields): string {
     return ottMikrotikTemplate
       .replace('XXX.XXX.XXX.XXX', fields.ip || 'XXX.XXX.XXX.XXX')
       .replace('"CUSTOMER NAME"', fields.customerName || '"CUSTOMER NAME"')
@@ -128,6 +128,7 @@ function App() {
       .replace('"CITY"', fields.city || '"CITY"')
       .replace('"XIP"', fields.xip || '"XIP"')
       .replace('"HANDLE-CUSTOMERADDRESS"', fields.handle || '"HANDLE-CUSTOMERADDRESS"');
+  }
   // State for active tab selection
   const [activeTab, setActiveTab] = useState('phone');
   // State for phone type (Polycom or Yealink)
@@ -189,6 +190,21 @@ function App() {
     config += `linekey.${linekeyIndex}.index=${linekeyIndex}\n`;
     setPolycomOutput(config);
   };
+
+  // Polycom MWI (Message Waiting Indicator) state and generator
+  const [polycomMWI, setPolycomMWI] = useState({
+    ext: '',
+    pbxIp: '',
+    output: ''
+  });
+  function generatePolycomMWI() {
+    setPolycomMWI(mwi => ({
+      ...mwi,
+      output:
+        `voIpProt.SIP.specialEvent.checkMWI.1.address=${mwi.ext}@${mwi.pbxIp}\n` +
+        `voIpProt.SIP.specialEvent.checkMWI.1.type=checkMWI\n`
+    }));
+  }
 
   // Generate Yealink expansion module config (sidecar keys)
   // const generateYealinkExpansion = () => {
@@ -1224,15 +1240,11 @@ function App() {
                         <input
                           id={f + '-' + rowIdx}
                           name={f}
-                                                   type="text"
+                          type="text"
                           value={row[f] || ''}
                           onChange={e => handleFpbxChange(rowIdx, e)}
                           style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                                               />
-                      </td>
-                    ))}
-                    <td>
-                                               />
+                        />
                       </td>
                     ))}
                     <td>
@@ -1243,11 +1255,12 @@ function App() {
               </tbody>
             </table>
             <button type="button" onClick={handleFpbxExport} style={{ marginTop: 12 }}>
-            Export as CSV
-          </button>
-          <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
-        </form>
-      </div>
+              Export as CSV
+            </button>
+            <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
+          </form>
+        </div>
+      )}
       {/* VPBX Import Template Tab */}
       {activeTab === 'vpbx' && (
         <div>
