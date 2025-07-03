@@ -10,8 +10,8 @@ const FullConfig: React.FC = () => {
         <textarea
           value={generatedConfig.config.trim()}
           readOnly
-          rows={18}
-          style={{ width: '100%', fontFamily: 'monospace', fontSize: 14, margin: 0, padding: 0, border: '1px solid #ccc', borderRadius: 4 }}
+          rows={28}
+          style={{ width: '100%', minHeight: 400, fontFamily: 'monospace', fontSize: 15, margin: 0, padding: 8, border: '1px solid #ccc', borderRadius: 4, resize: 'vertical' }}
         />
       ) : (
         <p>No config generated yet. Use the Phone Config tab to generate a config.</p>

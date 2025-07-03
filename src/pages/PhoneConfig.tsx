@@ -50,6 +50,29 @@ const PhoneConfig: React.FC = () => {
   const [enablePark, setEnablePark] = useState(false);
   const { setGeneratedConfig } = useConfigContext();
 
+  // Clear all config fields and output
+  function handleClearConfig() {
+    setPhoneType('Polycom');
+    setModel(MODEL_OPTIONS[0]);
+    setIp('');
+    setStartExt('71');
+    setEndExt('73');
+    setLabelPrefix('Park');
+    setTimeOffset('-5');
+    setAdminPassword('admin:08520852');
+    setYealinkLabelLength(false);
+    setYealinkDisableMissedCall(false);
+    setYealinkCallStealing(false);
+    setOutput('');
+    setError(null);
+    setEnableMWI(false);
+    setEnableSpeedDial(false);
+    setEnableIntercom(false);
+    setEnableTransferVM(false);
+    setEnablePark(false);
+    setGeneratedConfig({ config: '', phoneType: 'Polycom', model: MODEL_OPTIONS[0] });
+  }
+
   // Config generation logic for Polycom and Yealink
   // Improved IP validation (0-255 for each octet)
   const isValidIp = (ip: string) => {
@@ -173,6 +196,9 @@ const PhoneConfig: React.FC = () => {
 
   return (
     <>
+      <button onClick={handleClearConfig} style={{ float: 'right', marginBottom: 8, background: '#f44336', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', cursor: 'pointer' }}>
+        Clear Config
+      </button>
       <h2 style={{marginTop:0}}>Phone Config Generator</h2>
       <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 24, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' }}>
         <h3 style={{ marginTop: 0 }}>What does each config generator do?</h3>

@@ -1,3 +1,28 @@
+  // Clear all expansion config fields and outputs
+// ...existing code...
+  // Clear all expansion config fields and outputs
+  const handleClearExpansionConfig = () => {
+    setYealinkSection({
+      templateType: 'BLF',
+      sidecarPage: '1',
+      sidecarLine: '1',
+      label: '',
+      value: '',
+      pbxIp: '',
+    });
+    setYealinkOutput('');
+    setPolycomSection({
+      address: '',
+      label: '',
+      type: 'automata',
+      linekeyCategory: 'BLF',
+      linekeyIndex: '',
+    });
+    setPolycomOutput('');
+    try {
+      localStorage.removeItem('expansionConfig');
+    } catch {}
+  };
 import React, { useState } from 'react';
 
 
@@ -5,25 +30,13 @@ import React, { useState } from 'react';
 
 
 const ExpansionModules: React.FC = () => {
-  // Example state for Yealink expansion module
-  const [yealinkSection, setYealinkSection] = useState({
-    templateType: 'BLF',
-    sidecarPage: '1',
-    sidecarLine: '1',
-    label: '',
-    value: '',
-    pbxIp: '',
-  });
+  // Yealink: 20 slots per page
+  const [yealinkTemplateType, setYealinkTemplateType] = useState('BLF');
+  const [yealinkSlots, setYealinkSlots] = useState(Array(20).fill(0).map(() => ({ label: '', value: '', pbxIp: '' })));
   const [yealinkOutput, setYealinkOutput] = useState('');
 
-  // Example state for Polycom expansion module
-  const [polycomSection, setPolycomSection] = useState({
-    address: '',
-    label: '',
-    type: 'automata',
-    linekeyCategory: 'BLF',
-    linekeyIndex: '',
-  });
+  // Polycom: 28 slots
+  const [polycomSlots, setPolycomSlots] = useState(Array(28).fill(0).map(() => ({ label: '', address: '', type: 'automata' })));
   const [polycomOutput, setPolycomOutput] = useState('');
 
   // Utility: Download text as file
@@ -116,56 +129,6 @@ const ExpansionModules: React.FC = () => {
     };
     reader.readAsText(file);
   };
-  const generateYealinkExpansion = () => {
-    const { templateType, sidecarPage, label, value, pbxIp } = yealinkSection;
-    let type = templateType === 'BLF' ? 16 : 13;
-    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
-    // Preview all 20 keys for the selected page
-    let lines = [];
-    for (let i = 1; i <= 20; i++) {
-      if (i === parseInt(yealinkSection.sidecarLine)) {
-        lines.push(
-          `expansion_module.${sidecarPage}.key.${i}.label=${label}\n` +
-          `expansion_module.${sidecarPage}.key.${i}.type=${type}\n` +
-          `expansion_module.${sidecarPage}.key.${i}.value=${val}\n` +
-          `expansion_module.${sidecarPage}.key.${i}.line=1`
-        );
-      } else {
-        lines.push(
-          `expansion_module.${sidecarPage}.key.${i}.label=\n` +
-          `expansion_module.${sidecarPage}.key.${i}.type=\n` +
-          `expansion_module.${sidecarPage}.key.${i}.value=\n` +
-          `expansion_module.${sidecarPage}.key.${i}.line=1`
-        );
-      }
-    }
-    setYealinkOutput(lines.join('\n'));
-    try {
-      localStorage.setItem('expansionConfig', lines.join('\n'));
-    } catch {}
-  };
-
-  // Generate Yealink config for all pages (1-3)
-  const generateYealinkAllPages = () => {
-    const { templateType, label, value, pbxIp } = yealinkSection;
-    let type = templateType === 'BLF' ? 16 : 13;
-    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
-    let allLines = [];
-    for (let page = 1; page <= 3; page++) {
-      for (let i = 1; i <= 20; i++) {
-        allLines.push(
-          `expansion_module.${page}.key.${i}.label=${label}\n` +
-          `expansion_module.${page}.key.${i}.type=${type}\n` +
-          `expansion_module.${page}.key.${i}.value=${val}\n` +
-          `expansion_module.${page}.key.${i}.line=1`
-        );
-      }
-    }
-    setYealinkOutput(allLines.join('\n'));
-    try {
-      localStorage.setItem('expansionConfig', allLines.join('\n'));
-    } catch {}
-  };
 
   // Generate Polycom expansion config line and preview all keys for the page
   const generatePolycomExpansion = () => {
@@ -195,6 +158,9 @@ const ExpansionModules: React.FC = () => {
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 16 }}>
+      <button onClick={handleClearExpansionConfig} style={{ float: 'right', marginBottom: 8, background: '#f44336', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', cursor: 'pointer' }}>
+        Clear Config
+      </button>
       <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Hosted Config Generator</h1>
       <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 24 }}>Expansion Module Code Generators</h2>
       <div style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
@@ -205,43 +171,64 @@ const ExpansionModules: React.FC = () => {
           <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
             <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page & key toggles to preview each key visually. Enter any key to preview the full sidecar.
           </div>
-          <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
-            <label title="BLF = Busy Lamp Field, Speed Dial = quick dial">Template Type:</label>
-            <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
+          <div style={{ marginBottom: 12 }}>
+            <label>Template Type: </label>
+            <select value={yealinkTemplateType} onChange={e => setYealinkTemplateType(e.target.value)}>
               <option value="BLF">BLF</option>
               <option value="SpeedDial">Speed Dial</option>
             </select>
-            <label style={{ marginLeft: 16 }} title="Which page of the sidecar (1-3)">Sidecar Page (1-3):</label>
-            <input type="number" min={1} max={3} value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} style={{ width: 60 }} />
-            <label style={{ marginLeft: 16 }} title="Which button on the page (1-20)">Sidecar Line (1-20):</label>
-            <input type="number" min={1} max={20} value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} style={{ width: 60 }} />
-            <label style={{ marginLeft: 16 }} title="Text shown on the button">Label:</label>
-            <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
-            <label style={{ marginLeft: 16 }} title="Extension or number this button dials or monitors">Value (Phone/ext):</label>
-            <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
-            <label style={{ marginLeft: 16 }} title="PBX IP address for BLF keys">PBX IP:</label>
-            <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
+            <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ background: '#eaf4fc' }}>
+                  <th>Slot</th>
+                  <th>Label</th>
+                  <th>Value/Ext</th>
+                  <th>PBX IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {yealinkSlots.map((slot, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td><input type="text" value={slot.label} onChange={e => {
+                      const newSlots = [...yealinkSlots];
+                      newSlots[idx].label = e.target.value;
+                      setYealinkSlots(newSlots);
+                    }} style={{ width: 100 }} /></td>
+                    <td><input type="text" value={slot.value} onChange={e => {
+                      const newSlots = [...yealinkSlots];
+                      newSlots[idx].value = e.target.value;
+                      setYealinkSlots(newSlots);
+                    }} style={{ width: 100 }} /></td>
+                    <td><input type="text" value={slot.pbxIp} onChange={e => {
+                      const newSlots = [...yealinkSlots];
+                      newSlots[idx].pbxIp = e.target.value;
+                      setYealinkSlots(newSlots);
+                    }} style={{ width: 100 }} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <button onClick={generateYealinkExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
-          <button onClick={generateYealinkAllPages} style={{ marginTop: 8 }}>Generate All Pages</button>
+          <button onClick={() => {
+            const type = yealinkTemplateType === 'BLF' ? 16 : 13;
+            const lines = yealinkSlots.map((slot, i) => (
+              `expansion_module.1.key.${i + 1}.label=${slot.label}\n` +
+              `expansion_module.1.key.${i + 1}.type=${slot.label ? type : ''}\n` +
+              `expansion_module.1.key.${i + 1}.value=${slot.label ? (yealinkTemplateType === 'BLF' ? `${slot.value}@${slot.pbxIp}` : slot.value) : ''}\n` +
+              `expansion_module.1.key.${i + 1}.line=1`
+            ));
+            setYealinkOutput(lines.join('\n'));
+            try {
+              localStorage.setItem('expansionConfig', lines.join('\n'));
+            } catch {}
+          }} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={yealinkOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
             <button onClick={sortYealinkOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
             <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
               <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handleYealinkFileUpload} /></label>
               <button onClick={() => downloadTextFile('yealink_expansion_sorted.txt', yealinkOutput)} style={{ fontSize: 13 }}>Download</button>
-            </div>
-          </div>
-          {/* Yealink Preview Grid */}
-          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, marginTop: 16, padding: 8 }}>
-            <b>Preview: Page {yealinkSection.sidecarPage}</b>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, marginTop: 8 }}>
-              {[...Array(20)].map((_, idx) => (
-                <div key={idx} style={{ height: 32, border: '1px solid #b3c6e0', borderRadius: 4, background: idx + 1 === parseInt(yealinkSection.sidecarLine) ? '#d1eaff' : '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: idx + 1 === parseInt(yealinkSection.sidecarLine) ? 700 : 400, color: '#2a3b5c' }}>
-                  {idx + 1 === parseInt(yealinkSection.sidecarLine) ? '🟩' : '⬜'}
-                  <span style={{ marginLeft: 6 }}>{idx + 1}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
@@ -251,20 +238,56 @@ const ExpansionModules: React.FC = () => {
           <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
             <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key to show the index.
           </div>
-          <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
-            <label title="Which button (1-28) on the Polycom expansion module">Linekey Index (1-28):</label>
-            <input type="number" min={1} max={28} value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
-            <label style={{ marginLeft: 16 }} title="SIP address or extension (e.g. 100@PBX)">Address (e.g. 100@PBX):</label>
-            <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
-            <label style={{ marginLeft: 16 }} title="Text shown on the button">Label:</label>
-            <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
-            <label style={{ marginLeft: 16 }} title="Button type: automata (BLF) or normal (speed dial)">Type:</label>
-            <select value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))}>
-              <option value="automata">Automata</option>
-              <option value="normal">Normal</option>
-            </select>
+          <div style={{ marginBottom: 12 }}>
+            <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ background: '#eaf4fc' }}>
+                  <th>Slot</th>
+                  <th>Label</th>
+                  <th>Address/Ext</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {polycomSlots.map((slot, idx) => (
+                  <tr key={idx}>
+                    <td>{idx + 1}</td>
+                    <td><input type="text" value={slot.label} onChange={e => {
+                      const newSlots = [...polycomSlots];
+                      newSlots[idx].label = e.target.value;
+                      setPolycomSlots(newSlots);
+                    }} style={{ width: 100 }} /></td>
+                    <td><input type="text" value={slot.address} onChange={e => {
+                      const newSlots = [...polycomSlots];
+                      newSlots[idx].address = e.target.value;
+                      setPolycomSlots(newSlots);
+                    }} style={{ width: 100 }} /></td>
+                    <td>
+                      <select value={slot.type} onChange={e => {
+                        const newSlots = [...polycomSlots];
+                        newSlots[idx].type = e.target.value;
+                        setPolycomSlots(newSlots);
+                      }}>
+                        <option value="automata">Automata</option>
+                        <option value="normal">Normal</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <button onClick={generatePolycomExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
+          <button onClick={() => {
+            const lines = polycomSlots.map((slot, i) => (
+              `attendant.resourcelist.${i + 1}.address=${slot.address}\n` +
+              `attendant.resourcelist.${i + 1}.label=${slot.label}\n` +
+              `attendant.resourcelist.${i + 1}.type=${slot.type}`
+            ));
+            setPolycomOutput(lines.join('\n'));
+            try {
+              localStorage.setItem('expansionConfig', lines.join('\n'));
+            } catch {}
+          }} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={polycomOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
             <button onClick={sortPolycomOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
