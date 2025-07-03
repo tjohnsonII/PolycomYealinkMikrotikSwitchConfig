@@ -41,6 +41,7 @@ const PhoneConfig: React.FC = () => {
   const [yealinkDisableMissedCall, setYealinkDisableMissedCall] = useState(false);
   const [yealinkCallStealing, setYealinkCallStealing] = useState(false);
   const [output, setOutput] = useState('');
+  const [error, setError] = useState<string | null>(null);
   // Advanced feature toggles
   const [enableMWI, setEnableMWI] = useState(false);
   const [enableSpeedDial, setEnableSpeedDial] = useState(false);
@@ -50,82 +51,124 @@ const PhoneConfig: React.FC = () => {
   const { setGeneratedConfig } = useConfigContext();
 
   // Config generation logic for Polycom and Yealink
-  const generateConfig = () => {
-    let config = '';
-    const extStart = parseInt(startExt, 10);
-    const extEnd = parseInt(endExt, 10);
-    const extList = [];
-    for (let ext = extStart; ext <= extEnd; ext++) {
-      extList.push(ext);
-    }
+  // Improved IP validation (0-255 for each octet)
+  const isValidIp = (ip: string) => {
+    const parts = ip.split('.');
+    if (parts.length !== 4) return false;
+    return parts.every(p => {
+      const n = Number(p);
+      return n >= 0 && n <= 255 && /^\d+$/.test(p);
+    });
+  };
 
-    if (phoneType === 'Polycom') {
-      config += `device.sntp.serverName=216.239.35.12\n`;
-      config += `tcpIpApp.sntp.address=216.239.35.12\n`;
-      config += `tcpIpApp.sntp.address.overrideDHCP=1\n`;
-      config += `tcpIpApp.sntp.gmtOffset=${parseInt(timeOffset, 10) * 3600}\n`;
-      config += `tcpIpApp.sntp.gmtOffset.overrideDHCP=1\n`;
-      config += `static.security.user_password=${adminPassword}\n`;
-      extList.forEach((ext, i) => {
-        config += `attendant.resourcelist.${i + 1}.address=${ext}@${ip}\n`;
-        config += `attendant.resourcelist.${i + 1}.label=${labelPrefix}${ext}\n`;
-        config += `attendant.resourcelist.${i + 1}.type=automata\n`;
-      });
-      config += `feature.doNotDisturb.enable=0\n`;
-      if (enableMWI) {
-        config += `msg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
+  const generateConfig = () => {
+    setError(null);
+    let config = '';
+    try {
+      // Basic validation
+      if (!ip || !isValidIp(ip)) {
+        setError('Please enter a valid IP address (e.g. 192.168.1.100).');
+        setOutput('');
+        return;
       }
-      if (enableSpeedDial) {
-        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
+      if (!startExt || !endExt) {
+        setError('Start and end extension are required.');
+        setOutput('');
+        return;
       }
-      if (enableIntercom) {
-        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.2.mname=Intercom\nefk.efklist.2.status=1\nefk.efklist.2.action.string=*80$P2N4$$Tinvite$\nefk.efklist.2.label=Intercom\nefk.efkprompt.2.label=Extension\nefk.efkprompt.2.status=1\nefk.efkprompt.2.type=numeric\nlinekey.2.category=EFK\nlinekey.2.index=2\n`;
+      const extStart = parseInt(startExt, 10);
+      const extEnd = parseInt(endExt, 10);
+      if (isNaN(extStart) || isNaN(extEnd) || extStart > extEnd) {
+        setError('Please enter a valid extension range.');
+        setOutput('');
+        return;
       }
-      if (enableTransferVM) {
-        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
+      if (!labelPrefix) {
+        setError('Label prefix is required.');
+        setOutput('');
+        return;
       }
-      if (enablePark) {
-        config += `attendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
+      if (!adminPassword) {
+        setError('Admin password is required.');
+        setOutput('');
+        return;
       }
-    } else if (phoneType === 'Yealink') {
-      config += `local_time.ntp_server1=216.239.35.12\n`;
-      config += `local_time.time_zone=${timeOffset}\n`;
-      config += `static.security.user_password=${adminPassword}\n`;
-      if (yealinkLabelLength) {
-        config += `features.config_dsskey_length=1\n`;
+      const extList = [];
+      for (let ext = extStart; ext <= extEnd; ext++) {
+        extList.push(ext);
       }
-      if (yealinkDisableMissedCall) {
-        config += `phone_setting.missed_call_power_led_flash.enable=0\n`;
-        config += `features.missed_call_popup.enable=0\n`;
+
+      if (phoneType === 'Polycom') {
+        config += `device.sntp.serverName=216.239.35.12\n`;
+        config += `tcpIpApp.sntp.address=216.239.35.12\n`;
+        config += `tcpIpApp.sntp.address.overrideDHCP=1\n`;
+        config += `tcpIpApp.sntp.gmtOffset=${parseInt(timeOffset, 10) * 3600}\n`;
+        config += `tcpIpApp.sntp.gmtOffset.overrideDHCP=1\n`;
+        config += `static.security.user_password=${adminPassword}\n`;
+        extList.forEach((ext, i) => {
+          config += `attendant.resourcelist.${i + 1}.address=${ext}@${ip}\n`;
+          config += `attendant.resourcelist.${i + 1}.label=${labelPrefix}${ext}\n`;
+          config += `attendant.resourcelist.${i + 1}.type=automata\n`;
+        });
+        config += `feature.doNotDisturb.enable=0\n`;
+        if (enableMWI) {
+          config += `msg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
+        }
+        if (enableSpeedDial) {
+          config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
+        }
+        if (enableIntercom) {
+          config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.2.mname=Intercom\nefk.efklist.2.status=1\nefk.efklist.2.action.string=*80$P2N4$$Tinvite$\nefk.efklist.2.label=Intercom\nefk.efkprompt.2.label=Extension\nefk.efkprompt.2.status=1\nefk.efkprompt.2.type=numeric\nlinekey.2.category=EFK\nlinekey.2.index=2\n`;
+        }
+        if (enableTransferVM) {
+          config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
+        }
+        if (enablePark) {
+          config += `attendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
+        }
+      } else if (phoneType === 'Yealink') {
+        config += `local_time.ntp_server1=216.239.35.12\n`;
+        config += `local_time.time_zone=${timeOffset}\n`;
+        config += `static.security.user_password=${adminPassword}\n`;
+        if (yealinkLabelLength) {
+          config += `features.config_dsskey_length=1\n`;
+        }
+        if (yealinkDisableMissedCall) {
+          config += `phone_setting.missed_call_power_led_flash.enable=0\n`;
+          config += `features.missed_call_popup.enable=0\n`;
+        }
+        if (yealinkCallStealing) {
+          config += `features.pickup.direct_pickup_code=**\n`;
+          config += `features.pickup.direct_pickup_enable=1\n`;
+        }
+        extList.forEach((ext, i) => {
+          config += `linekey.${i + 1}.label=${labelPrefix}${ext}\n`;
+          config += `linekey.${i + 1}.line=1\n`;
+          config += `linekey.${i + 1}.type=16\n`;
+          config += `linekey.${i + 1}.value=${ext}\n`;
+        });
+        if (enableMWI) {
+          config += `account.1.subscribe_mwi_to_vm=1\n`;
+        }
+        if (enableSpeedDial) {
+          config += `linekey.10.label=SpeedDial\nlinekey.10.line=1\nlinekey.10.type=13\nlinekey.10.value=YYY-YYY-YYYY\n`;
+        }
+        if (enableIntercom) {
+          config += `features.enhanced_dss_keys.enable=1\nfeature.enhancedFeatureKeys.enabled=1\nlinekey.8.label=Intercom\nlinekey.8.line=0\nlinekey.8.type=73\nlinekey.8.value=*80$PExtension&TIntercom&C3&N$$Tinvite$\n`;
+        }
+        if (enableTransferVM) {
+          config += `linekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
+        }
+        if (enablePark) {
+          config += `linekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
+        }
       }
-      if (yealinkCallStealing) {
-        config += `features.pickup.direct_pickup_code=**\n`;
-        config += `features.pickup.direct_pickup_enable=1\n`;
-      }
-      extList.forEach((ext, i) => {
-        config += `linekey.${i + 1}.label=${labelPrefix}${ext}\n`;
-        config += `linekey.${i + 1}.line=1\n`;
-        config += `linekey.${i + 1}.type=16\n`;
-        config += `linekey.${i + 1}.value=${ext}\n`;
-      });
-      if (enableMWI) {
-        config += `account.1.subscribe_mwi_to_vm=1\n`;
-      }
-      if (enableSpeedDial) {
-        config += `linekey.10.label=SpeedDial\nlinekey.10.line=1\nlinekey.10.type=13\nlinekey.10.value=YYY-YYY-YYYY\n`;
-      }
-      if (enableIntercom) {
-        config += `features.enhanced_dss_keys.enable=1\nfeature.enhancedFeatureKeys.enabled=1\nlinekey.8.label=Intercom\nlinekey.8.line=0\nlinekey.8.type=73\nlinekey.8.value=*80$PExtension&TIntercom&C3&N$$Tinvite$\n`;
-      }
-      if (enableTransferVM) {
-        config += `linekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
-      }
-      if (enablePark) {
-        config += `linekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
-      }
+      setOutput(config);
+      setGeneratedConfig({ model, phoneType, config });
+    } catch (e: any) {
+      setError('An unexpected error occurred: ' + (e?.message || e));
+      setOutput('');
     }
-    setOutput(config);
-    setGeneratedConfig({ model, phoneType, config });
   };
 
   return (
@@ -225,8 +268,31 @@ const PhoneConfig: React.FC = () => {
           </label>
         </div>
         <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
+        {error && (
+          <div style={{ color: 'red', marginTop: 8 }}>{error}</div>
+        )}
         <div className="output">
           <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+          {output && (
+            <button
+              style={{ marginTop: 8 }}
+              onClick={() => {
+                const blob = new Blob([output], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${phoneType}_${model.replace(/\s+/g, '_')}_config.txt`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }, 100);
+              }}
+            >
+              Download Config
+            </button>
+          )}
         </div>
     </>
   );

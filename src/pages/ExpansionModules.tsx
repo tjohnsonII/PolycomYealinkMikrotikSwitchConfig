@@ -1,64 +1,8 @@
-
 import React, { useState } from 'react';
-import { FaInfoCircle } from 'react-icons/fa';
 
-const FIELD_TOOLTIPS: Record<string, string> = {
-  linekeyNum: 'The key/button number on the phone to assign this function (usually starts at 1).',
-  linekeyLabel: 'Text label that will appear on the phone’s display for this key.',
-  linekeyRegLine: 'Select the line (account) this key should be associated with, usually Line 1.',
-  linekeyType: 'Choose the key function type (e.g., BLF, speed dial, transfer, etc.).',
-  linekeyValue: 'The target number, extension, or function code to assign to the key.',
-  externalBrand: 'Choose the phone brand for which you are creating the external dial key.',
-  externalLineNum: 'The programmable key/button number to assign this speed dial.',
-  externalLabel: 'Label to display for the external number on the phone’s screen.',
-  externalNumber: 'Enter the external phone number this key will dial when pressed.'
-};
 
-const YEALINK_LINEKEY_TYPES = [
-  { code: 0, label: 'NA' },
-  { code: 1, label: 'Conference' },
-  { code: 2, label: 'Forward' },
-  { code: 3, label: 'Transfer' },
-  { code: 4, label: 'Hold' },
-  { code: 5, label: 'DND' },
-  { code: 7, label: 'Call Return' },
-  { code: 8, label: 'SMS' },
-  { code: 9, label: 'Directed Pickup' },
-  { code: 10, label: 'Call Park' },
-  { code: 11, label: 'DTMF' },
-  { code: 12, label: 'Voice Mail' },
-  { code: 13, label: 'Speed Dial' },
-  { code: 14, label: 'Intercom' },
-  { code: 15, label: 'Line' },
-  { code: 16, label: 'BLF' },
-  { code: 17, label: 'URL' },
-  { code: 18, label: 'Group Listening' },
-  { code: 20, label: 'Private Hold' },
-  { code: 22, label: 'XML Group' },
-  { code: 23, label: 'Group Pickup' },
-  { code: 24, label: 'Multicast Paging' },
-  { code: 25, label: 'Record' },
-  { code: 27, label: 'XML Browser' },
-  { code: 34, label: 'Hot Desking' },
-  { code: 35, label: 'URL Record' },
-  { code: 38, label: 'LDAP' },
-  { code: 39, label: 'BLF List' },
-  { code: 40, label: 'Prefix' },
-  { code: 41, label: 'Zero Touch' },
-  { code: 42, label: 'ACD' },
-  { code: 45, label: 'Local Group' },
-  { code: 46, label: 'Network Group' },
-  { code: 49, label: 'Custom Button' },
-  { code: 50, label: 'Keypad Lock' },
-  { code: 55, label: 'Meet-Me Conference' },
-  { code: 56, label: 'Retrieve Park' },
-  { code: 57, label: 'Hoteling' },
-  { code: 58, label: 'ACD Grace' },
-  { code: 59, label: 'Sisp Code' },
-  { code: 60, label: 'Emergency' },
-  { code: 61, label: 'Directory' },
-  { code: 73, label: 'MACRO' },
-];
+
+
 
 const ExpansionModules: React.FC = () => {
   // Example state for Yealink expansion module
@@ -82,39 +26,175 @@ const ExpansionModules: React.FC = () => {
   });
   const [polycomOutput, setPolycomOutput] = useState('');
 
-  // Generate Yealink expansion config line
-  const generateYealinkExpansion = () => {
-    const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
-    let type = templateType === 'BLF' ? 16 : 13;
-    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
-    let line = `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n` +
-      `expansion_module.${sidecarPage}.key.${sidecarLine}.type=${type}\n` +
-      `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${val}\n` +
-      `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1`;
-    setYealinkOutput(line);
+  // Utility: Download text as file
+  const downloadTextFile = (filename: string, text: string) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   };
 
-  // Generate Polycom expansion config line
-  const generatePolycomExpansion = () => {
-    const { linekeyIndex, address, label, type, linekeyCategory } = polycomSection;
-    if (!linekeyIndex || !address) {
-      setPolycomOutput('');
-      return;
+  // Sort Yealink output by label (A-Z)
+  const sortYealinkOutputByLabel = () => {
+    const lines = yealinkOutput.split(/\n/).filter(Boolean);
+    // Group by key (4 lines per key)
+    const keys = [];
+    for (let i = 0; i < lines.length; i += 4) {
+      keys.push(lines.slice(i, i + 4));
     }
-    let line = `attendant.resourcelist.${linekeyIndex}.address=${address}\n` +
-      `attendant.resourcelist.${linekeyIndex}.label=${label}\n` +
-      `attendant.resourcelist.${linekeyIndex}.type=${type}`;
-    setPolycomOutput(line);
+    keys.sort((a, b) => {
+      const aLabel = a[0]?.split('=')[1] || '';
+      const bLabel = b[0]?.split('=')[1] || '';
+      return aLabel.localeCompare(bLabel);
+    });
+    setYealinkOutput(keys.map(k => k.join('\n')).join('\n'));
+  };
+
+  // File upload handler for Yealink: parse, sort, and display sorted config
+  const handleYealinkFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split(/\n/).filter(Boolean);
+      const keys = [];
+      for (let i = 0; i < lines.length; i += 4) {
+        keys.push(lines.slice(i, i + 4));
+      }
+      keys.sort((a, b) => {
+        const aLabel = a[0]?.split('=')[1] || '';
+        const bLabel = b[0]?.split('=')[1] || '';
+        return aLabel.localeCompare(bLabel);
+      });
+      setYealinkOutput(keys.map(k => k.join('\n')).join('\n'));
+    };
+    reader.readAsText(file);
+  };
+
+  // Sort Polycom output by label (A-Z)
+  const sortPolycomOutputByLabel = () => {
+    const lines = polycomOutput.split(/\n/).filter(Boolean);
+    // Group by key (3 lines per key)
+    const keys = [];
+    for (let i = 0; i < lines.length; i += 3) {
+      keys.push(lines.slice(i, i + 3));
+    }
+    keys.sort((a, b) => {
+      const aLabel = a[1]?.split('=')[1] || '';
+      const bLabel = b[1]?.split('=')[1] || '';
+      return aLabel.localeCompare(bLabel);
+    });
+    setPolycomOutput(keys.map(k => k.join('\n')).join('\n'));
+  };
+
+  // File upload handler for Polycom: parse, sort, and display sorted config
+  const handlePolycomFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const lines = text.split(/\n/).filter(Boolean);
+      const keys = [];
+      for (let i = 0; i < lines.length; i += 3) {
+        keys.push(lines.slice(i, i + 3));
+      }
+      keys.sort((a, b) => {
+        const aLabel = a[1]?.split('=')[1] || '';
+        const bLabel = b[1]?.split('=')[1] || '';
+        return aLabel.localeCompare(bLabel);
+      });
+      setPolycomOutput(keys.map(k => k.join('\n')).join('\n'));
+    };
+    reader.readAsText(file);
+  };
+  const generateYealinkExpansion = () => {
+    const { templateType, sidecarPage, label, value, pbxIp } = yealinkSection;
+    let type = templateType === 'BLF' ? 16 : 13;
+    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
+    // Preview all 20 keys for the selected page
+    let lines = [];
+    for (let i = 1; i <= 20; i++) {
+      if (i === parseInt(yealinkSection.sidecarLine)) {
+        lines.push(
+          `expansion_module.${sidecarPage}.key.${i}.label=${label}\n` +
+          `expansion_module.${sidecarPage}.key.${i}.type=${type}\n` +
+          `expansion_module.${sidecarPage}.key.${i}.value=${val}\n` +
+          `expansion_module.${sidecarPage}.key.${i}.line=1`
+        );
+      } else {
+        lines.push(
+          `expansion_module.${sidecarPage}.key.${i}.label=\n` +
+          `expansion_module.${sidecarPage}.key.${i}.type=\n` +
+          `expansion_module.${sidecarPage}.key.${i}.value=\n` +
+          `expansion_module.${sidecarPage}.key.${i}.line=1`
+        );
+      }
+    }
+    setYealinkOutput(lines.join('\n'));
+  };
+
+  // Generate Yealink config for all pages (1-3)
+  const generateYealinkAllPages = () => {
+    const { templateType, label, value, pbxIp } = yealinkSection;
+    let type = templateType === 'BLF' ? 16 : 13;
+    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
+    let allLines = [];
+    for (let page = 1; page <= 3; page++) {
+      for (let i = 1; i <= 20; i++) {
+        allLines.push(
+          `expansion_module.${page}.key.${i}.label=${label}\n` +
+          `expansion_module.${page}.key.${i}.type=${type}\n` +
+          `expansion_module.${page}.key.${i}.value=${val}\n` +
+          `expansion_module.${page}.key.${i}.line=1`
+        );
+      }
+    }
+    setYealinkOutput(allLines.join('\n'));
+  };
+
+  // Generate Polycom expansion config line and preview all keys for the page
+  const generatePolycomExpansion = () => {
+    const { linekeyIndex, address, label, type } = polycomSection;
+    // Preview all 28 keys for the Polycom module
+    let lines = [];
+    for (let i = 1; i <= 28; i++) {
+      if (i === parseInt(linekeyIndex)) {
+        lines.push(
+          `attendant.resourcelist.${i}.address=${address}\n` +
+          `attendant.resourcelist.${i}.label=${label}\n` +
+          `attendant.resourcelist.${i}.type=${type}`
+        );
+      } else {
+        lines.push(
+          `attendant.resourcelist.${i}.address=\n` +
+          `attendant.resourcelist.${i}.label=\n` +
+          `attendant.resourcelist.${i}.type=`
+        );
+      }
+    }
+    setPolycomOutput(lines.join('\n'));
   };
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
-      <h2 style={{ marginBottom: 24 }}>Expansion Module Code Generators</h2>
+    <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 16 }}>
+      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Hosted Config Generator</h1>
+      <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 24 }}>Expansion Module Code Generators</h2>
       <div style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-        {/* Yealink Section */}
-        <div style={{ flex: 1, minWidth: 350 }}>
-          <div style={{ background: '#eef6fb', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
-            <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key.
+        {/* Yealink Expansion Module */}
+        <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
+          <img src="/images/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: 120, marginBottom: 8 }} />
+          <img src="/images/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: 120, marginBottom: 8 }} />
+          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+            <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page & key toggles to preview each key visually. Enter any key to preview the full sidecar.
           </div>
           <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
             <label>Template Type:</label>
@@ -122,9 +202,9 @@ const ExpansionModules: React.FC = () => {
               <option value="BLF">BLF</option>
               <option value="SpeedDial">Speed Dial</option>
             </select>
-            <label style={{ marginLeft: 16 }}>Sidecar Page:</label>
+            <label style={{ marginLeft: 16 }}>Sidecar Page (1-3):</label>
             <input type="number" min={1} max={3} value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} style={{ width: 60 }} />
-            <label style={{ marginLeft: 16 }}>Sidecar Line:</label>
+            <label style={{ marginLeft: 16 }}>Sidecar Line (1-20):</label>
             <input type="number" min={1} max={20} value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} style={{ width: 60 }} />
             <label style={{ marginLeft: 16 }}>Label:</label>
             <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
@@ -134,14 +214,33 @@ const ExpansionModules: React.FC = () => {
             <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
           </div>
           <button onClick={generateYealinkExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
+          <button onClick={generateYealinkAllPages} style={{ marginTop: 8 }}>Generate All Pages</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
+            <button onClick={sortYealinkOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
+            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handleYealinkFileUpload} /></label>
+              <button onClick={() => downloadTextFile('yealink_expansion_sorted.txt', yealinkOutput)} style={{ fontSize: 13 }}>Download</button>
+            </div>
+          </div>
+          {/* Yealink Preview Grid */}
+          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, marginTop: 16, padding: 8 }}>
+            <b>Preview: Page {yealinkSection.sidecarPage}</b>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, marginTop: 8 }}>
+              {[...Array(20)].map((_, idx) => (
+                <div key={idx} style={{ height: 32, border: '1px solid #b3c6e0', borderRadius: 4, background: idx + 1 === parseInt(yealinkSection.sidecarLine) ? '#d1eaff' : '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: idx + 1 === parseInt(yealinkSection.sidecarLine) ? 700 : 400, color: '#2a3b5c' }}>
+                  {idx + 1 === parseInt(yealinkSection.sidecarLine) ? '🟩' : '⬜'}
+                  <span style={{ marginLeft: 6 }}>{idx + 1}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        {/* Polycom Section */}
-        <div style={{ flex: 1, minWidth: 350 }}>
-          <div style={{ background: '#eef6fb', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
-            <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key.
+        {/* Polycom Expansion Module */}
+        <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
+          <img src="/images/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion" style={{ width: 120, marginBottom: 8 }} />
+          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+            <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key to show the index.
           </div>
           <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
             <label>Linekey Index (1-28):</label>
@@ -155,12 +254,27 @@ const ExpansionModules: React.FC = () => {
               <option value="automata">Automata</option>
               <option value="normal">Normal</option>
             </select>
-            <label style={{ marginLeft: 16 }}>Linekey Category:</label>
-            <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
           </div>
           <button onClick={generatePolycomExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
+            <button onClick={sortPolycomOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
+            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handlePolycomFileUpload} /></label>
+              <button onClick={() => downloadTextFile('polycom_expansion_sorted.txt', polycomOutput)} style={{ fontSize: 13 }}>Download</button>
+            </div>
+          </div>
+          {/* Polycom Preview Grid */}
+          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, marginTop: 16, padding: 8 }}>
+            <b>Preview: 28 keys (4 columns × 7 rows)</b>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginTop: 8 }}>
+              {[...Array(28)].map((_, idx) => (
+                <div key={idx} title={`Key ${idx + 1}`} style={{ height: 32, border: '1px solid #b3c6e0', borderRadius: 4, background: idx + 1 === parseInt(polycomSection.linekeyIndex) ? '#d1eaff' : '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: idx + 1 === parseInt(polycomSection.linekeyIndex) ? 700 : 400, color: '#2a3b5c' }}>
+                  {idx + 1 === parseInt(polycomSection.linekeyIndex) ? '🟩' : '⬜'}
+                  <span style={{ marginLeft: 6 }}>{idx + 1}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
