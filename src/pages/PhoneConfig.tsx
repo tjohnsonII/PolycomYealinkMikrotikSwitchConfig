@@ -204,8 +204,14 @@ const PhoneConfig: React.FC = () => {
       <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 24, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' }}>
         <h3 style={{ marginTop: 0 }}>What does each config generator do?</h3>
         <ul style={{ marginLeft: 20 }}>
-          <li><b>Base Config Options:</b> Generates the main configuration for Polycom or Yealink phones, including park/BLF keys, static settings, and model-specific options.</li>
+          <li><b>Base Config Options:</b> Generates the main configuration for Polycom or Yealink phones, including park/BLF keys, static settings, and model-specific options. This section allows you to specify the phone type, model, IP address, park line range, and advanced features such as voicemail indicator, speed dial, intercom, transfer to voicemail, and park keys. You can also set time zone, admin password, and Yealink-specific options like long DSS key labels, missed call notification, and BLF call stealing.</li>
+          <li><b>Expansion Module Config:</b> Use the Expansion Modules tab to generate and preview configuration for Yealink or Polycom expansion sidecars. You can append the generated expansion config to your base config here.</li>
+          <li><b>Import/Export Tabs:</b> The FBPX, VPBX, Stretto, and Order Tracker tabs allow you to import/export phone and order data using a spreadsheet-like interface with CSV support.</li>
+          <li><b>Full Config:</b> The Full Config tab displays the complete generated configuration, including any appended expansion module code, ready for download or provisioning.</li>
         </ul>
+        <div style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+          <b>Tip:</b> After generating your config, you can download it or append expansion module code. All settings are designed to match Polycom and Yealink provisioning best practices.
+        </div>
       </div>
       {/* Base Config Options Form */}
       <div className="form-section" style={{marginBottom:24}}>
@@ -317,7 +323,7 @@ const PhoneConfig: React.FC = () => {
           <div style={{ color: 'red', marginTop: 8 }}>{error}</div>
         )}
         <div className="output">
-          <textarea value={output} readOnly rows={18} style={{ width: '100%', marginTop: 16, fontSize: 15, minHeight: 320 }} />
+          <textarea value={output} readOnly rows={38} style={{ width: '98vw', maxWidth: 1600, marginTop: 16, fontSize: 16, minHeight: 600, fontFamily: 'monospace', padding: 12, border: '1.5px solid #bbb', borderRadius: 6, resize: 'vertical', display: 'block' }} />
           {output && (
             <button
               style={{ marginTop: 8 }}
