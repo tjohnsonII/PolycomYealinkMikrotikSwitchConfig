@@ -7,6 +7,74 @@ const REFERENCE_SUBTABS = [
   { key: 'pbx', label: "PBX's" },
 ];
 
+const PBX_SUBTABS = ['FreePBX', 'UCaaS', 'FusionPBX', 'Intermedia'];
+
+function PBXReferenceSubnav() {
+  const [pbxSubtab, setPbxSubtab] = useState('FreePBX');
+  return (
+    <div style={{ width: '100%', textAlign: 'left' }}>
+      <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>PBX Platform Reference</h2>
+      {/* PBX sub-navigation */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+        {PBX_SUBTABS.map((pbx) => (
+          <button
+            key={pbx}
+            className={pbxSubtab === pbx ? 'active' : ''}
+            onClick={() => setPbxSubtab(pbx)}
+            style={{
+              border: 'none',
+              borderBottom: pbxSubtab === pbx ? '3px solid #0078d4' : '2px solid #ccc',
+              background: pbxSubtab === pbx ? '#f7fbff' : '#f4f4f4',
+              color: pbxSubtab === pbx ? '#0078d4' : '#333',
+              fontWeight: pbxSubtab === pbx ? 600 : 400,
+              padding: '8px 20px',
+              borderRadius: 6,
+              cursor: 'pointer',
+              minWidth: 100,
+            }}
+          >
+            {pbx}
+          </button>
+        ))}
+      </div>
+      {/* PBX subtab content */}
+      {pbxSubtab === 'FreePBX' && (
+        <div>
+          <h3 style={{ fontSize: 22, fontWeight: 600 }}>FreePBX</h3>
+          <p style={{ fontSize: 16 }}>Open-source PBX platform, widely used for on-premises and hosted VoIP deployments. Import/export tools support FreePBX CSV formats for extensions, BLFs, and device provisioning.</p>
+          <ul style={{ fontSize: 16, marginBottom: 24 }}>
+            <li>Use the FBPX Import/Export tab for FreePBX-specific CSVs and config output.</li>
+          </ul>
+        </div>
+      )}
+      {pbxSubtab === 'UCaaS' && (
+        <div>
+          <h3 style={{ fontSize: 22, fontWeight: 600 }}>UCaaS</h3>
+          <p style={{ fontSize: 16 }}>Unified Communications as a Service. Refers to cloud-hosted PBX solutions (e.g., NetSapiens, Broadsoft, etc.). The app supports import/export of user, extension, and device data for common UCaaS platforms.</p>
+          <ul style={{ fontSize: 16, marginBottom: 24 }}>
+            <li>Use the VPBX Import/Export tab for UCaaS user/device data.</li>
+          </ul>
+        </div>
+      )}
+      {pbxSubtab === 'FusionPBX' && (
+        <div>
+          <h3 style={{ fontSize: 22, fontWeight: 600 }}>FusionPBX</h3>
+          <p style={{ fontSize: 16 }}>FusionPBX or similar multi-tenant PBX platforms. Import/export tools support Fusion CSV and table formats for users, devices, and BLFs.</p>
+          <ul style={{ fontSize: 16, marginBottom: 24 }}>
+            <li>Use the Stretto Import/Export tab for FusionPBX and similar platforms.</li>
+          </ul>
+        </div>
+      )}
+      {pbxSubtab === 'Intermedia' && (
+        <div>
+          <h3 style={{ fontSize: 22, fontWeight: 600 }}>Intermedia</h3>
+          <p style={{ fontSize: 16 }}><b>Coming soon:</b> Intermedia PBX platform support will be announced and added in a future update.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const Reference: React.FC = () => {
   const [referenceSubtab, setReferenceSubtab] = useState('phones');
 
@@ -36,7 +104,7 @@ const Reference: React.FC = () => {
           </button>
         ))}
       </div>
-      {/* Subtab content (to be filled in next step) */}
+      {/* Subtab content */}
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {referenceSubtab === 'phones' && (
           <div style={{ width: '100%', textAlign: 'left' }}>
@@ -211,35 +279,7 @@ const Reference: React.FC = () => {
             </ul>
           </div>
         )}
-        {referenceSubtab === 'pbx' && (
-          <div style={{ width: '100%', textAlign: 'left' }}>
-            <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>PBX Platform Reference</h2>
-            <p style={{ fontSize: 16, marginBottom: 16 }}>
-              This app currently supports three PBX platforms for configuration and import/export:
-            </p>
-            <ul style={{ fontSize: 16, marginBottom: 24 }}>
-              <li><b>FreePBX:</b> Open-source PBX platform, widely used for on-premises and hosted VoIP deployments. Import/export tools support FreePBX CSV formats for extensions, BLFs, and device provisioning.</li>
-              <li><b>UCaaS:</b> Unified Communications as a Service. Refers to cloud-hosted PBX solutions (e.g., NetSapiens, Broadsoft, etc.). The app supports import/export of user, extension, and device data for common UCaaS platforms.</li>
-              <li><b>Fusion:</b> FusionPBX or similar multi-tenant PBX platforms. Import/export tools support Fusion CSV and table formats for users, devices, and BLFs.</li>
-            </ul>
-            <p style={{ fontSize: 16, marginBottom: 16 }}>
-              <b>Coming soon:</b> <b>Intermedia</b> PBX platform support will be announced and added in a future update.
-            </p>
-            <h3 style={{ fontSize: 22, fontWeight: 600, marginTop: 32 }}>PBX Import/Export Features</h3>
-            <ul style={{ fontSize: 16, marginBottom: 24 }}>
-              <li>Import users, extensions, and BLF keys from platform-specific CSV files.</li>
-              <li>Export generated configs or tables for bulk provisioning.</li>
-              <li>Excel-like table UI for editing, adding, and deleting rows/columns.</li>
-              <li>CSV import/export for easy migration between platforms.</li>
-            </ul>
-            <h3 style={{ fontSize: 22, fontWeight: 600, marginTop: 32 }}>Platform Notes</h3>
-            <ul style={{ fontSize: 16, marginBottom: 24 }}>
-              <li><b>FreePBX:</b> Use the FBPX Import/Export tab for FreePBX-specific CSVs and config output.</li>
-              <li><b>UCaaS:</b> Use the VPBX Import/Export tab for UCaaS user/device data.</li>
-              <li><b>Fusion:</b> Use the Stretto Import/Export tab for FusionPBX and similar platforms.</li>
-            </ul>
-          </div>
-        )}
+        {referenceSubtab === 'pbx' && <PBXReferenceSubnav />}
       </div>
     </div>
   );
