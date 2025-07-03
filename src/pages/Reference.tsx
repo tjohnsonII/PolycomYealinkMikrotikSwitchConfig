@@ -60,12 +60,92 @@ function PBXReferenceSubnav() {
               It controls traffic for SIP, SSH, Web GUI, etc., and includes intrusion detection (Fail2Ban).
             </li>
             <li><b>Extensions</b><br />
-              Each user/phone gets an extension—this is their internal number.
-              <ul>
-                <li>SIP or PJSIP protocol</li>
-                <li>Each extension can have voicemail, call forwarding, Find Me/Follow Me, etc.</li>
-                <li>Extensions register to the PBX and are used in routing.</li>
-              </ul>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>What is an Extension?</b><br />
+                  An extension in FreePBX represents a user endpoint on the phone system — usually a physical phone, a softphone, or a device that registers via SIP or PJSIP.<br />
+                  You assign a unique number (like 101, 202, etc.) to each extension. That number becomes the internal "phone number" for that device or user.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Protocol Types (SIP vs. PJSIP)</b><br />
+                  When creating an extension, you choose a technology driver:
+                  <ul>
+                    <li><b>PJSIP (recommended for new deployments):</b>
+                      <ul>
+                        <li>Modern protocol stack</li>
+                        <li>Supports multiple registrations (e.g., multiple devices per user)</li>
+                      </ul>
+                    </li>
+                    <li><b>SIP (legacy):</b>
+                      <ul>
+                        <li>Simpler, but less flexible</li>
+                        <li>Single registration per extension</li>
+                      </ul>
+                    </li>
+                  </ul>
+                  <span style={{ color: '#b00', fontWeight: 500 }}>⚠️ You cannot use the same extension number for both SIP and PJSIP — they must be distinct.</span>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Common Extension Settings</b></p>
+                <ul>
+                  <li><b>User Extension:</b> The internal number (e.g., 1001). Unique across the system.</li>
+                  <li><b>Display Name:</b> Human-friendly label (e.g., John Smith). Appears on devices and in FreePBX GUI.</li>
+                  <li><b>Secret / Password:</b> SIP/PJSIP registration password. Should be long and secure (randomized).</li>
+                  <li><b>Voicemail Settings:</b> Enable/disable, email delivery (with or without attachment), greeting preferences, VMX Locater (press-to-redirect options while caller is in voicemail).</li>
+                  <li><b>CID Options:</b> Outbound CID controls what caller ID is presented when this extension calls out. Can override trunk-level CID with format: “John Smith” &lt;2485551234&gt;.</li>
+                  <li><b>Device Options:</b> NAT (enable for devices behind NAT/firewalls), DTMF Mode (typically RFC2833 or Auto), Transport (UDP / TCP / TLS for SIP signaling).</li>
+                  <li><b>Advanced Settings:</b> Call recording (always, never, on-demand), language code (for system prompts), codec preferences (e.g., G722, ulaw, alaw, G729), Qualify/Keepalive (ensures phone is reachable).</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>Features Tied to Extensions</b></p>
+                <ul>
+                  <li><b>Find Me/Follow Me:</b> Enable follow-me behavior for calls to this extension. Ring internal and external numbers sequentially or simultaneously.</li>
+                  <li><b>Call Recording:</b> On-demand or always-record per extension. Saved in /var/spool/asterisk/monitor.</li>
+                  <li><b>Call Forwarding:</b> Forward all/busy/unavailable to another extension, external number, or voicemail.</li>
+                  <li><b>Call Waiting / Call Screening / Call Announce:</b> Fine-grained controls over how additional calls are handled. Can require caller to say their name before connecting.</li>
+                  <li><b>Voicemail to Email:</b> Email notifications of new voicemails. Attachments and delete-after-send options.</li>
+                  <li><b>User Control Panel (UCP):</b> If enabled, users can:
+                    <ul>
+                      <li>Listen to voicemail</li>
+                      <li>Review call history</li>
+                      <li>Manage recordings</li>
+                      <li>Adjust Find Me/Follow Me</li>
+                      <li>Send/receive faxes (if enabled)</li>
+                      <li>Chat (with commercial modules)</li>
+                    </ul>
+                    Users log into UCP via the FreePBX web interface using their extension number and user password.
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>Registration: How Phones Connect</b><br />
+                  A phone or softphone must be configured with:
+                  <ul>
+                    <li><b>Username:</b> The extension number (e.g., 1001)</li>
+                    <li><b>Password:</b> The SIP/PJSIP secret</li>
+                    <li><b>Server:</b> IP or FQDN of the FreePBX system</li>
+                    <li><b>Port:</b> Typically 5060 (UDP for SIP, or 5061 for TLS/PJSIP)</li>
+                  </ul>
+                  Once registered, the device can:
+                  <ul>
+                    <li>Receive calls directly</li>
+                    <li>Make internal and outbound calls</li>
+                    <li>Use BLFs and other features</li>
+                  </ul>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Extension States</b><br />
+                  Extensions can be in different states:
+                  <ul>
+                    <li><b>Idle:</b> Available for calls</li>
+                    <li><b>In Use:</b> On a call</li>
+                    <li><b>Ringing:</b> Incoming call</li>
+                    <li><b>Unavailable:</b> Unregistered or not reachable</li>
+                  </ul>
+                  These states are used by BLF lights and call center logic
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Use Cases</b><br />
+                  <ul>
+                    <li>Personal devices (e.g., desk phones)</li>
+                    <li>Softphones (e.g., Zoiper, Bria, Linphone)</li>
+                    <li>Remote users (via VPN or NAT-aware SIP)</li>
+                    <li>Call groups (used with ring groups/queues)</li>
+                  </ul>
+                </p>
+              </div>
             </li>
             <li><b>Ring Groups</b><br />
               Ring groups allow you to ring multiple extensions simultaneously or in sequence. Use for:
