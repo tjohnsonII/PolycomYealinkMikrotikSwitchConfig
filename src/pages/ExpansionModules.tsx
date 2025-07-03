@@ -82,12 +82,29 @@ const ExpansionModules: React.FC = () => {
   });
   const [polycomOutput, setPolycomOutput] = useState('');
 
-  // Placeholder for config generation logic
+  // Generate Yealink expansion config line
   const generateYealinkExpansion = () => {
-    setYealinkOutput(`# Yealink Expansion Config\n# (Logic goes here)`);
+    const { templateType, sidecarPage, sidecarLine, label, value, pbxIp } = yealinkSection;
+    let type = templateType === 'BLF' ? 16 : 13;
+    let val = templateType === 'BLF' ? `${value}@${pbxIp}` : value;
+    let line = `expansion_module.${sidecarPage}.key.${sidecarLine}.label=${label}\n` +
+      `expansion_module.${sidecarPage}.key.${sidecarLine}.type=${type}\n` +
+      `expansion_module.${sidecarPage}.key.${sidecarLine}.value=${val}\n` +
+      `expansion_module.${sidecarPage}.key.${sidecarLine}.line=1`;
+    setYealinkOutput(line);
   };
+
+  // Generate Polycom expansion config line
   const generatePolycomExpansion = () => {
-    setPolycomOutput(`# Polycom Expansion Config\n# (Logic goes here)`);
+    const { linekeyIndex, address, label, type, linekeyCategory } = polycomSection;
+    if (!linekeyIndex || !address) {
+      setPolycomOutput('');
+      return;
+    }
+    let line = `attendant.resourcelist.${linekeyIndex}.address=${address}\n` +
+      `attendant.resourcelist.${linekeyIndex}.label=${label}\n` +
+      `attendant.resourcelist.${linekeyIndex}.type=${type}`;
+    setPolycomOutput(line);
   };
 
   return (

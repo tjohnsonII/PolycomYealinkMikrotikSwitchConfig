@@ -60,37 +60,34 @@ const PhoneConfig: React.FC = () => {
     }
 
     if (phoneType === 'Polycom') {
-      config += `# Polycom ${model} Base Config\n`;
       config += `device.sntp.serverName=216.239.35.12\n`;
       config += `tcpIpApp.sntp.address=216.239.35.12\n`;
       config += `tcpIpApp.sntp.address.overrideDHCP=1\n`;
       config += `tcpIpApp.sntp.gmtOffset=${parseInt(timeOffset, 10) * 3600}\n`;
       config += `tcpIpApp.sntp.gmtOffset.overrideDHCP=1\n`;
       config += `static.security.user_password=${adminPassword}\n`;
-      config += `\n# Park/BLF Keys\n`;
       extList.forEach((ext, i) => {
         config += `attendant.resourcelist.${i + 1}.address=${ext}@${ip}\n`;
         config += `attendant.resourcelist.${i + 1}.label=${labelPrefix}${ext}\n`;
         config += `attendant.resourcelist.${i + 1}.type=automata\n`;
       });
-      config += `\n# Disable DND\nfeature.doNotDisturb.enable=0\n`;
+      config += `feature.doNotDisturb.enable=0\n`;
       if (enableMWI) {
-        config += `\n# Voicemail Indicator (MWI)\nmsg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
+        config += `msg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
       }
       if (enableSpeedDial) {
-        config += `\n# Speed Dial Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
+        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
       }
       if (enableIntercom) {
-        config += `\n# Intercom Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.2.mname=Intercom\nefk.efklist.2.status=1\nefk.efklist.2.action.string=*80$P2N4$$Tinvite$\nefk.efklist.2.label=Intercom\nefk.efkprompt.2.label=Extension\nefk.efkprompt.2.status=1\nefk.efkprompt.2.type=numeric\nlinekey.2.category=EFK\nlinekey.2.index=2\n`;
+        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.2.mname=Intercom\nefk.efklist.2.status=1\nefk.efklist.2.action.string=*80$P2N4$$Tinvite$\nefk.efklist.2.label=Intercom\nefk.efkprompt.2.label=Extension\nefk.efkprompt.2.status=1\nefk.efkprompt.2.type=numeric\nlinekey.2.category=EFK\nlinekey.2.index=2\n`;
       }
       if (enableTransferVM) {
-        config += `\n# Transfer to Voicemail Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
+        config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
       }
       if (enablePark) {
-        config += `\n# Park Example\nattendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
+        config += `attendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
       }
     } else if (phoneType === 'Yealink') {
-      config += `# Yealink ${model} Base Config\n`;
       config += `local_time.ntp_server1=216.239.35.12\n`;
       config += `local_time.time_zone=${timeOffset}\n`;
       config += `static.security.user_password=${adminPassword}\n`;
@@ -105,7 +102,6 @@ const PhoneConfig: React.FC = () => {
         config += `features.pickup.direct_pickup_code=**\n`;
         config += `features.pickup.direct_pickup_enable=1\n`;
       }
-      config += `\n# Park/BLF Keys\n`;
       extList.forEach((ext, i) => {
         config += `linekey.${i + 1}.label=${labelPrefix}${ext}\n`;
         config += `linekey.${i + 1}.line=1\n`;
@@ -113,19 +109,19 @@ const PhoneConfig: React.FC = () => {
         config += `linekey.${i + 1}.value=${ext}\n`;
       });
       if (enableMWI) {
-        config += `\n# Voicemail Indicator (MWI)\naccount.1.subscribe_mwi_to_vm=1\n`;
+        config += `account.1.subscribe_mwi_to_vm=1\n`;
       }
       if (enableSpeedDial) {
-        config += `\n# Speed Dial Example\nlinekey.10.label=SpeedDial\nlinekey.10.line=1\nlinekey.10.type=13\nlinekey.10.value=YYY-YYY-YYYY\n`;
+        config += `linekey.10.label=SpeedDial\nlinekey.10.line=1\nlinekey.10.type=13\nlinekey.10.value=YYY-YYY-YYYY\n`;
       }
       if (enableIntercom) {
-        config += `\n# Intercom Example\nfeatures.enhanced_dss_keys.enable=1\nfeature.enhancedFeatureKeys.enabled=1\nlinekey.8.label=Intercom\nlinekey.8.line=0\nlinekey.8.type=73\nlinekey.8.value=*80$PExtension&TIntercom&C3&N$$Tinvite$\n`;
+        config += `features.enhanced_dss_keys.enable=1\nfeature.enhancedFeatureKeys.enabled=1\nlinekey.8.label=Intercom\nlinekey.8.line=0\nlinekey.8.type=73\nlinekey.8.value=*80$PExtension&TIntercom&C3&N$$Tinvite$\n`;
       }
       if (enableTransferVM) {
-        config += `\n# Transfer to Voicemail Example\nlinekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
+        config += `linekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
       }
       if (enablePark) {
-        config += `\n# Park Example\nlinekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
+        config += `linekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
       }
     }
     setOutput(config);
