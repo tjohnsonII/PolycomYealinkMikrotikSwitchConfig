@@ -1,0 +1,154 @@
+
+/* Modern, clean styles for the app */
+
+body {
+  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  background: #f7f8fa;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
+
+.container, .centered-section {
+  max-width: 900px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.centered-section {
+  align-items: center;
+  text-align: left;
+}
+
+
+nav {
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 32px;
+  display: flex;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: 56px;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.07);
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 6px;
+  transition: background 0.2s, color 0.2s;
+  font-size: 1.08rem;
+  letter-spacing: 0.01em;
+  margin: 0 2px;
+  display: inline-block;
+}
+nav a:hover, nav a.active {
+  background: #e3f0fc;
+  color: #1976d2;
+}
+
+@media (max-width: 700px) {
+  .container, .centered-section {
+    padding: 12px;
+  }
+  nav {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 4px;
+    min-height: 44px;
+  }
+  nav a {
+    font-size: 0.98rem;
+    padding: 6px 10px;
+  }
+}
+
+nav a {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+nav a:hover, nav a.active {
+  background: #e3f0fc;
+  color: #0d47a1;
+}
+
+h1, h2, h3 {
+  font-weight: 600;
+  color: #1a237e;
+}
+
+.container {
+  max-width: 900px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  padding: 32px;
+}
+
+label {
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 6px 10px;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  margin-right: 8px;
+  background: #fafbfc;
+  transition: border 0.2s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #1976d2;
+  outline: none;
+}
+
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+button:hover {
+  background: #1565c0;
+}
+
+/* Info/Help icons */
+.info-icon {
+  color: #1976d2;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+/* Responsive tweaks */
+@media (max-width: 700px) {
+  .container {
+    padding: 12px;
+  }
+  nav {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 4px;
+  }
+}

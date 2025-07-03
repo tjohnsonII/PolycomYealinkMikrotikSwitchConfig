@@ -73,8 +73,8 @@ const ExpansionModuleTab: React.FC = () => {
       <div style={{ flex: 1, minWidth: 320 }}>
         <h3>Yealink Expansion Module</h3>
         {/* Device images for user reference */}
-        <img src="/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
-        <img src="/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        <img src="/images/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        <img src="/images/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
         {/* Instructions for users */}
         <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
           <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page toggles to preview each page. Hover over any key in the preview for details.
@@ -180,7 +180,7 @@ const ExpansionModuleTab: React.FC = () => {
       <div style={{ flex: 1, minWidth: 320 }}>
         <h3>Polycom VVX Color Expansion Module</h3>
         {/* Device image for user reference */}
-        <img src="/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        <img src="/images/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
         {/* Instructions for users */}
         <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
           <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout for each page (1–3). Hover over any key for details. <br />
