@@ -4,7 +4,7 @@ import React from 'react';
 import { useRef, useState } from 'react';
 
 // These should be imported from a shared constants file in a real refactor
-const FPBX_FIELDS = [
+const DEFAULT_FPBX_FIELDS = [
   "extension", "name", "description", "tech", "secret", "callwaiting_enable", "voicemail",
   "voicemail_enable", "voicemail_vmpwd", "voicemail_email", "voicemail_pager", "voicemail_options",
   "voicemail_same_exten", "outboundcid", "id", "dial", "user", "max_contacts", "accountcode"
@@ -12,21 +12,32 @@ const FPBX_FIELDS = [
 
 type FpbxFormType = Record<string, string>;
 
-const createEmptyFpbxRow = (): FpbxFormType => FPBX_FIELDS.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType);
+const createEmptyFpbxRow = (fields = DEFAULT_FPBX_FIELDS): FpbxFormType => fields.reduce((acc, f) => ({ ...acc, [f]: '' }), {} as FpbxFormType);
 
 
 const DEFAULT_ROWS = 10;
 
 const FBPXImport: React.FC = () => {
-  const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>(Array(DEFAULT_ROWS).fill(0).map(createEmptyFpbxRow));
+  const [fpbxFields, setFpbxFields] = useState<string[]>([...DEFAULT_FPBX_FIELDS]);
+  const [fpbxRows, setFpbxRows] = useState<FpbxFormType[]>(Array(DEFAULT_ROWS).fill(0).map(() => createEmptyFpbxRow(fpbxFields)));
   const fpbxDownloadRef = useRef<HTMLAnchorElement>(null);
 
   const handleFpbxChange = (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFpbxRows(rows => rows.map((row, i) => i === idx ? { ...row, [name]: value } : row));
   };
+
+  const handleFpbxDeleteColumn = (field: string) => {
+    if (fpbxFields.length <= 1) return;
+    setFpbxFields(fields => fields.filter(f => f !== field));
+    setFpbxRows(rows => rows.map(row => {
+      const newRow = { ...row };
+      delete newRow[field];
+      return newRow;
+    }));
+  };
   const handleFpbxAddRow = (count = 1) => {
-    setFpbxRows(rows => [...rows, ...Array(count).fill(0).map(createEmptyFpbxRow)]);
+    setFpbxRows(rows => [...rows, ...Array(count).fill(0).map(() => createEmptyFpbxRow(fpbxFields))]);
   };
   const handleFpbxDeleteRow = (idx: number) => {
     setFpbxRows(rows => rows.filter((_, i) => i !== idx));
@@ -40,17 +51,18 @@ const FBPXImport: React.FC = () => {
       const lines = text.split(/\r?\n/).filter(Boolean);
       const [header, ...rows] = lines;
       const fields = header.split(',');
+      setFpbxFields(fields);
       const data = rows.map(line => {
         const values = line.split(',');
         return fields.reduce((acc, f, i) => ({ ...acc, [f]: values[i] || '' }), {} as FpbxFormType);
       });
-      setFpbxRows(data.length ? data : [createEmptyFpbxRow()]);
+      setFpbxRows(data.length ? data : [createEmptyFpbxRow(fields)]);
     };
     reader.readAsText(file);
   };
   const handleFpbxExport = () => {
-    const csv = [FPBX_FIELDS.join(',')].concat(
-      fpbxRows.map(row => FPBX_FIELDS.map(f => row[f] || '').join(','))
+    const csv = [fpbxFields.join(',')].concat(
+      fpbxRows.map(row => fpbxFields.map(f => row[f] || '').join(','))
     ).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -68,18 +80,29 @@ const FBPXImport: React.FC = () => {
       <input type="file" accept=".csv" onChange={handleFpbxImport} />
       <button onClick={handleFpbxExport}>Export CSV</button>
       <a ref={fpbxDownloadRef} style={{ display: 'none' }}>Download</a>
-      <div style={{ overflowX: 'auto' }}>
+      <div style={{ overflowX: 'auto', zoom: 0.8, WebkitTransform: 'scale(0.8)', WebkitTransformOrigin: '0 0' }}>
         <table style={{ borderCollapse: 'collapse', minWidth: '100%' }}>
           <thead>
             <tr>
-              {FPBX_FIELDS.map(f => <th key={f} style={{ border: '1px solid #ccc', padding: 4 }}>{f}</th>)}
+              {fpbxFields.map(f => (
+                <th key={f} style={{ border: '1px solid #ccc', padding: 4, position: 'relative' }}>
+                  {f}
+                  <button
+                    style={{ marginLeft: 4, fontSize: 10, padding: '2px 6px', position: 'absolute', right: 2, top: 2 }}
+                    onClick={() => handleFpbxDeleteColumn(f)}
+                    title={`Delete column ${f}`}
+                  >
+                    Delete
+                  </button>
+                </th>
+              ))}
               <th>Delete</th>
             </tr>
           </thead>
           <tbody>
             {fpbxRows.map((row, idx) => (
               <tr key={idx}>
-                {FPBX_FIELDS.map(f => (
+                {fpbxFields.map(f => (
                   <td key={f} style={{ border: '1px solid #ccc', padding: 2 }}>
                     <input
                       name={f}
