@@ -156,25 +156,25 @@ const HostedOrderTrackerTab: React.FC = () => {
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', minWidth: 1000 }}>
           <thead>
             <tr>
-              <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Field</th>
+              <th style={{ border: '1px solid #ccc', padding: '12px 8px', background: '#f4f4f4', textAlign: 'center' }}>Field</th>
               {customers.map((c, i) => (
-                <th key={i} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative', minWidth: 120 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <th key={i} style={{ border: '1px solid #ccc', padding: '12px 8px', background: '#f4f4f4', position: 'relative', minWidth: 120, height: 48, verticalAlign: 'middle', textAlign: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                     <input
                       type="text"
                       value={c}
                       onChange={e => handleCustomerHandleChange(i, e.target.value)}
                       placeholder="Handle (e.g. WS7)"
-                      style={{ width: 100, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 4, marginRight: 8 }}
+                      style={{ width: 100, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 4, marginRight: 8, textAlign: 'center' }}
                     />
                     {customers.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomer(i)}
-                        style={{ background: '#fff', border: '1px solid #f00', color: '#f00', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, padding: '2px 8px', marginLeft: 4 }}
+                        style={{ background: '#fff', border: '1px solid #f00', color: '#f00', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, padding: '2px 10px', marginLeft: 4, height: 32 }}
                         title={`Delete customer column`}
                       >
                         Delete
@@ -187,26 +187,29 @@ const HostedOrderTrackerTab: React.FC = () => {
           </thead>
           <tbody>
             {fields.map((field, i) => (
-              <tr key={field}>
-                <td style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>
+              <tr key={field} style={{ height: 44 }}>
+                <td style={{ border: '1px solid #ccc', padding: '8px 0', background: '#f4f4f4', textAlign: 'center' }}>
                   {field}
                 </td>
                 {customers.map(cust => (
-                  <td key={cust} style={{ border: '1px solid #ccc', padding: 4 }}>
-                    {CHECKBOX_FIELDS.has(field) ? (
-                      <input
-                        type="checkbox"
-                        checked={data[field]?.[cust] === 'TRUE'}
-                        onChange={e => handleCheckboxChange(field, cust, e.target.checked)}
-                      />
-                    ) : (
-                      <input
-                        type="text"
-                        value={data[field]?.[cust] || ''}
-                        onChange={e => handleCellChange(field, cust, e.target.value)}
-                        style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
-                      />
-                    )}
+                  <td key={cust} style={{ border: '1px solid #ccc', padding: '8px 0', verticalAlign: 'middle', textAlign: 'center', background: '#fff' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                      {CHECKBOX_FIELDS.has(field) ? (
+                        <input
+                          type="checkbox"
+                          checked={data[field]?.[cust] === 'TRUE'}
+                          onChange={e => handleCheckboxChange(field, cust, e.target.checked)}
+                          style={{ width: 20, height: 20 }}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={data[field]?.[cust] || ''}
+                          onChange={e => handleCellChange(field, cust, e.target.value)}
+                          style={{ width: '90%', border: '1px solid #ccc', borderRadius: 4, padding: '8px 0', fontSize: 15, textAlign: 'center', background: '#fff' }}
+                        />
+                      )}
+                    </div>
                   </td>
                 ))}
               </tr>
