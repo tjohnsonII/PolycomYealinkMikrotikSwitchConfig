@@ -1,3 +1,12 @@
+import React from 'react';
 
-// This file is legacy and not used by the current app. All logic has been migrated to /src/pages/App.tsx
-// Keeping this file as a placeholder for reference. Safe to delete.
+function App() {
+  return (
+    <div>
+      {/* Your app content goes here */}
+      <h1>Hello, world!</h1>
+    </div>
+  );
+}
+
+export default App;
