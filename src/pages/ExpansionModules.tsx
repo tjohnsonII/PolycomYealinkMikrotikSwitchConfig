@@ -140,6 +140,9 @@ const ExpansionModules: React.FC = () => {
       }
     }
     setYealinkOutput(lines.join('\n'));
+    try {
+      localStorage.setItem('expansionConfig', lines.join('\n'));
+    } catch {}
   };
 
   // Generate Yealink config for all pages (1-3)
@@ -159,6 +162,9 @@ const ExpansionModules: React.FC = () => {
       }
     }
     setYealinkOutput(allLines.join('\n'));
+    try {
+      localStorage.setItem('expansionConfig', allLines.join('\n'));
+    } catch {}
   };
 
   // Generate Polycom expansion config line and preview all keys for the page
@@ -182,6 +188,9 @@ const ExpansionModules: React.FC = () => {
       }
     }
     setPolycomOutput(lines.join('\n'));
+    try {
+      localStorage.setItem('expansionConfig', lines.join('\n'));
+    } catch {}
   };
 
   return (
@@ -191,32 +200,32 @@ const ExpansionModules: React.FC = () => {
       <div style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         {/* Yealink Expansion Module */}
         <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
-          <img src="/images/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: 120, marginBottom: 8 }} />
-          <img src="/images/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: 120, marginBottom: 8 }} />
+          <img src="/images/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: 120, marginBottom: 8 }} title="Yealink EXP40 Sidecar: 20 keys per page, up to 3 pages" />
+          <img src="/images/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: 120, marginBottom: 8 }} title="Yealink EXP50 Sidecar: 20 keys per page, up to 3 pages" />
           <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
             <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page & key toggles to preview each key visually. Enter any key to preview the full sidecar.
           </div>
           <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
-            <label>Template Type:</label>
+            <label title="BLF = Busy Lamp Field, Speed Dial = quick dial">Template Type:</label>
             <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
               <option value="BLF">BLF</option>
               <option value="SpeedDial">Speed Dial</option>
             </select>
-            <label style={{ marginLeft: 16 }}>Sidecar Page (1-3):</label>
+            <label style={{ marginLeft: 16 }} title="Which page of the sidecar (1-3)">Sidecar Page (1-3):</label>
             <input type="number" min={1} max={3} value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} style={{ width: 60 }} />
-            <label style={{ marginLeft: 16 }}>Sidecar Line (1-20):</label>
+            <label style={{ marginLeft: 16 }} title="Which button on the page (1-20)">Sidecar Line (1-20):</label>
             <input type="number" min={1} max={20} value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} style={{ width: 60 }} />
-            <label style={{ marginLeft: 16 }}>Label:</label>
+            <label style={{ marginLeft: 16 }} title="Text shown on the button">Label:</label>
             <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
-            <label style={{ marginLeft: 16 }}>Value (Phone/ext):</label>
+            <label style={{ marginLeft: 16 }} title="Extension or number this button dials or monitors">Value (Phone/ext):</label>
             <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
-            <label style={{ marginLeft: 16 }}>PBX IP:</label>
+            <label style={{ marginLeft: 16 }} title="PBX IP address for BLF keys">PBX IP:</label>
             <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
           </div>
           <button onClick={generateYealinkExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
           <button onClick={generateYealinkAllPages} style={{ marginTop: 8 }}>Generate All Pages</button>
           <div className="output" style={{ marginTop: 12 }}>
-            <textarea value={yealinkOutput} readOnly rows={5} style={{ width: '100%' }} />
+            <textarea value={yealinkOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
             <button onClick={sortYealinkOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
             <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
               <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handleYealinkFileUpload} /></label>
@@ -243,13 +252,13 @@ const ExpansionModules: React.FC = () => {
             <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key to show the index.
           </div>
           <div className="form-group" style={{ textAlign: 'left', margin: '0 auto', maxWidth: 320 }}>
-            <label>Linekey Index (1-28):</label>
+            <label title="Which button (1-28) on the Polycom expansion module">Linekey Index (1-28):</label>
             <input type="number" min={1} max={28} value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
-            <label style={{ marginLeft: 16 }}>Address (e.g. 100@PBX):</label>
+            <label style={{ marginLeft: 16 }} title="SIP address or extension (e.g. 100@PBX)">Address (e.g. 100@PBX):</label>
             <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
-            <label style={{ marginLeft: 16 }}>Label:</label>
+            <label style={{ marginLeft: 16 }} title="Text shown on the button">Label:</label>
             <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
-            <label style={{ marginLeft: 16 }}>Type:</label>
+            <label style={{ marginLeft: 16 }} title="Button type: automata (BLF) or normal (speed dial)">Type:</label>
             <select value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))}>
               <option value="automata">Automata</option>
               <option value="normal">Normal</option>
@@ -257,7 +266,7 @@ const ExpansionModules: React.FC = () => {
           </div>
           <button onClick={generatePolycomExpansion} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
-            <textarea value={polycomOutput} readOnly rows={5} style={{ width: '100%' }} />
+            <textarea value={polycomOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
             <button onClick={sortPolycomOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
             <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
               <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handlePolycomFileUpload} /></label>

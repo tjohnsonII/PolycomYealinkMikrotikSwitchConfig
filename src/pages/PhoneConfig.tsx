@@ -268,11 +268,29 @@ const PhoneConfig: React.FC = () => {
           </label>
         </div>
         <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
+        <button
+          style={{ marginTop: 8, marginLeft: 8 }}
+          title="Append the most recent expansion module config after the base config"
+          onClick={() => {
+            // Try to get expansion config from localStorage (set by ExpansionModules page)
+            let expansionConfig = '';
+            try {
+              expansionConfig = localStorage.getItem('expansionConfig') || '';
+            } catch {}
+            if (!expansionConfig) {
+              alert('No expansion module config found. Please generate one in the Expansion Modules tab first.');
+              return;
+            }
+            setOutput(prev => prev + (prev && !prev.endsWith('\n') ? '\n' : '') + expansionConfig);
+          }}
+        >
+          Add Expansion Module Config
+        </button>
         {error && (
           <div style={{ color: 'red', marginTop: 8 }}>{error}</div>
         )}
         <div className="output">
-          <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
+          <textarea value={output} readOnly rows={18} style={{ width: '100%', marginTop: 16, fontSize: 15, minHeight: 320 }} />
           {output && (
             <button
               style={{ marginTop: 8 }}

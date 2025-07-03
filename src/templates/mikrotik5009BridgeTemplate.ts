@@ -1,20 +1,35 @@
 // Mikrotik 5009 Bridge template
 export const mikrotik5009Bridge = `
 /interface bridge
-add name=bridge1
+add name=Phones
 /interface ethernet
-set [ find default-name=ether1 ] comment="WAN"
-set [ find default-name=ether2 ] comment="LAN"
+set [ find default-name=ether4 ] comment="HOSTED PHONE"
+set [ find default-name=ether5 ] comment="HOSTED PHONE"
+/interface vlan
+add interface=Phones name=vlan202 vlan-id=202
+/ip pool
+add name=Phones ranges=172.16.1.3-172.16.1.10
+/ip dhcp-server
+add address-pool=Phones interface=Phones name="Phone DHCP NETWORK"
 /interface bridge port
-add bridge=bridge1 interface=ether2
-add bridge=bridge1 interface=ether3
-add bridge=bridge1 interface=ether4
-add bridge=bridge1 interface=ether5
-add bridge=bridge1 interface=ether6
-add bridge=bridge1 interface=ether7
-add bridge=bridge1 interface=ether8
-add bridge=bridge1 interface=ether9
-add bridge=bridge1 interface=ether10
+add bridge=Phones interface=ether4
+add bridge=Phones interface=ether5
+/ip firewall connection tracking
+set udp-timeout=1m30s
 /ip address
-add address=192.168.88.1/24 interface=bridge1
+add address=172.16.1.1/24 interface=Phones network=172.16.1.0
+/ip dhcp-server network
+add address=172.16.1.0/24 dns-server=1.1.1.1,8.8.8.8 gateway=172.16.1.1 \
+    netmask=24
+/ip firewall address-list
+add address=172.16.1.0/24 list=MGMT
+add address=216.109.194.21 list=MGMT
+/ip firewall nat
+add action=masquerade chain=srcnat src-address=172.16.1.0/24
+/ip firewall service-port
+set ftp disabled=yes
+set tftp disabled=yes
+set h323 disabled=yes
+set sip disabled=yes
+set pptp disabled=yes
 `;

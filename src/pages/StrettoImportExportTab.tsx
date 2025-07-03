@@ -103,16 +103,18 @@ const StrettoImportExportTab: React.FC = () => {
         <thead>
           <tr>
             {columns.map(col => (
-              <th key={col} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
-                {col}
-                <button
-                  type="button"
-                  onClick={() => handleDeleteColumn(col)}
-                  style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
-                  title={`Delete column ${col}`}
-                >
-                  ×
-                </button>
+              <th key={col} style={{ border: '1px solid #ccc', padding: '12px 8px', background: '#f4f4f4', position: 'relative', height: 48, verticalAlign: 'middle' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontWeight: 600 }}>{col}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteColumn(col)}
+                    style={{ background: '#fff', border: '1px solid #f00', color: '#f00', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, padding: '2px 10px', marginLeft: 4, height: 32 }}
+                    title={`Delete column ${col}`}
+                  >
+                    Delete
+                  </button>
+                </div>
               </th>
             ))}
             <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Actions</th>
@@ -121,25 +123,25 @@ const StrettoImportExportTab: React.FC = () => {
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: 8 }}>
+              <td colSpan={columns.length + 1} style={{ textAlign: 'center', padding: 12 }}>
                 No data
               </td>
             </tr>
           ) : (
             rows.map((row, i) => (
-              <tr key={i}>
+              <tr key={i} style={{ height: 44 }}>
                 {columns.map(col => (
-                  <td key={col} style={{ border: '1px solid #ccc', padding: 4 }}>
+                  <td key={col} style={{ border: '1px solid #ccc', padding: 6, verticalAlign: 'middle', textAlign: 'center' }}>
                     <input
                       type="text"
                       value={row[col] || ''}
                       onChange={e => handleCellChange(i, col, e.target.value)}
-                      style={{ width: '100%', border: '1px solid #ccc', borderRadius: 4, padding: 4 }}
+                      style={{ width: '90%', border: '1px solid #ccc', borderRadius: 4, padding: '6px 12px', fontSize: 15, textAlign: 'center', margin: '0 4px' }}
                     />
                   </td>
                 ))}
-                <td style={{ border: '1px solid #ccc', padding: 4, textAlign: 'center' }}>
-                  <button type="button" onClick={() => handleDeleteRow(i)} style={{ color: 'red' }}>Delete</button>
+                <td style={{ border: '1px solid #ccc', padding: 6, textAlign: 'center', verticalAlign: 'middle' }}>
+                  <button type="button" onClick={() => handleDeleteRow(i)} style={{ color: 'red', background: '#fff', border: '1px solid #f00', borderRadius: 4, padding: '2px 10px', fontWeight: 'bold', height: 32 }}>Delete</button>
                 </td>
               </tr>
             ))

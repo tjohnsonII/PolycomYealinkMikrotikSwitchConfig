@@ -162,22 +162,22 @@ const HostedOrderTrackerTab: React.FC = () => {
               <th style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>Field</th>
               {customers.map((c, i) => (
                 <th key={i} style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative', minWidth: 120 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <input
                       type="text"
                       value={c}
                       onChange={e => handleCustomerHandleChange(i, e.target.value)}
                       placeholder="Handle (e.g. WS7)"
-                      style={{ width: 70, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 2 }}
+                      style={{ width: 100, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 4, marginRight: 8 }}
                     />
                     {customers.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomer(i)}
-                        style={{ background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer', marginLeft: 4 }}
+                        style={{ background: '#fff', border: '1px solid #f00', color: '#f00', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, padding: '2px 8px', marginLeft: 4 }}
                         title={`Delete customer column`}
                       >
-                        ×
+                        Delete
                       </button>
                     )}
                   </div>
@@ -188,18 +188,8 @@ const HostedOrderTrackerTab: React.FC = () => {
           <tbody>
             {fields.map((field, i) => (
               <tr key={field}>
-                <td style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4', position: 'relative' }}>
+                <td style={{ border: '1px solid #ccc', padding: 4, background: '#f4f4f4' }}>
                   {field}
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteField(i)}
-                      style={{ position: 'absolute', top: 2, right: 2, background: 'none', border: 'none', color: 'red', fontWeight: 'bold', cursor: 'pointer' }}
-                      title={`Delete field ${field}`}
-                    >
-                      ×
-                    </button>
-                  )}
                 </td>
                 {customers.map(cust => (
                   <td key={cust} style={{ border: '1px solid #ccc', padding: 4 }}>
