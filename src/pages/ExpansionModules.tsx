@@ -6,15 +6,31 @@ const ExpansionModules: React.FC = () => {
   // You may need to declare other state variables (e.g., yealinkSlots, yealinkTemplateType, etc.) if not already present.
 
   // Add Yealink slots state
-  const [yealinkSlots, setYealinkSlots] = useState<{ label: string; value: string; pbxIp: string }[]>(
-    Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' }))
-  );
-  const [yealinkTemplateType, setYealinkTemplateType] = useState<'BLF' | 'SpeedDial'>('BLF');
+  // Yealink state with localStorage persistence
+  const [yealinkSlots, setYealinkSlots] = useState<{ label: string; value: string; pbxIp: string }[]>(() => {
+    const saved = localStorage.getItem('yealinkSlots');
+    return saved ? JSON.parse(saved) : Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' }));
+  });
+  const [yealinkTemplateType, setYealinkTemplateType] = useState<'BLF' | 'SpeedDial'>(() => {
+    const saved = localStorage.getItem('yealinkTemplateType');
+    return saved === 'SpeedDial' ? 'SpeedDial' : 'BLF';
+  });
 
-  // Add Polycom slots state
-  const [polycomSlots, setPolycomSlots] = useState<{ label: string; address: string; type: string }[]>(
-    Array.from({ length: 28 }, () => ({ label: '', address: '', type: 'automata' }))
-  );
+  // Polycom state with localStorage persistence
+  const [polycomSlots, setPolycomSlots] = useState<{ label: string; address: string; type: string }[]>(() => {
+    const saved = localStorage.getItem('polycomSlots');
+    return saved ? JSON.parse(saved) : Array.from({ length: 28 }, () => ({ label: '', address: '', type: 'automata' }));
+  });
+  // Persist Yealink and Polycom state to localStorage
+  React.useEffect(() => {
+    localStorage.setItem('yealinkSlots', JSON.stringify(yealinkSlots));
+  }, [yealinkSlots]);
+  React.useEffect(() => {
+    localStorage.setItem('yealinkTemplateType', yealinkTemplateType);
+  }, [yealinkTemplateType]);
+  React.useEffect(() => {
+    localStorage.setItem('polycomSlots', JSON.stringify(polycomSlots));
+  }, [polycomSlots]);
 
   // Sort Yealink output by label (A-Z)
   const sortYealinkOutputByLabel = () => {
@@ -115,13 +131,13 @@ const ExpansionModules: React.FC = () => {
   const handleClearExpansionConfig = () => {
     setYealinkOutput('');
     setPolycomOutput('');
-    // Optionally reset slots to initial state
-    setPolycomSlots(Array.from({ length: 20 }, () => ({ label: '', address: '', type: 'automata' })));
-    if (typeof setYealinkSlots === 'function') {
-      setYealinkSlots(Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' })));
-    }
+    setYealinkSlots(Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' })));
+    setPolycomSlots(Array.from({ length: 28 }, () => ({ label: '', address: '', type: 'automata' })));
     try {
       localStorage.removeItem('expansionConfig');
+      localStorage.removeItem('yealinkSlots');
+      localStorage.removeItem('yealinkTemplateType');
+      localStorage.removeItem('polycomSlots');
     } catch {}
   };
 
@@ -194,7 +210,7 @@ const ExpansionModules: React.FC = () => {
           {/* Yealink Preview Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(5, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 8,
             margin: '16px 0',
             justifyItems: 'center',
@@ -290,7 +306,7 @@ const ExpansionModules: React.FC = () => {
           {/* Polycom Preview Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(7, 1fr)',
+            gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 8,
             margin: '16px 0',
             justifyItems: 'center',

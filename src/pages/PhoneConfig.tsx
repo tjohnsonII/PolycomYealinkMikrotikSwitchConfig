@@ -32,8 +32,9 @@ const PhoneConfig: React.FC = () => {
   const [phoneType, setPhoneType] = useState<'Polycom' | 'Yealink'>('Polycom');
   const [model, setModel] = useState(MODEL_OPTIONS[0]);
   const [ip, setIp] = useState('');
-  const [startExt, setStartExt] = useState('71');
-  const [endExt, setEndExt] = useState('73');
+  // Park line range fields
+  const [startPark, setStartPark] = useState('71');
+  const [endPark, setEndPark] = useState('73');
   const [labelPrefix, setLabelPrefix] = useState('Park');
   const [timeOffset, setTimeOffset] = useState('-5');
   const [adminPassword, setAdminPassword] = useState('admin:08520852');
@@ -55,8 +56,8 @@ const PhoneConfig: React.FC = () => {
     setPhoneType('Polycom');
     setModel(MODEL_OPTIONS[0]);
     setIp('');
-    setStartExt('71');
-    setEndExt('73');
+    setStartPark('71');
+    setEndPark('73');
     setLabelPrefix('Park');
     setTimeOffset('-5');
     setAdminPassword('admin:08520852');
@@ -94,15 +95,15 @@ const PhoneConfig: React.FC = () => {
         setOutput('');
         return;
       }
-      if (!startExt || !endExt) {
-        setError('Start and end extension are required.');
+      if (!startPark || !endPark) {
+        setError('Start and end park line are required.');
         setOutput('');
         return;
       }
-      const extStart = parseInt(startExt, 10);
-      const extEnd = parseInt(endExt, 10);
-      if (isNaN(extStart) || isNaN(extEnd) || extStart > extEnd) {
-        setError('Please enter a valid extension range.');
+      const parkStart = parseInt(startPark, 10);
+      const parkEnd = parseInt(endPark, 10);
+      if (isNaN(parkStart) || isNaN(parkEnd) || parkStart > parkEnd) {
+        setError('Please enter a valid park line range.');
         setOutput('');
         return;
       }
@@ -116,9 +117,10 @@ const PhoneConfig: React.FC = () => {
         setOutput('');
         return;
       }
-      const extList = [];
-      for (let ext = extStart; ext <= extEnd; ext++) {
-        extList.push(ext);
+      // For park lines
+      const parkList = [];
+      for (let ext = parkStart; ext <= parkEnd; ext++) {
+        parkList.push(ext);
       }
 
       if (phoneType === 'Polycom') {
@@ -128,14 +130,17 @@ const PhoneConfig: React.FC = () => {
         config += `tcpIpApp.sntp.gmtOffset=${parseInt(timeOffset, 10) * 3600}\n`;
         config += `tcpIpApp.sntp.gmtOffset.overrideDHCP=1\n`;
         config += `static.security.user_password=${adminPassword}\n`;
-        extList.forEach((ext, i) => {
-          config += `attendant.resourcelist.${i + 1}.address=${ext}@${ip}\n`;
-          config += `attendant.resourcelist.${i + 1}.label=${labelPrefix}${ext}\n`;
-          config += `attendant.resourcelist.${i + 1}.type=automata\n`;
+        // Park lines for Polycom
+        parkList.forEach((ext, i) => {
+          const idx = i + 9; // Park lines start at 9 in Polycom reference
+          config += `attendant.resourcelist.${idx}.address=${ext}@${ip}\n`;
+          config += `attendant.resourcelist.${idx}.calladdress=*85${ext}@${ip}\n`;
+          config += `attendant.resourcelist.${idx}.label=${labelPrefix}${i + 1}\n`;
+          config += `attendant.resourcelist.${idx}.type=automata\n`;
         });
         config += `feature.doNotDisturb.enable=0\n`;
         if (enableMWI) {
-          config += `msg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
+          config += `msg.mwi.1.callback=*98${parkList[0]}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${parkList[0]}@${ip}\n`;
         }
         if (enableSpeedDial) {
           config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
@@ -145,9 +150,6 @@ const PhoneConfig: React.FC = () => {
         }
         if (enableTransferVM) {
           config += `feature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
-        }
-        if (enablePark) {
-          config += `attendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
         }
       } else if (phoneType === 'Yealink') {
         config += `local_time.ntp_server1=216.239.35.12\n`;
@@ -164,11 +166,13 @@ const PhoneConfig: React.FC = () => {
           config += `features.pickup.direct_pickup_code=**\n`;
           config += `features.pickup.direct_pickup_enable=1\n`;
         }
-        extList.forEach((ext, i) => {
-          config += `linekey.${i + 1}.label=${labelPrefix}${ext}\n`;
-          config += `linekey.${i + 1}.line=1\n`;
-          config += `linekey.${i + 1}.type=16\n`;
-          config += `linekey.${i + 1}.value=${ext}\n`;
+        // Park lines for Yealink
+        parkList.forEach((ext, i) => {
+          const idx = i + 6; // Park lines start at 6 in Yealink reference
+          config += `linekey.${idx}.label=${labelPrefix}${i + 1}\n`;
+          config += `linekey.${idx}.line=1\n`;
+          config += `linekey.${idx}.type=10\n`;
+          config += `linekey.${idx}.value=${ext}@${ip}\n`;
         });
         if (enableMWI) {
           config += `account.1.subscribe_mwi_to_vm=1\n`;
@@ -181,9 +185,6 @@ const PhoneConfig: React.FC = () => {
         }
         if (enableTransferVM) {
           config += `linekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
-        }
-        if (enablePark) {
-          config += `linekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
         }
       }
       setOutput(config);
@@ -243,18 +244,18 @@ const PhoneConfig: React.FC = () => {
             </span>
           </label>
           <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
-          <label style={{marginLeft:16}}>Start Extension:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.startExt}>
-              <FaInfoCircle />
-            </span>
-          </label>
-          <input type="number" value={startExt} onChange={e => setStartExt(e.target.value)} />
-          <label style={{marginLeft:16}}>End Extension:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.endExt}>
-              <FaInfoCircle />
-            </span>
-          </label>
-          <input type="number" value={endExt} onChange={e => setEndExt(e.target.value)} />
+        <label style={{marginLeft:16}}>Start Park Line:
+          <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="First park line number (e.g. 71)">
+            <FaInfoCircle />
+          </span>
+        </label>
+        <input type="number" value={startPark} onChange={e => setStartPark(e.target.value)} />
+        <label style={{marginLeft:16}}>End Park Line:
+          <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="Last park line number (e.g. 73)">
+            <FaInfoCircle />
+          </span>
+        </label>
+        <input type="number" value={endPark} onChange={e => setEndPark(e.target.value)} />
           <label style={{marginLeft:16}}>Label Prefix:
             <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.labelPrefix}>
               <FaInfoCircle />
