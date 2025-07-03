@@ -80,26 +80,27 @@ const StrettoImportExportTab: React.FC = () => {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 8px' }}>
       <h2>Stretto Import/Export</h2>
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 12, display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
         <input type="file" accept=".csv" onChange={handleImport} />
-        <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>
+        <button type="button" onClick={handleExport}>
           Export as CSV
         </button>
-        <button type="button" onClick={() => handleAddRows(1)} style={{ marginLeft: 8 }}>
+        <button type="button" onClick={() => handleAddRows(1)}>
           Add 1 Row
         </button>
-        <button type="button" onClick={() => handleAddRows(5)} style={{ marginLeft: 8 }}>
+        <button type="button" onClick={() => handleAddRows(5)}>
           Add 5 Rows
         </button>
-        <button type="button" onClick={() => handleAddRows(10)} style={{ marginLeft: 8 }}>
+        <button type="button" onClick={() => handleAddRows(10)}>
           Add 10 Rows
         </button>
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-      <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px' }}>
+      <div style={{ overflowX: 'auto', width: '100%' }}>
+        <table style={{ minWidth: 1200, width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px' }}>
         <thead>
           <tr>
             {columns.map(col => (
@@ -150,6 +151,7 @@ const StrettoImportExportTab: React.FC = () => {
           )}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

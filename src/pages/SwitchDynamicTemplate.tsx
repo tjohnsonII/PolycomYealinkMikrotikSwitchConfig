@@ -213,8 +213,8 @@ const SwitchDynamicTemplate: React.FC = () => {
       </div>
       <textarea
         readOnly
-        rows={32}
-        style={{ width: '100%', fontFamily: 'monospace', fontSize: 13 }}
+        rows={38}
+        style={{ width: '90vw', maxWidth: 1100, minHeight: 600, fontFamily: 'monospace', fontSize: 16, padding: 12, border: '1.5px solid #bbb', borderRadius: 6, resize: 'vertical', display: 'block' }}
         value={filled}
       />
     </div>
