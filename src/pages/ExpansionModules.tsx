@@ -266,8 +266,8 @@ const ExpansionModules: React.FC = () => {
           </div>
           {/* Polycom Preview Grid */}
           <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, marginTop: 16, padding: 8 }}>
-            <b>Preview: 28 keys (4 columns × 7 rows)</b>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginTop: 8 }}>
+            <b>Preview: 28 keys (2 columns × 14 rows)</b>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, marginTop: 8 }}>
               {[...Array(28)].map((_, idx) => (
                 <div key={idx} title={`Key ${idx + 1}`} style={{ height: 32, border: '1px solid #b3c6e0', borderRadius: 4, background: idx + 1 === parseInt(polycomSection.linekeyIndex) ? '#d1eaff' : '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: idx + 1 === parseInt(polycomSection.linekeyIndex) ? 700 : 400, color: '#2a3b5c' }}>
                   {idx + 1 === parseInt(polycomSection.linekeyIndex) ? '🟩' : '⬜'}
