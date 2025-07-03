@@ -6,7 +6,7 @@ import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-ro
 import MainLayout from '../layouts/MainLayout';
 import { ConfigProvider } from '../components/ConfigContext';
 import PhoneConfig from './PhoneConfig';
-import ExpansionModules from './ExpansionModules';
+import ExpansionModules from './ExpansionModules'; // Only default import, no named import
 import Reference from './Reference';
 import FullConfig from './FullConfig';
 import FBPXImport from './FBPXImport';

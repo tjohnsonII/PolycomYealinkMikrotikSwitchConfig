@@ -1,58 +1,6 @@
-  // Clear all expansion config fields and outputs
-// ...existing code...
-  // Clear all expansion config fields and outputs
-  const handleClearExpansionConfig = () => {
-    setYealinkSection({
-      templateType: 'BLF',
-      sidecarPage: '1',
-      sidecarLine: '1',
-      label: '',
-      value: '',
-      pbxIp: '',
-    });
-    setYealinkOutput('');
-    setPolycomSection({
-      address: '',
-      label: '',
-      type: 'automata',
-      linekeyCategory: 'BLF',
-      linekeyIndex: '',
-    });
-    setPolycomOutput('');
-    try {
-      localStorage.removeItem('expansionConfig');
-    } catch {}
-  };
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 
-
-
-
-const ExpansionModules: React.FC = () => {
-  // Yealink: 20 slots per page
-  const [yealinkTemplateType, setYealinkTemplateType] = useState('BLF');
-  const [yealinkSlots, setYealinkSlots] = useState(Array(20).fill(0).map(() => ({ label: '', value: '', pbxIp: '' })));
-  const [yealinkOutput, setYealinkOutput] = useState('');
-
-  // Polycom: 28 slots
-  const [polycomSlots, setPolycomSlots] = useState(Array(28).fill(0).map(() => ({ label: '', address: '', type: 'automata' })));
-  const [polycomOutput, setPolycomOutput] = useState('');
-
-  // Utility: Download text as file
-  const downloadTextFile = (filename: string, text: string) => {
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }, 100);
-  };
 
   // Sort Yealink output by label (A-Z)
   const sortYealinkOutputByLabel = () => {
@@ -236,7 +184,7 @@ const ExpansionModules: React.FC = () => {
         <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
           <img src="/images/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion" style={{ width: 120, marginBottom: 8 }} />
           <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
-            <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout. Hover over any key to show the index.
+            <b>Instructions:</b> Edit each slot below. Label, Address/Ext, and Type are editable for each key. Click "Generate" to update the config output.
           </div>
           <div style={{ marginBottom: 12 }}>
             <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 14 }}>
@@ -294,18 +242,6 @@ const ExpansionModules: React.FC = () => {
             <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
               <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handlePolycomFileUpload} /></label>
               <button onClick={() => downloadTextFile('polycom_expansion_sorted.txt', polycomOutput)} style={{ fontSize: 13 }}>Download</button>
-            </div>
-          </div>
-          {/* Polycom Preview Grid */}
-          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, marginTop: 16, padding: 8 }}>
-            <b>Preview: 28 keys (2 columns × 14 rows)</b>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4, marginTop: 8 }}>
-              {[...Array(28)].map((_, idx) => (
-                <div key={idx} title={`Key ${idx + 1}`} style={{ height: 32, border: '1px solid #b3c6e0', borderRadius: 4, background: idx + 1 === parseInt(polycomSection.linekeyIndex) ? '#d1eaff' : '#f4f8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: idx + 1 === parseInt(polycomSection.linekeyIndex) ? 700 : 400, color: '#2a3b5c' }}>
-                  {idx + 1 === parseInt(polycomSection.linekeyIndex) ? '🟩' : '⬜'}
-                  <span style={{ marginLeft: 6 }}>{idx + 1}</span>
-                </div>
-              ))}
             </div>
           </div>
         </div>
