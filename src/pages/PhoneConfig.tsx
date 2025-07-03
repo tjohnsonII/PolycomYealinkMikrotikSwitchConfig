@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { useConfigContext } from '../components/ConfigContext';
 import { FaInfoCircle } from 'react-icons/fa';
 
 // These should be imported from a shared constants file in a real refactor
@@ -40,10 +41,95 @@ const PhoneConfig: React.FC = () => {
   const [yealinkDisableMissedCall, setYealinkDisableMissedCall] = useState(false);
   const [yealinkCallStealing, setYealinkCallStealing] = useState(false);
   const [output, setOutput] = useState('');
+  // Advanced feature toggles
+  const [enableMWI, setEnableMWI] = useState(false);
+  const [enableSpeedDial, setEnableSpeedDial] = useState(false);
+  const [enableIntercom, setEnableIntercom] = useState(false);
+  const [enableTransferVM, setEnableTransferVM] = useState(false);
+  const [enablePark, setEnablePark] = useState(false);
+  const { setGeneratedConfig } = useConfigContext();
 
-  // Placeholder for config generation logic
+  // Config generation logic for Polycom and Yealink
   const generateConfig = () => {
-    setOutput(`# Model: ${model}\n# (Config generation logic goes here)`);
+    let config = '';
+    const extStart = parseInt(startExt, 10);
+    const extEnd = parseInt(endExt, 10);
+    const extList = [];
+    for (let ext = extStart; ext <= extEnd; ext++) {
+      extList.push(ext);
+    }
+
+    if (phoneType === 'Polycom') {
+      config += `# Polycom ${model} Base Config\n`;
+      config += `device.sntp.serverName=216.239.35.12\n`;
+      config += `tcpIpApp.sntp.address=216.239.35.12\n`;
+      config += `tcpIpApp.sntp.address.overrideDHCP=1\n`;
+      config += `tcpIpApp.sntp.gmtOffset=${parseInt(timeOffset, 10) * 3600}\n`;
+      config += `tcpIpApp.sntp.gmtOffset.overrideDHCP=1\n`;
+      config += `static.security.user_password=${adminPassword}\n`;
+      config += `\n# Park/BLF Keys\n`;
+      extList.forEach((ext, i) => {
+        config += `attendant.resourcelist.${i + 1}.address=${ext}@${ip}\n`;
+        config += `attendant.resourcelist.${i + 1}.label=${labelPrefix}${ext}\n`;
+        config += `attendant.resourcelist.${i + 1}.type=automata\n`;
+      });
+      config += `\n# Disable DND\nfeature.doNotDisturb.enable=0\n`;
+      if (enableMWI) {
+        config += `\n# Voicemail Indicator (MWI)\nmsg.mwi.1.callback=*98${startExt}\nmsg.mwi.1.callbackmode=contact\nmsg.mwi.1.subscribe=${startExt}@${ip}\n`;
+      }
+      if (enableSpeedDial) {
+        config += `\n# Speed Dial Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.1.mname=Call Ext Test\nefk.efklist.1.status=1\nefk.efklist.1.action.string=EXTERNAL_NUM$Tinvite$\nlinekey.1.category=EFK\nlinekey.1.index=1\n`;
+      }
+      if (enableIntercom) {
+        config += `\n# Intercom Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.2.mname=Intercom\nefk.efklist.2.status=1\nefk.efklist.2.action.string=*80$P2N4$$Tinvite$\nefk.efklist.2.label=Intercom\nefk.efkprompt.2.label=Extension\nefk.efkprompt.2.status=1\nefk.efkprompt.2.type=numeric\nlinekey.2.category=EFK\nlinekey.2.index=2\n`;
+      }
+      if (enableTransferVM) {
+        config += `\n# Transfer to Voicemail Example\nfeature.enhancedFeatureKeys.enabled=1\nfeature.EFKLineKey.enabled=1\nefk.efklist.3.mname=Transfer-2-VM\nefk.efklist.3.status=1\nefk.efklist.3.action.string=*EXT-NUM@${ip}$Tinvite$\nlinekey.3.category=EFK\nlinekey.3.index=3\n`;
+      }
+      if (enablePark) {
+        config += `\n# Park Example\nattendant.resourcelist.7.address=71@${ip}\nattendant.resourcelist.7.calladdress=*8571@${ip}\nattendant.resourcelist.7.label=Park 1\nattendant.resourcelist.7.type=automata\n`;
+      }
+    } else if (phoneType === 'Yealink') {
+      config += `# Yealink ${model} Base Config\n`;
+      config += `local_time.ntp_server1=216.239.35.12\n`;
+      config += `local_time.time_zone=${timeOffset}\n`;
+      config += `static.security.user_password=${adminPassword}\n`;
+      if (yealinkLabelLength) {
+        config += `features.config_dsskey_length=1\n`;
+      }
+      if (yealinkDisableMissedCall) {
+        config += `phone_setting.missed_call_power_led_flash.enable=0\n`;
+        config += `features.missed_call_popup.enable=0\n`;
+      }
+      if (yealinkCallStealing) {
+        config += `features.pickup.direct_pickup_code=**\n`;
+        config += `features.pickup.direct_pickup_enable=1\n`;
+      }
+      config += `\n# Park/BLF Keys\n`;
+      extList.forEach((ext, i) => {
+        config += `linekey.${i + 1}.label=${labelPrefix}${ext}\n`;
+        config += `linekey.${i + 1}.line=1\n`;
+        config += `linekey.${i + 1}.type=16\n`;
+        config += `linekey.${i + 1}.value=${ext}\n`;
+      });
+      if (enableMWI) {
+        config += `\n# Voicemail Indicator (MWI)\naccount.1.subscribe_mwi_to_vm=1\n`;
+      }
+      if (enableSpeedDial) {
+        config += `\n# Speed Dial Example\nlinekey.10.label=SpeedDial\nlinekey.10.line=1\nlinekey.10.type=13\nlinekey.10.value=YYY-YYY-YYYY\n`;
+      }
+      if (enableIntercom) {
+        config += `\n# Intercom Example\nfeatures.enhanced_dss_keys.enable=1\nfeature.enhancedFeatureKeys.enabled=1\nlinekey.8.label=Intercom\nlinekey.8.line=0\nlinekey.8.type=73\nlinekey.8.value=*80$PExtension&TIntercom&C3&N$$Tinvite$\n`;
+      }
+      if (enableTransferVM) {
+        config += `\n# Transfer to Voicemail Example\nlinekey.11.extension=EXT-NUM\nlinekey.11.label=Transfer-2-VM\nlinekey.11.line=1\nlinekey.11.type=3\nlinekey.11.value=*EXT-NUM@${ip}\n`;
+      }
+      if (enablePark) {
+        config += `\n# Park Example\nlinekey.6.extension=71\nlinekey.6.label=Park 1\nlinekey.6.line=1\nlinekey.6.type=10\nlinekey.6.value=71@${ip}\n`;
+      }
+    }
+    setOutput(config);
+    setGeneratedConfig({ model, phoneType, config });
   };
 
   return (
@@ -59,6 +145,12 @@ const PhoneConfig: React.FC = () => {
       <div className="form-section" style={{marginBottom:24}}>
         <h3>Base Config Options</h3>
         <div className="form-group">
+          <label><input type="checkbox" checked={enableMWI} onChange={e => setEnableMWI(e.target.checked)} /> Voicemail Indicator (MWI)</label>
+          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableSpeedDial} onChange={e => setEnableSpeedDial(e.target.checked)} /> Speed Dial</label>
+          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableIntercom} onChange={e => setEnableIntercom(e.target.checked)} /> Intercom</label>
+          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableTransferVM} onChange={e => setEnableTransferVM(e.target.checked)} /> Transfer to Voicemail</label>
+          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enablePark} onChange={e => setEnablePark(e.target.checked)} /> Park</label>
+        </div>
           <label>Phone Type:
             <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.phoneType}>
               <FaInfoCircle />
@@ -140,7 +232,6 @@ const PhoneConfig: React.FC = () => {
         <div className="output">
           <textarea value={output} readOnly rows={10} style={{ width: '100%', marginTop: 16 }} />
         </div>
-      </div>
     </>
   );
 };

@@ -1,12 +1,21 @@
 import React from 'react';
+import { useConfigContext } from '../components/ConfigContext';
 
 const FullConfig: React.FC = () => {
-  // TODO: Move full config generation logic here from App.tsx
+  const { generatedConfig } = useConfigContext();
   return (
     <div>
       <h2>Full Config</h2>
-      <p>This tab should generate a complete phone config for all supported models. (Restore your previous UI here.)</p>
-      {/* Add full config generation UI and logic here */}
+      {generatedConfig && (generatedConfig.phoneType === 'Polycom' || generatedConfig.phoneType === 'Yealink') ? (
+        <>
+          <div style={{ margin: '16px 0', fontWeight: 500 }}>
+            Model: {generatedConfig.model} ({generatedConfig.phoneType})
+          </div>
+          <textarea value={generatedConfig.config} readOnly rows={18} style={{ width: '100%', fontFamily: 'monospace', fontSize: 14 }} />
+        </>
+      ) : (
+        <p>No config generated yet. Use the Phone Config tab to generate a config.</p>
+      )}
     </div>
   );
 };

@@ -1,0 +1,26 @@
+Sidecars
+
+HOSTED LAB IP: 152.160.3.118
+username: i123
+Password: sdxczv
+HOSTED LAB IP Grand Rapids: 152.160.170.21
+Customer login portal:secure.123.net
+ticket#@tickets.123.net
+
+Wednesday, December 4, 2024
+10:30 AM
+
+Yealink:
+Template (SpeedDial)
+expansion_module.Y.key.Z.label=JOHN SMITH
+expansion_module.Y.key.Z.type=13
+expansion_module.Y.key.Z.value=PHONE_NUMBER
+expansion_module.Y.key.Z.line=1
+Template (BLF)
+expansion_module.Y.key.Z.label=JOHN SMITH
+expansion_module.Y.key.Z.type=16
+expansion_module.Y.key.Z.value=EXT_NUM@PBX-IP
+expansion_module.Y.key.Z.line=1
+Breakdown
+Y = Sidecar Page
+Z = Sidecar Page Line
