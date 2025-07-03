@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
+const ExpansionModules: React.FC = () => {
+  const [yealinkOutput, setYealinkOutput] = useState<string>('');
+  const [polycomOutput, setPolycomOutput] = useState<string>('');
+  // You may need to declare other state variables (e.g., yealinkSlots, yealinkTemplateType, etc.) if not already present.
 
+  // Add Yealink slots state
+  const [yealinkSlots, setYealinkSlots] = useState<{ label: string; value: string; pbxIp: string }[]>(
+    Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' }))
+  );
+  const [yealinkTemplateType, setYealinkTemplateType] = useState<'BLF' | 'SpeedDial'>('BLF');
+
+  // Add Polycom slots state
+  const [polycomSlots, setPolycomSlots] = useState<{ label: string; address: string; type: string }[]>(
+    Array.from({ length: 28 }, () => ({ label: '', address: '', type: 'automata' }))
+  );
 
   // Sort Yealink output by label (A-Z)
   const sortYealinkOutputByLabel = () => {
@@ -79,24 +93,17 @@ import React, { useState, useEffect } from 'react';
   };
 
   // Generate Polycom expansion config line and preview all keys for the page
-  const generatePolycomExpansion = () => {
-    const { linekeyIndex, address, label, type } = polycomSection;
-    // Preview all 28 keys for the Polycom module
+  // (This function is not used in the current UI, but if needed, you can implement it using polycomSlots)
+  // Example: generate config for a specific slot index
+  const generatePolycomExpansion = (slotIndex: number) => {
     let lines = [];
-    for (let i = 1; i <= 28; i++) {
-      if (i === parseInt(linekeyIndex)) {
-        lines.push(
-          `attendant.resourcelist.${i}.address=${address}\n` +
-          `attendant.resourcelist.${i}.label=${label}\n` +
-          `attendant.resourcelist.${i}.type=${type}`
-        );
-      } else {
-        lines.push(
-          `attendant.resourcelist.${i}.address=\n` +
-          `attendant.resourcelist.${i}.label=\n` +
-          `attendant.resourcelist.${i}.type=`
-        );
-      }
+    for (let i = 0; i < polycomSlots.length; i++) {
+      const slot = polycomSlots[i];
+      lines.push(
+        `attendant.resourcelist.${i + 1}.address=${slot.address}\n` +
+        `attendant.resourcelist.${i + 1}.label=${slot.label}\n` +
+        `attendant.resourcelist.${i + 1}.type=${slot.type}`
+      );
     }
     setPolycomOutput(lines.join('\n'));
     try {
@@ -104,8 +111,34 @@ import React, { useState, useEffect } from 'react';
     } catch {}
   };
 
-  return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 16 }}>
+  // Clear config handler
+  const handleClearExpansionConfig = () => {
+    setYealinkOutput('');
+    setPolycomOutput('');
+    // Optionally reset slots to initial state
+    setPolycomSlots(Array.from({ length: 20 }, () => ({ label: '', address: '', type: 'automata' })));
+    if (typeof setYealinkSlots === 'function') {
+      setYealinkSlots(Array.from({ length: 20 }, () => ({ label: '', value: '', pbxIp: '' })));
+    }
+    try {
+      localStorage.removeItem('expansionConfig');
+    } catch {}
+  };
+
+  // Utility function to download text as a file
+  const downloadTextFile = (filename: string, text: string) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+  
+    return (
+      <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 16 }}>
       <button onClick={handleClearExpansionConfig} style={{ float: 'right', marginBottom: 8, background: '#f44336', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', cursor: 'pointer' }}>
         Clear Config
       </button>
@@ -121,7 +154,7 @@ import React, { useState, useEffect } from 'react';
           </div>
           <div style={{ marginBottom: 12 }}>
             <label>Template Type: </label>
-            <select value={yealinkTemplateType} onChange={e => setYealinkTemplateType(e.target.value)}>
+            <select value={yealinkTemplateType} onChange={e => setYealinkTemplateType(e.target.value as 'BLF' | 'SpeedDial')}>
               <option value="BLF">BLF</option>
               <option value="SpeedDial">Speed Dial</option>
             </select>
@@ -157,6 +190,35 @@ import React, { useState, useEffect } from 'react';
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Yealink Preview Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: 8,
+            margin: '16px 0',
+            justifyItems: 'center',
+          }}>
+            {yealinkSlots.map((slot, idx) => (
+              <div key={idx} style={{
+                width: 70,
+                height: 38,
+                background: slot.label ? '#0078d4' : '#e0e0e0',
+                color: slot.label ? '#fff' : '#888',
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 500,
+                fontSize: 14,
+                border: '1px solid #b0c4d4',
+                boxShadow: slot.label ? '0 2px 6px rgba(0,120,212,0.10)' : 'none',
+                transition: 'background 0.2s',
+                cursor: slot.label ? 'pointer' : 'default',
+              }} title={slot.label || `Slot ${idx + 1}`}>
+                {slot.label || idx + 1}
+              </div>
+            ))}
           </div>
           <button onClick={() => {
             const type = yealinkTemplateType === 'BLF' ? 16 : 13;
@@ -224,6 +286,35 @@ import React, { useState, useEffect } from 'react';
                 ))}
               </tbody>
             </table>
+          </div>
+          {/* Polycom Preview Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(7, 1fr)',
+            gap: 8,
+            margin: '16px 0',
+            justifyItems: 'center',
+          }}>
+            {polycomSlots.map((slot, idx) => (
+              <div key={idx} style={{
+                width: 60,
+                height: 34,
+                background: slot.label ? '#2d7d46' : '#e0e0e0',
+                color: slot.label ? '#fff' : '#888',
+                borderRadius: 6,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 500,
+                fontSize: 13,
+                border: '1px solid #b0c4d4',
+                boxShadow: slot.label ? '0 2px 6px rgba(45,125,70,0.10)' : 'none',
+                transition: 'background 0.2s',
+                cursor: slot.label ? 'pointer' : 'default',
+              }} title={slot.label || `Slot ${idx + 1}`}>
+                {slot.label || idx + 1}
+              </div>
+            ))}
           </div>
           <button onClick={() => {
             const lines = polycomSlots.map((slot, i) => (
