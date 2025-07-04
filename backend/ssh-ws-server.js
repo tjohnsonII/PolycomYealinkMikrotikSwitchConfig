@@ -1,11 +1,10 @@
-// Simple Node.js backend for SSH WebSocket bridge
+// Simple Node.js backend for SSH WebSocket bridge (ESM version)
 // Run: node backend/ssh-ws-server.js
 
-const WebSocket = require('ws');
-const { Server } = require('ws');
-const { Client } = require('ssh2');
+import { WebSocketServer } from 'ws';
+import { Client } from 'ssh2';
 
-const wss = new Server({ port: 3001, path: '/ssh' });
+const wss = new WebSocketServer({ port: 3001, path: '/ssh' });
 
 wss.on('connection', function connection(ws) {
   let sshClient = new Client();
