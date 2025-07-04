@@ -43,14 +43,52 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   );
 };
 
-const PBXReference: React.FC = () => (
-  <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%', maxWidth: 1200, margin: '0 auto' }}>
-    <div style={{ flex: 1, textAlign: 'left', maxWidth: 900, paddingRight: 32 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>FreePBX Reference</h1>
+import { useState, useMemo } from 'react';
 
-      {/* Inbound Routes */}
-      <Section title="Inbound Routes">
-        <p>Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like:</p>
+const PBXReference: React.FC = () => {
+  const [search, setSearch] = useState('');
+
+  // Helper to filter sections by search
+  const filterSection = (title: string, content: string) => {
+    if (!search.trim()) return true;
+    const s = search.toLowerCase();
+    return title.toLowerCase().includes(s) || content.toLowerCase().includes(s);
+  };
+
+  // Section content as array for search
+  const sections = [
+    {
+      title: 'Inbound Routes',
+      content: `Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like: ...existing code...`,
+      jsx: (
+        <Section title="Inbound Routes">
+          {/* ...existing code for Inbound Routes... */}
+        </Section>
+      ),
+    },
+    // ...repeat for each section, using the section title and a string summary of the content for search...
+  ];
+
+  // For now, render the search field and the original content below
+  return (
+    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%', maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ flex: 1, textAlign: 'left', maxWidth: 900, paddingRight: 32 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: 16 }}>
+          <label htmlFor="pbx-search" style={{ fontWeight: 500, marginRight: 8 }}>Search:</label>
+          <input
+            id="pbx-search"
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Type to search..."
+            style={{ padding: '4px 8px', border: '1px solid #ccc', borderRadius: 4, minWidth: 180 }}
+          />
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>FreePBX Reference</h1>
+
+        {/* Inbound Routes */}
+        <Section title="Inbound Routes">
+          <p>Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like:</p>
         <ul>
           <li>An extension</li>
           <li>A ring group</li>
@@ -2055,5 +2093,8 @@ WHERE LinkedID = '1688650400.1234';
     </nav>
   </div>
 );
+
+  // ...existing code...
+}
 
 export default PBXReference;
