@@ -527,6 +527,165 @@ const PBXReference: React.FC = () => (
         </tbody>
       </table>
     </section>
+    <section>
+      <h2>Time Conditions</h2>
+      <h3>What is a Time Condition?</h3>
+      <p>A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly. It functions like an IF/ELSE statement: IF current time matches time group → send call to Destination A ELSE → send call to Destination B</p>
+      <h4>Key Components</h4>
+      <ul>
+        <li><strong>Time Group:</strong> A reusable schedule definition that includes:
+          <ul>
+            <li>Days of the week</li>
+            <li>Time ranges (e.g., 9:00 AM–5:00 PM)</li>
+            <li>Specific dates or months (e.g., holidays)</li>
+            <li>Combinations of the above</li>
+          </ul>
+        </li>
+        <li>You can create multiple time groups in: Admin → Time Groups</li>
+        <li><strong>Time Condition:</strong> A logic block that uses a Time Group to make routing decisions. Configure in: Admin → Time Conditions</li>
+        <li>Main Fields:
+          <ul>
+            <li>Time Condition Name: Label (e.g., "Open Hours Routing")</li>
+            <li>Time Group: The schedule to evaluate (e.g., “Office Hours”)</li>
+            <li>Destination if time matches: Where the call goes during matching hours</li>
+            <li>Destination if time does not match: Where the call goes outside of those hours</li>
+            <li>Optional Call Flow Toggle Feature Code: Lets you override the logic manually</li>
+          </ul>
+        </li>
+      </ul>
+      <h4>Common Use Case Examples</h4>
+      <ul>
+        <li><strong>Business Hours Routing</strong>
+          <ul>
+            <li>Time Group: “Business Hours”</li>
+            <li>Mon–Fri | 9:00 AM – 5:00 PM</li>
+            <li>Time Condition: “Main Line Logic”</li>
+            <li>If in business hours → go to IVR</li>
+            <li>If outside hours → go to after-hours voicemail or announcement</li>
+          </ul>
+        </li>
+        <li><strong>Holiday Routing</strong>
+          <ul>
+            <li>Create a “Holiday Dates” time group:</li>
+            <li>Add dates: Dec 25, Jan 1, etc.</li>
+            <li>Time Condition: "Holiday Check"</li>
+            <li>If date matches → route to "We're closed" announcement</li>
+            <li>Else → go to normal hours logic</li>
+            <li>Inbound Route → Time Condition (Holiday Check) → If YES → Holiday Announcement → If NO → Time Condition (Office Hours) → If YES → Ring Group → If NO → After Hours Voicemail</li>
+          </ul>
+        </li>
+        <li><strong>Manual Override</strong>
+          <ul>
+            <li>Time Conditions optionally support a feature code (like *271):</li>
+            <li>Allows users to toggle the logic manually (e.g., early closure)</li>
+            <li>Can be tied to a BLF button on phones (shows red/green status)</li>
+          </ul>
+        </li>
+      </ul>
+      <h4>Real-World Examples</h4>
+      <ul>
+        <li><strong>Example 1: Office Line with Voicemail Failover</strong>
+          <ul>
+            <li>Time Group: Mon–Fri, 9–5</li>
+            <li>Time Condition: Match: Ring Group 600 No Match: Voicemail 600</li>
+          </ul>
+        </li>
+        <li><strong>Example 2: Lunch Break Routing</strong>
+          <ul>
+            <li>Time Group: Mon–Fri, 12:00–1:00 PM</li>
+            <li>Time Condition: Match: Play "We’re at lunch" announcement No Match: Normal IVR</li>
+          </ul>
+        </li>
+      </ul>
+      <h4>Best Practices</h4>
+      <table>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Name time groups descriptively</td><td>Easier to manage multiple schedules</td></tr>
+          <tr><td>Use layered logic</td><td>Stack holiday, open/close, and lunch conditions</td></tr>
+          <tr><td>Use override feature codes</td><td>Staff can toggle logic without admin access</td></tr>
+          <tr><td>Use separate conditions for holidays</td><td>Avoids disrupting normal hours logic</td></tr>
+          <tr><td>Add BLF buttons for toggles</td><td>Visually monitor and control routing state</td></tr>
+        </tbody>
+      </table>
+      <h4>Time Condition vs. Time Group (Quick Summary)</h4>
+      <table>
+        <thead>
+          <tr><th>Feature</th><th>Time Group</th><th>Time Condition</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Stores schedule data</td><td>✅</td><td>❌</td></tr>
+          <tr><td>Makes routing decisions</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Can be reused across multiple flows</td><td>✅</td><td>❌</td></tr>
+          <tr><td>Uses IF/ELSE logic</td><td>❌</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <h2>Announcements</h2>
+      <h3>What is an Announcement?</h3>
+      <p>An Announcement is a module in FreePBX that plays a pre-recorded message (audio file) and then routes the call to another destination. There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.</p>
+      <h4>Where to Configure</h4>
+      <p>FreePBX GUI: Applications → Announcements</p>
+      <h4>Key Settings</h4>
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Announcement Name</td><td>Internal label (e.g., “Office Closed Notice”)</td></tr>
+          <tr><td>Recording</td><td>The audio file to play (choose from system recordings or upload)</td></tr>
+          <tr><td>Allow Skip</td><td>If enabled, the caller can press # to skip the message</td></tr>
+          <tr><td>Repeat Message</td><td>Replays the message before moving on</td></tr>
+          <tr><td>Return to IVR</td><td>If the call came from an IVR, you can return the caller back to it</td></tr>
+          <tr><td>Destination after Playback</td><td>Where to send the call next (e.g., extension, IVR, voicemail)</td></tr>
+        </tbody>
+      </table>
+      <h4>Recording the Audio</h4>
+      <ul>
+        <li>Upload .wav or .mp3 files in Admin → System Recordings</li>
+        <li>Record from an extension using *77</li>
+        <li>Use Text-to-Speech (via third-party services) to generate audio</li>
+      </ul>
+      <h4>Common Use Cases</h4>
+      <ul>
+        <li><strong>After-Hours Message:</strong> “Thank you for calling. Our office is currently closed. Please leave a message after the tone.” Destination: Voicemail</li>
+        <li><strong>Shipping or Info Update:</strong> “Due to inclement weather, shipping may be delayed.” Destination: Ring Group or Queue</li>
+        <li><strong>Call Blocking / Spam Handling:</strong> “This number does not accept unsolicited calls.” → hang up. Destination: Terminate Call → Hang Up</li>
+        <li><strong>Loop Back to IVR:</strong> “Please listen carefully to our new menu options.” Destination: Return to IVR</li>
+      </ul>
+      <h4>Integrated Call Flows</h4>
+      <ul>
+        <li>Inbound Route (DID: 2485551234) ↓ Time Condition (if outside business hours) ↓ Announcement: “We are closed.” ↓ Voicemail box</li>
+      </ul>
+      <h4>Tips for Using Announcements</h4>
+      <table>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Keep messages short</td><td>Avoid frustrating callers</td></tr>
+          <tr><td>Enable skip (#) for long messages</td><td>Allows faster navigation</td></tr>
+          <tr><td>Use professional recordings</td><td>Enhances credibility</td></tr>
+          <tr><td>Test playback volume</td><td>Avoid distortion or silence</td></tr>
+          <tr><td>Use announcements before IVRs</td><td>Sets context for menu options</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <ul>
+        <li>Use consistent naming: Name your recordings and announcements clearly (e.g., after_hours_greeting.wav, HolidayNotice2025)</li>
+        <li>Segment announcements: Break long messages into reusable pieces (e.g., generic closure message + department-specific routing)</li>
+        <li>Use return to IVR carefully: Prevent loops by confirming the call originated from an IVR</li>
+      </ul>
+      <h4>Related Modules</h4>
+      <ul>
+        <li>System Recordings: Where audio files are created or uploaded</li>
+        <li>IVRs: Announcements are often used before or inside menus</li>
+        <li>Time Conditions: Direct callers to announcements based on time or date</li>
+      </ul>
+    </section>
   </div>
 );
 
