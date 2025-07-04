@@ -143,13 +143,188 @@ function PBXReferenceSubnav() {
               </div>
             </li>
             <li><b>Firewall</b><br />
-              The integrated FreePBX Firewall protects the PBX from unauthorized access. It uses zones:
-              <ul>
-                <li><b>Trusted:</b> Internal devices (phones, admin IPs).</li>
-                <li><b>Internet:</b> Remote SIP endpoints.</li>
-                <li><b>Blocked:</b> Explicitly denied IPs.</li>
-              </ul>
-              It controls traffic for SIP, SSH, Web GUI, etc., and includes intrusion detection (Fail2Ban).
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>Overview: What Does the FreePBX Firewall Do?</b><br />
+                  The FreePBX Firewall:
+                  <ul>
+                    <li>Filters traffic by source IP address and port</li>
+                    <li>Organizes access via zones (internal, external, trusted, etc.)</li>
+                    <li>Automatically blocks threats and scanning attempts (via Fail2Ban)</li>
+                    <li>Allows or denies access to services like:
+                      <ul>
+                        <li>Web GUI (HTTP/HTTPS)</li>
+                        <li>SSH</li>
+                        <li>SIP/PJSIP</li>
+                        <li>UCP, Zulu, REST API, etc.</li>
+                      </ul>
+                    </li>
+                  </ul>
+                  It works hand-in-hand with <b>iptables</b> (on Linux) and can be customized to protect a local system, cloud PBX, or hybrid deployment.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Firewall Zones (Core Concept)</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Zone</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Use Case</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Trusted</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Full access, no restrictions</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>LAN, VPN peers, known public IPs</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Local</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Only for services running on the system (loopback)</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>127.0.0.1</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Internal</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allows PBX services (phones, UCP, etc.)</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Office subnets</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>External</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Blocked by default, can whitelist services</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Internet, unknown IPs</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Other</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Catch-all zone for unclassified traffic</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Used for alerts/monitoring</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Blacklist</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Permanently banned IPs</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Malicious traffic, SIP scanners</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>Services Controlled by Firewall</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Service</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Web Interface (Admin, UCP)</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>HTTP/HTTPS access to FreePBX GUI</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>SIP/PJSIP</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Call signaling ports (usually UDP 5060, 5160)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>RTP Media</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Voice traffic (UDP ports 10000–20000 by default)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>SSH</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Secure shell for remote access</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>REST API / AMI</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Used by advanced applications or external integrations</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Responsive Firewall</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Dynamically adjusts rules based on traffic</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>Responsive Firewall</b><br />
+                  This feature allows remote phones or clients to connect dynamically:
+                  <ul>
+                    <li>Accepts new connections temporarily</li>
+                    <li>Uses SIP registration attempts to whitelist the IP</li>
+                    <li>If registration is successful, the IP is added to the Internal zone for a limited time</li>
+                    <li>Supports PJSIP, IAX, and SIP transport</li>
+                  </ul>
+                  <b>Use Case:</b> Remote Yealink or Bria softphone connects from home IP, gets added automatically.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Intrusion Detection (Fail2Ban)</b><br />
+                  <ul>
+                    <li>Monitors logs for brute-force attempts (SIP, SSH, web logins)</li>
+                    <li>Automatically bans IPs after too many failed attempts</li>
+                    <li>Ban time and retry limits are configurable</li>
+                    <li>Logs can be viewed in <code>/var/log/fail2ban.log</code></li>
+                  </ul>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>Configuration Tabs</b></p>
+                <ol style={{ margin: '0 0 8px 0' }}>
+                  <li><b>Status</b><br />
+                    Current firewall mode: Enabled/Disabled/Testing<br />
+                    Summary of running services and zones
+                  </li>
+                  <li><b>Interfaces</b><br />
+                    Classify each network interface (e.g., eth0) as:
+                    <ul>
+                      <li>Trusted / Internal / External</li>
+                      <li>Typically: WAN = External, LAN = Internal</li>
+                    </ul>
+                  </li>
+                  <li><b>Networks</b><br />
+                    Whitelist or blacklist specific IPs or ranges<br />
+                    Add remote offices, admin IPs, or mobile networks here
+                  </li>
+                  <li><b>Services</b><br />
+                    Toggle allowed services (per zone)<br />
+                    Select which zones can access SIP, HTTP, SSH, etc.
+                  </li>
+                  <li><b>Advanced</b><br />
+                    Adjust default ports<br />
+                    Modify fail2ban ban times<br />
+                    Manage logs and performance settings
+                  </li>
+                </ol>
+                <p style={{ margin: '0 0 8px 0' }}><b>Best Practices</b></p>
+                <ul>
+                  <li>✅ Whitelist your management IPs (under "Networks")</li>
+                  <li>✅ Set your LAN interfaces to Trusted or Internal</li>
+                  <li>✅ Disable unnecessary services (e.g., Web UI over WAN)</li>
+                  <li>✅ Use Responsive Firewall for remote phones</li>
+                  <li>✅ Monitor intrusion logs and adjust thresholds as needed</li>
+                  <li>✅ Use secure SIP passwords and avoid predictable extensions</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>Common Troubleshooting Tips</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Symptom</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Possible Cause</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Fix</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Remote phones can't register</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>IP not whitelisted or responsive firewall not working</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use Responsive mode or manually allow IP</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>GUI unreachable from remote</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Web access not allowed for External zone</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Temporarily move IP to Trusted zone</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Calls fail or drop</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>RTP ports not allowed through firewall/NAT</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allow UDP 10000–20000 and ensure correct NAT setup</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Fail2Ban too aggressive</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>False positives from SIP scanners</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Adjust ban time or retry limit in Advanced settings</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </li>
             <li><b>Extensions</b><br />
               <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
