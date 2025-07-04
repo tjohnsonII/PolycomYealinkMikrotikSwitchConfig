@@ -408,36 +408,708 @@ function PBXReferenceSubnav() {
               </div>
             </li>
             <li><b>Ring Groups</b><br />
-              Ring groups allow you to ring multiple extensions simultaneously or in sequence. Use for:
-              <ul>
-                <li>Departments (e.g., Sales group rings 101, 102, 103).</li>
-                <li>Configurable ring strategy (all at once, in order, etc.)</li>
-              </ul>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>📁 What Is a Ring Group?</b><br />
+                  A Ring Group is a way to ring multiple extensions simultaneously or in sequence when a call is received. It’s typically used to reach a department, team, or group of phones (e.g., Sales, Support, Reception).<br />
+                  Think of it as a mini broadcast system for inbound or internal calls.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🛠️ Common Use Cases</b></p>
+                <ul>
+                  <li>Ring all front desk phones at once</li>
+                  <li>Call a group of remote support reps in order</li>
+                  <li>Overflow logic: ring extension 100 for 10 seconds, then ring 101 and 102</li>
+                  <li>Combine with Inbound Routes, IVRs, or Queues</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔧 Core Configuration Options</b></p>
+                <ul>
+                  <li><b>Ring-Group Number</b><br />
+                    The internal number to dial this group (e.g., 600).<br />
+                    Can also be a destination for Inbound Routes or IVRs.
+                  </li>
+                  <li><b>Group Description</b><br />
+                    Label to identify purpose (e.g., Sales Team, Tech Support)
+                  </li>
+                  <li><b>Extension List</b><br />
+                    Add one or more extensions or external numbers (e.g., 100, 101, 2485551234#).<br />
+                    Use <b>#</b> at the end of external numbers.<br />
+                    <span style={{ display: 'block', margin: '8px 0 0 8px', fontFamily: 'monospace', whiteSpace: 'pre' }}>100
+101
+102
+2485557890#</span>
+                  </li>
+                  <li><b>Ring Strategy</b><br />
+                    Controls how the phones ring:
+                    <ul>
+                      <li><b>ringall:</b> Ring all at once</li>
+                      <li><b>hunt:</b> Ring one at a time in order</li>
+                      <li><b>memoryhunt:</b> Ring one, then add the next, etc.</li>
+                      <li><b>firstavailable:</b> Rings the first free extension</li>
+                      <li><b>random:</b> Randomized order</li>
+                    </ul>
+                  </li>
+                  <li><b>Ring Time</b><br />
+                    How long to ring this group (in seconds) before trying the next destination
+                  </li>
+                  <li><b>Destination if No Answer</b><br />
+                    Where to send the call if no one answers (e.g., voicemail, another ring group, queue)
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔔 Additional Features</b></p>
+                <ul>
+                  <li><b>CID Name Prefix</b><br />
+                    Adds a prefix to the caller ID on phones in the group.<br />
+                    Example: <b>Sales:</b> makes incoming CID show as Sales:2485551212
+                  </li>
+                  <li><b>Ignore CF Settings</b><br />
+                    Ignore individual extensions' call forwarding (recommended for group integrity)
+                  </li>
+                  <li><b>Disable Call Forwarding</b><br />
+                    Prevent users from forwarding group calls to external destinations
+                  </li>
+                  <li><b>Enable Call Confirmation</b><br />
+                    Required when calling external numbers (e.g., cell phones).<br />
+                    Prompts remote user to "Press 1 to accept the call"
+                  </li>
+                  <li><b>Remote Announce / Too-Late Announce</b><br />
+                    Audio prompts played to external users when they answer
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔁 Real-World Examples</b></p>
+                <ul>
+                  <li><b>🧑‍💼 Sales Group</b><br />
+                    Extensions: 100, 101, 102<br />
+                    Ring Strategy: ringall<br />
+                    CID Prefix: Sales:<br />
+                    Timeout Destination: Queue 600 (to queue calls if no answer)
+                  </li>
+                  <li><b>🧍‍♂️ On-Call Tech</b><br />
+                    Extensions: 200<br />
+                    External: 5865552222#<br />
+                    Strategy: hunt<br />
+                    Call Confirm: Enabled (ensures cell phones press 1 to answer)
+                  </li>
+                  <li><b>🕗 Office Hours Route</b><br />
+                    Time Condition → if open → Ring Group Reception<br />
+                    Time Condition → if closed → Voicemail or Announcement
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧼 Best Practices</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Tip</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use CID Prefixes</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Helps staff know what type of call it is</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use Call Confirm on external numbers</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Prevents calls from hitting personal voicemail</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Limit Ring Time</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoids long ringing and faster failover</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Document each group’s role</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Keeps your call flow organized</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoid loops</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Don’t send a failed call back into the same group</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔗 Ring Groups vs. Queues</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Feature</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Ring Group</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Queue</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Call distribution</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Simultaneous/sequential</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Rules-based (round robin, etc.)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Music on hold</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>No</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Caller position</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>No</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Agent login/logout</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>No</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Ideal for</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Small teams, simple routing</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Call centers, advanced control</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </li>
             <li><b>Queues</b><br />
-              Queues are like enhanced ring groups, ideal for call centers.
-              <ul>
-                <li>Callers wait in line.</li>
-                <li>Calls are distributed to agents based on rules (round robin, least recent, etc.).</li>
-                <li>Can use hold music, position announcements, etc.</li>
-              </ul>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎯 What is a Queue?</b><br />
+                  A Queue is a structured call-holding system in FreePBX. When callers enter a queue:
+                  <ul>
+                    <li>They wait on hold until an available agent can answer.</li>
+                    <li>Calls are distributed based on defined strategies (e.g., round robin, least recent).</li>
+                    <li>Agents can log in/out of queues manually or dynamically.</li>
+                    <li>You can provide music on hold, caller position, and estimated wait time.</li>
+                  </ul>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🛠️ Where to Configure Queues</b></p>
+                <ul>
+                  <li>Admin GUI: <b>Applications → Queues</b></li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧩 Core Queue Settings</b></p>
+                <ul>
+                  <li><b>Queue Number</b><br />
+                    Internal extension number for the queue (e.g., 600)
+                  </li>
+                  <li><b>Queue Name</b><br />
+                    Label that appears in reports and agent displays (e.g., Support Line, Billing Queue)
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧑‍💼 Agent Configuration</b></p>
+                <ul>
+                  <li><b>Static Agents</b><br />
+                    Predefined list of extensions (always part of the queue):<br />
+                    <span style={{ display: 'block', margin: '8px 0 0 8px', fontFamily: 'monospace', whiteSpace: 'pre' }}>100
+101
+102</span>
+                  </li>
+                  <li><b>Dynamic Agents</b><br />
+                    Agents log in/out with feature codes (e.g., *45).<br />
+                    Good for hot-desking or rotating teams.<br />
+                    Can also use hotdesk provisioning or Sangoma Phones' presence states.
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎛️ Key Call Handling Options</b></p>
+                <ul>
+                  <li><b>📞 Call Distribution Strategy</b><br />
+                    Controls how calls are assigned:
+                    <table style={{ borderCollapse: 'collapse', margin: '8px 0' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Strategy</th>
+                          <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>ringall</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Ring all agents simultaneously</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>rrmemory</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Round-robin with memory (next agent after last one)</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>leastrecent</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Agent who hasn’t taken a call in the longest time</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>fewestcalls</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Agent who has taken the fewest calls</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>random</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Random agent</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>rrordered</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Strict round-robin in order listed</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </li>
+                  <li><b>🕓 Max Wait Time</b><br />
+                    How long a caller will wait in the queue before timing out.<br />
+                    If reached, the call is sent to a failover destination (voicemail, another queue, etc.)
+                  </li>
+                  <li><b>🔀 Failover Destination</b><br />
+                    Where to send the call if no agents answer (voicemail, another queue, ring group)
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎧 Caller Experience</b></p>
+                <ul>
+                  <li><b>🎵 Music on Hold</b><br />
+                    Keeps caller engaged while waiting.<br />
+                    Can use custom playlists or default MOH.
+                  </li>
+                  <li><b>🗣️ Announce Position / Hold Time</b><br />
+                    Tells the caller their position in line or estimated wait time.<br />
+                    Optional and configurable.
+                  </li>
+                  <li><b>📢 Periodic Announcements</b><br />
+                    Audio files played every X seconds to reassure or inform callers
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>💬 Agent Experience</b></p>
+                <ul>
+                  <li><b>🔔 Agent Timeout</b><br />
+                    How long to ring an agent before trying the next
+                  </li>
+                  <li><b>↩️ Agent Wrap-Up Time</b><br />
+                    Pause before agent gets another call (useful for after-call work)
+                  </li>
+                  <li><b>🚫 Skip Busy Agents</b><br />
+                    If enabled, agents already on a call won’t be tried
+                  </li>
+                  <li><b>📲 Call Confirm</b><br />
+                    For external agents (e.g., cell phones), prompts “Press 1 to accept this call”
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧪 Example Call Flow</b></p>
+                <ul>
+                  <li>Inbound Route for DID 2485551000</li>
+                  <li>Routes to Time Condition (open vs closed)</li>
+                  <li>If open → Queue 600 (Support)</li>
+                  <li>If no agent answers in 45 sec → Voicemail</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>📈 Queue Reporting & Monitoring</b></p>
+                <ul>
+                  <li><b>Built-in Tools:</b></li>
+                  <li>Reports → Asterisk Info / Queues: See live agent status and queue load</li>
+                  <li>UCP / FOP2 / Queues Pro (Commercial): Advanced dashboards</li>
+                  <li>CDR/CEL Logs: Show queue entry and exit times</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔐 Advanced Features (Commercial Modules)</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Feature</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Requires Commercial Module</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Agent pause codes</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes (Queue Pro)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Wallboard/dashboard</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes (Queue Wallboard)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>SLA stats and alerts</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes (Queue Pro)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Advanced failover logic</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Real-time supervisor tools</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>✅ Best Practices</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Tip</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use rrmemory or leastrecent for fair call distribution</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Prevents burnout or idle agents</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Add periodic announcements</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Keeps callers engaged and less likely to hang up</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Enable agent wrap-up</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Prevents agents from being overwhelmed</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Set a failover destination</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoids infinite hold times</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Monitor live stats</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Quickly respond to spikes in call volume</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>📚 Example Config: Support Queue</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Setting</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Queue Number</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>600</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Queue Name</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Support</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Static Agents</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>101, 102, 103</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Ring Strategy</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>leastrecent</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Max Wait Time</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>300 sec</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Failover</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Voicemail box 600</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Music on Hold</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>&quot;TechHoldMix&quot;</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Announce Position</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Yes</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Periodic Announcement</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Every 45 seconds</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Agent Timeout</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>25 sec</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Wrap-Up</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>10 sec</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </li>
             <li><b>Time Conditions</b><br />
-              Time-based routing logic.
-              <ul>
-                <li>Combine a Time Group (schedule) with an If/Else route:</li>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>⏰ What is a Time Condition?</b><br />
+                  A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly.<br />
+                  It functions like an IF/ELSE statement:<br />
+                  <span style={{ display: 'block', margin: '8px 0 0 16px', fontFamily: 'monospace', whiteSpace: 'pre' }}>IF current time matches time group → send call to Destination A
+ELSE → send call to Destination B</span>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧩 Key Components</b></p>
+                <ol style={{ margin: '0 0 8px 0' }}>
+                  <li><b>Time Group</b><br />
+                    A reusable schedule definition that includes:
+                    <ul>
+                      <li>Days of the week</li>
+                      <li>Time ranges (e.g., 9:00 AM–5:00 PM)</li>
+                      <li>Specific dates or months (e.g., holidays)</li>
+                      <li>Combinations of the above</li>
+                    </ul>
+                    You can create multiple time groups in:<br />
+                    <b>Admin → Time Groups</b>
+                  </li>
+                  <li><b>Time Condition</b><br />
+                    A logic block that uses a Time Group to make routing decisions.<br />
+                    Configure in: <b>Admin → Time Conditions</b><br />
+                    <b>Main Fields:</b>
+                    <table style={{ borderCollapse: 'collapse', margin: '8px 0' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Field</th>
+                          <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Time Condition Name</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Label (e.g., "Open Hours Routing")</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Time Group</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>The schedule to evaluate (e.g., “Office Hours”)</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Destination if time matches</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Where the call goes during matching hours</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Destination if time does not match</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Where the call goes outside of those hours</td>
+                        </tr>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Optional Call Flow Toggle Feature Code</td>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Lets you override the logic manually</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </li>
+                </ol>
+                <p style={{ margin: '0 0 8px 0' }}><b>📞 Common Use Case Examples</b></p>
                 <ul>
-                  <li>If open hours → go to IVR</li>
-                  <li>Else → go to voicemail or announcement</li>
+                  <li><b>🏢 Business Hours Routing</b><br />
+                    <table style={{ borderCollapse: 'collapse', margin: '8px 0' }}>
+                      <thead>
+                        <tr>
+                          <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Time Group: “Business Hours”</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Mon–Fri | 9:00 AM – 5:00 PM</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    Time Condition: “Main Line Logic”<br />
+                    If in business hours → go to IVR<br />
+                    If outside hours → go to after-hours voicemail or announcement
+                  </li>
+                  <li><b>🎄 Holiday Routing</b><br />
+                    Create a “Holiday Dates” time group:<br />
+                    Add dates: Dec 25, Jan 1, etc.<br />
+                    Time Condition: "Holiday Check"<br />
+                    If date matches → route to "We're closed" announcement<br />
+                    Else → go to normal hours logic<br />
+                    <span style={{ display: 'block', margin: '8px 0 0 8px', fontFamily: 'monospace', whiteSpace: 'pre' }}>Inbound Route → Time Condition (Holiday Check)
+  → If YES → Holiday Announcement
+  → If NO → Time Condition (Office Hours)
+       → If YES → Ring Group
+       → If NO → After Hours Voicemail</span>
+                  </li>
+                  <li><b>⌨️ Manual Override</b><br />
+                    Time Conditions optionally support a feature code (like *271):<br />
+                    Allows users to toggle the logic manually (e.g., early closure)<br />
+                    Can be tied to a BLF button on phones (shows red/green status)
+                  </li>
                 </ul>
-              </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔁 Real-World Examples</b></p>
+                <ul>
+                  <li><b>Example 1: Office Line with Voicemail Failover</b><br />
+                    Time Group: Mon–Fri, 9–5<br />
+                    Time Condition:<br />
+                    <span style={{ display: 'block', margin: '8px 0 0 16px', fontFamily: 'monospace', whiteSpace: 'pre' }}>Match: Ring Group 600
+No Match: Voicemail 600</span>
+                  </li>
+                  <li><b>Example 2: Lunch Break Routing</b><br />
+                    Time Group: Mon–Fri, 12:00–1:00 PM<br />
+                    Time Condition:<br />
+                    <span style={{ display: 'block', margin: '8px 0 0 16px', fontFamily: 'monospace', whiteSpace: 'pre' }}>Match: Play "We’re at lunch" announcement
+No Match: Normal IVR</span>
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>✅ Best Practices</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Tip</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Name time groups descriptively</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Easier to manage multiple schedules</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use layered logic</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Stack holiday, open/close, and lunch conditions</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use override feature codes</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Staff can toggle logic without admin access</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use separate conditions for holidays</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoids disrupting normal hours logic</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Add BLF buttons for toggles</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Visually monitor and control routing state</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>🛠 Time Condition vs. Time Group (Quick Summary)</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Feature</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Time Group</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Time Condition</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Stores schedule data</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>✅</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>❌</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Makes routing decisions</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>❌</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>✅</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Can be reused across multiple flows</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>✅</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>❌</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Uses IF/ELSE logic</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>❌</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>✅</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </li>
             <li><b>Announcements</b><br />
-              Play a recorded message before proceeding to a destination.
-              <ul>
-                <li>Used for disclaimers, instructions, or temporary closures.</li>
-                <li>Optionally allow the call to continue afterward.</li>
-              </ul>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>📣 What is an Announcement?</b><br />
+                  An Announcement is a module in FreePBX that:<br />
+                  <ul>
+                    <li>Plays a pre-recorded message (audio file)</li>
+                    <li>Then routes the call to another destination</li>
+                  </ul>
+                  There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧩 Where to Configure</b></p>
+                <ul>
+                  <li>FreePBX GUI: <b>Applications → Announcements</b></li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔧 Key Settings</b></p>
+                <table style={{ borderCollapse: 'collapse', margin: '8px 0' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Field</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Announcement Name</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Internal label (e.g., “Office Closed Notice”)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Recording</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>The audio file to play (choose from system recordings or upload)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allow Skip</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>If enabled, the caller can press # to skip the message</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Repeat Message</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Replays the message before moving on</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Return to IVR</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>If the call came from an IVR, you can return the caller back to it</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Destination after Playback</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Where to send the call next (e.g., extension, IVR, voicemail)</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎙 Recording the Audio</b></p>
+                <ul>
+                  <li>Upload .wav or .mp3 files in <b>Admin → System Recordings</b></li>
+                  <li>Record from an extension using <b>*77</b></li>
+                  <li>Use Text-to-Speech (via third-party services) to generate audio</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>📞 Common Use Cases</b></p>
+                <ul>
+                  <li><b>🕗 After-Hours Message</b><br />
+                    “Thank you for calling. Our office is currently closed. Please leave a message after the tone.”<br />
+                    <b>Destination:</b> Voicemail
+                  </li>
+                  <li><b>📦 Shipping or Info Update</b><br />
+                    “Due to inclement weather, shipping may be delayed.”<br />
+                    <b>Destination:</b> Ring Group or Queue
+                  </li>
+                  <li><b>🚫 Call Blocking / Spam Handling</b><br />
+                    “This number does not accept unsolicited calls.” → hang up<br />
+                    <b>Destination:</b> Terminate Call → Hang Up
+                  </li>
+                  <li><b>🔁 Loop Back to IVR</b><br />
+                    “Please listen carefully to our new menu options.”<br />
+                    <b>Destination:</b> Return to IVR
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔁 Integrated Call Flows</b></p>
+                <span style={{ display: 'block', margin: '8px 0 0 8px', fontFamily: 'monospace', whiteSpace: 'pre' }}>Inbound Route (DID: 2485551234)
+  ↓
+Time Condition (if outside business hours)
+  ↓
+Announcement: “We are closed.”
+  ↓
+Voicemail box</span>
+                <p style={{ margin: '0 0 8px 0' }}><b>🛠 Tips for Using Announcements</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Tip</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Keep messages short</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoid frustrating callers</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Enable skip (#) for long messages</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allows faster navigation</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use professional recordings</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Enhances credibility</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Test playback volume</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoid distortion or silence</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use announcements before IVRs</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Sets context for menu options</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>✅ Best Practices</b></p>
+                <ul>
+                  <li>Use consistent naming: Name your recordings and announcements clearly (e.g., after_hours_greeting.wav, HolidayNotice2025)</li>
+                  <li>Segment announcements: Break long messages into reusable pieces (e.g., generic closure message + department-specific routing)</li>
+                  <li>Use return to IVR carefully: Prevent loops by confirming the call originated from an IVR</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧠 Related Modules</b></p>
+                <ul>
+                  <li><b>System Recordings:</b> Where audio files are created or uploaded</li>
+                  <li><b>IVRs:</b> Announcements are often used before or inside menus</li>
+                  <li><b>Time Conditions:</b> Direct callers to announcements based on time or date</li>
+                </ul>
+              </div>
             </li>
             <li><b>IVR (Interactive Voice Response)</b><br />
               Menu system for callers.
