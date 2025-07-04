@@ -1693,11 +1693,90 @@ WHERE LinkedID = '1688650400.1234';
     </Section>
 
     <Section title="Call Flow Control">
+      <h3>What is the Call Flow Control Module?</h3>
+      <p>The Call Flow Control module lets you manually toggle call routing behavior — like flipping a switch — without needing to modify time conditions, inbound routes, or IVRs each time. It's commonly used for switching between open/closed hours, enabling emergency modes, or giving users a BLF button to control routing.</p>
+      <h4>Where to Find It</h4>
       <ul>
-        <li>Manual override toggles (like a switchboard button)</li>
-        <li>Used to change routing paths manually (e.g., switch between day/night mode)</li>
-        <li>Can be tied to BLF buttons on phones</li>
+        <li>FreePBX GUI: <b>Applications → Call Flow Control</b></li>
       </ul>
+      <h4>Key Fields</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Index Number</td><td>Unique identifier for the toggle (e.g., 0, 1, 2)</td></tr>
+          <tr><td>Feature Code</td><td>Code to dial or assign to a BLF (e.g., *280)</td></tr>
+          <tr><td>Current State</td><td>Normal or Override (toggles between states)</td></tr>
+          <tr><td>Normal Mode Destination</td><td>Where calls go when not overridden</td></tr>
+          <tr><td>Override Mode Destination</td><td>Where calls go when manually overridden</td></tr>
+          <tr><td>Label</td><td>Optional name (e.g., “Main Office Toggle”)</td></tr>
+          <tr><td>Change Configuration via BLF</td><td>Allows pressing BLF key to toggle this</td></tr>
+        </tbody>
+      </table>
+      <h4>How It Works in Practice</h4>
+      <p>You reference the Call Flow Control object as a destination in Inbound Routes, Time Conditions, IVRs, or Ring Groups. Users can manually toggle the route using the feature code or a BLF key.</p>
+      <h4>Real-World Use Cases</h4>
+      <ul>
+        <li><b>Manual Open/Closed Toggle:</b> Normal: Calls go to Ring Group 600 (open hours); Override: Calls go to Voicemail or “We’re closed” Announcement. Toggle with *280 or BLF labeled “Open/Closed”.</li>
+        <li><b>Emergency Override:</b> Override sends calls to emergency contact or paging group; Normal goes to IVR or queue.</li>
+        <li><b>Holiday Closure:</b> Time Conditions control normal schedule; Call Flow Control allows manual holiday override.</li>
+      </ul>
+      <h4>Example Setup</h4>
+      <ul>
+        <li><b>Inbound Route:</b> DID: 248-555-1000 → Destination: Call Flow Control 1</li>
+        <li><b>Call Flow Control 1:</b> Normal: IVR Main Menu; Override: Announcement → “We’re closed for the holiday”</li>
+        <li><b>Feature Code:</b> *281</li>
+        <li><b>BLF:</b> Configured on receptionist’s phone as toggle switch</li>
+      </ul>
+      <h4>Tips for Using Effectively</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use descriptive labels (e.g., "Sales Office Hours")</td><td>Makes BLF assignment easier</td></tr>
+          <tr><td>Combine with Time Conditions</td><td>Call Flow Control can override or extend time-based logic</td></tr>
+          <tr><td>Use BLF buttons for quick access</td><td>Give reception or managers real-time control</td></tr>
+          <tr><td>Train staff on meaning of green/red BLF status</td><td>Green = one route, Red = the other</td></tr>
+          <tr><td>Use multiple toggles for different departments</td><td>Keeps logic clean and modular</td></tr>
+        </tbody>
+      </table>
+      <h4>Security & Access</h4>
+      <ul>
+        <li>Only users with the feature code or BLF can toggle routes</li>
+        <li>You can restrict access to toggles by not assigning them to certain users</li>
+        <li>Great for giving front desk or managers routing control without full admin access</li>
+      </ul>
+      <h4>Related Modules</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Time Conditions</td><td>Time-based routing (can be overridden by Call Flow Control)</td></tr>
+          <tr><td>Announcements</td><td>Often used as override destinations</td></tr>
+          <tr><td>Inbound Routes</td><td>Entry point for Call Flow Control logic</td></tr>
+          <tr><td>User Management / BLF</td><td>Assign toggle access to specific users or phones</td></tr>
+        </tbody>
+      </table>
+      <h4>CLI Tools</h4>
+      <ul>
+        <li>Toggle a call flow from the Asterisk CLI: <code>asterisk -rx "database put CALLFLOW 1 newstate"</code></li>
+        <li>Check its current state: <code>asterisk -rx "database show CALLFLOW"</code></li>
+      </ul>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Practice</th><th>Benefit</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Always document what each Call Flow toggle controls</td><td>Avoid routing confusion</td></tr>
+          <tr><td>Use BLFs with clear labels (e.g., “Main Line Override”)</td><td>Helps non-technical users</td></tr>
+          <tr><td>Limit the number of toggles in use</td><td>Prevents logic overload</td></tr>
+          <tr><td>Combine with Alerts or Announcements</td><td>Inform staff when toggles are changed</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Parking">
