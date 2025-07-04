@@ -48,9 +48,16 @@ import { useState } from 'react';
 const PBXReference: React.FC = () => {
   const [search, setSearch] = useState('');
 
-  // ...existing code...
+  // Helper to check if a section matches the search
+  const matchesSearch = (title: string, ...content: (string | undefined)[]) => {
+    if (!search.trim()) return true;
+    const s = search.toLowerCase();
+    if (title.toLowerCase().includes(s)) return true;
+    return content.some(
+      c => c && c.toLowerCase().includes(s)
+    );
+  };
 
-  // For now, render the search field and the original content below
   return (
     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', width: '100%', maxWidth: 1200, margin: '0 auto' }}>
       <div style={{ flex: 1, textAlign: 'left', maxWidth: 900, paddingRight: 32 }}>
@@ -68,8 +75,11 @@ const PBXReference: React.FC = () => {
         <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>FreePBX Reference</h1>
 
         {/* Inbound Routes */}
-        <Section title="Inbound Routes">
-          <p>Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like:</p>
+        {matchesSearch('Inbound Routes',
+          'Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like: Extension, ring group, IVR, queue, time condition, voicemail, custom destination.'
+        ) && (
+          <Section title="Inbound Routes">
+            <p>Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like:</p>
         <ul>
           <li>An extension</li>
           <li>A ring group</li>
@@ -148,10 +158,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Firewall */}
-      <Section title="Firewall">
-        <p>The FreePBX Firewall filters traffic by source IP address and port, organizes access via zones (internal, external, trusted, etc.), and automatically blocks threats and scanning attempts (via Fail2Ban). It allows or denies access to services like Web GUI, SSH, SIP/PJSIP, UCP, Zulu, REST API, etc. It works hand-in-hand with <b>iptables</b> (on Linux) and can be customized to protect a local system, cloud PBX, or hybrid deployment.</p>
+        {/* Firewall */}
+        {matchesSearch('Firewall',
+          'The FreePBX Firewall filters traffic by source IP address and port, organizes access via zones (internal, external, trusted, etc.), and automatically blocks threats and scanning attempts (via Fail2Ban).'
+        ) && (
+          <Section title="Firewall">
+            <p>The FreePBX Firewall filters traffic by source IP address and port, organizes access via zones (internal, external, trusted, etc.), and automatically blocks threats and scanning attempts (via Fail2Ban). It allows or denies access to services like Web GUI, SSH, SIP/PJSIP, UCP, Zulu, REST API, etc. It works hand-in-hand with <b>iptables</b> (on Linux) and can be customized to protect a local system, cloud PBX, or hybrid deployment.</p>
         <h3>Firewall Zones (Core Concept)</h3>
         <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
           <thead>
@@ -216,10 +230,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Extensions */}
-      <Section title="Extensions">
-        <p>An extension in FreePBX represents a user endpoint on the phone system — usually a physical phone, a softphone, or a device that registers via SIP or PJSIP. You assign a unique number (like 101, 202, etc.) to each extension. That number becomes the internal "phone number" for that device or user.</p>
+        {/* Extensions */}
+        {matchesSearch('Extensions',
+          'An extension in FreePBX represents a user endpoint on the phone system — usually a physical phone, a softphone, or a device that registers via SIP or PJSIP.'
+        ) && (
+          <Section title="Extensions">
+            <p>An extension in FreePBX represents a user endpoint on the phone system — usually a physical phone, a softphone, or a device that registers via SIP or PJSIP. You assign a unique number (like 101, 202, etc.) to each extension. That number becomes the internal "phone number" for that device or user.</p>
         <h3>Protocol Types (PJSIP)</h3>
         <ul>
           <li>PJSIP (recommended for new deployments): Modern protocol stack, supports multiple registrations (e.g., multiple devices per user)</li>
@@ -267,10 +285,14 @@ const PBXReference: React.FC = () => {
           <li>Call groups (used with ring groups/queues)</li>
         </ul>
       </Section>
+        )}
 
-      {/* Ring Groups */}
-      <Section title="Ring Groups">
-        <p>A Ring Group is a way to ring multiple extensions simultaneously or in sequence when a call is received. It’s typically used to reach a department, team, or group of phones (e.g., Sales, Support, Reception). Think of it as a mini broadcast system for inbound or internal calls.</p>
+        {/* Ring Groups */}
+        {matchesSearch('Ring Groups',
+          'A Ring Group is a way to ring multiple extensions simultaneously or in sequence when a call is received. It’s typically used to reach a department, team, or group of phones (e.g., Sales, Support, Reception).'
+        ) && (
+          <Section title="Ring Groups">
+            <p>A Ring Group is a way to ring multiple extensions simultaneously or in sequence when a call is received. It’s typically used to reach a department, team, or group of phones (e.g., Sales, Support, Reception). Think of it as a mini broadcast system for inbound or internal calls.</p>
         <h3>Common Use Cases</h3>
         <ul>
           <li>Ring all front desk phones at once</li>
@@ -322,10 +344,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Queues */}
-      <Section title="Queues">
-        <p>A Queue is a structured call-holding system in FreePBX. When callers enter a queue, they wait on hold until an available agent can answer. Calls are distributed based on defined strategies (e.g., round robin, least recent). Agents can log in/out of queues manually or dynamically. You can provide music on hold, caller position, and estimated wait time.</p>
+        {/* Queues */}
+        {matchesSearch('Queues',
+          'A Queue is a structured call-holding system in FreePBX. When callers enter a queue, they wait on hold until an available agent can answer. Calls are distributed based on defined strategies (e.g., round robin, least recent).'
+        ) && (
+          <Section title="Queues">
+            <p>A Queue is a structured call-holding system in FreePBX. When callers enter a queue, they wait on hold until an available agent can answer. Calls are distributed based on defined strategies (e.g., round robin, least recent). Agents can log in/out of queues manually or dynamically. You can provide music on hold, caller position, and estimated wait time.</p>
         <h3>Core Queue Settings</h3>
         <ul>
           <li><b>Queue Number:</b> Internal extension number for the queue (e.g., 600)</li>
@@ -374,10 +400,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Time Conditions */}
-      <Section title="Time Conditions">
-        <p>A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly. It functions like an IF/ELSE statement: IF current time matches time group → send call to Destination A ELSE → send call to Destination B.</p>
+        {/* Time Conditions */}
+        {matchesSearch('Time Conditions',
+          'A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly. It functions like an IF/ELSE statement: IF current time matches time group → send call to Destination A ELSE → send call to Destination B.'
+        ) && (
+          <Section title="Time Conditions">
+            <p>A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly. It functions like an IF/ELSE statement: IF current time matches time group → send call to Destination A ELSE → send call to Destination B.</p>
         <h3>Key Components</h3>
         <ul>
           <li><b>Time Group:</b> A reusable schedule definition that includes days of the week, time ranges, specific dates or months, or combinations. You can create multiple time groups in Admin → Time Groups.</li>
@@ -411,10 +441,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Announcements */}
-      <Section title="Announcements">
-        <p>An Announcement is a module in FreePBX that plays a pre-recorded message (audio file) and then routes the call to another destination. There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.</p>
+        {/* Announcements */}
+        {matchesSearch('Announcements',
+          'An Announcement is a module in FreePBX that plays a pre-recorded message (audio file) and then routes the call to another destination. There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.'
+        ) && (
+          <Section title="Announcements">
+            <p>An Announcement is a module in FreePBX that plays a pre-recorded message (audio file) and then routes the call to another destination. There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.</p>
         <h3>Key Settings</h3>
         <ul>
           <li><b>Announcement Name:</b> Internal label (e.g., “Office Closed Notice”)</li>
@@ -440,10 +474,14 @@ const PBXReference: React.FC = () => {
           <li>Use announcements before IVRs: Sets context for menu options</li>
         </ul>
       </Section>
+        )}
 
-      {/* IVR (Interactive Voice Response) */}
-      <Section title="IVR (Interactive Voice Response)">
-        <p>An IVR (Interactive Voice Response) is an automated phone menu that allows callers to press keys (DTMF) to navigate to different departments, people, or services. It's commonly known as a "press 1 for Sales, press 2 for Support" system.</p>
+        {/* IVR (Interactive Voice Response) */}
+        {matchesSearch('IVR (Interactive Voice Response)',
+          'An IVR (Interactive Voice Response) is an automated phone menu that allows callers to press keys (DTMF) to navigate to different departments, people, or services. It\'s commonly known as a "press 1 for Sales, press 2 for Support" system.'
+        ) && (
+          <Section title="IVR (Interactive Voice Response)">
+            <p>An IVR (Interactive Voice Response) is an automated phone menu that allows callers to press keys (DTMF) to navigate to different departments, people, or services. It&apos;s commonly known as a "press 1 for Sales, press 2 for Support" system.</p>
         <h3>What IVRs Do in FreePBX</h3>
         <ul>
           <li>Play an audio message (e.g., "Welcome to XYZ Company…")</li>
@@ -483,10 +521,15 @@ const PBXReference: React.FC = () => {
           <li>Use CID name prefixing when routing calls through IVR to help agents identify menu origin</li>
         </ul>
       </Section>
+        )}
 
-      <Section title="Find Me/Follow Me vs Miscellaneous Destinations">
-        <h3>Find Me/Follow Me</h3>
-        <p>Find Me/Follow Me is a powerful call routing feature in FreePBX that allows per-extension call forwarding logic, often involving multiple numbers, devices, and time-based ringing strategies. It's ideal for mobile workers, remote staff, and anyone who needs calls to follow them beyond just their desk phone.</p>
+        {/* Find Me/Follow Me vs Miscellaneous Destinations */}
+        {matchesSearch('Find Me/Follow Me vs Miscellaneous Destinations',
+          'Find Me/Follow Me is a powerful call routing feature in FreePBX that allows per-extension call forwarding logic, often involving multiple numbers, devices, and time-based ringing strategies. It\'s ideal for mobile workers, remote staff, and anyone who needs calls to follow them beyond just their desk phone.'
+        ) && (
+          <Section title="Find Me/Follow Me vs Miscellaneous Destinations">
+            <h3>Find Me/Follow Me</h3>
+        <p>Find Me/Follow Me is a powerful call routing feature in FreePBX that allows per-extension call forwarding logic, often involving multiple numbers, devices, and time-based ringing strategies. It&apos;s ideal for mobile workers, remote staff, and anyone who needs calls to follow them beyond just their desk phone.</p>
         <h4>What is Find Me/Follow Me?</h4>
         <p>Find Me/Follow Me lets you define how an extension handles incoming calls, including:</p>
         <ul>
@@ -598,10 +641,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Trunks */}
-      <Section title="Trunks">
-        <h3>What is a Trunk?</h3>
+        {/* Trunks */}
+        {matchesSearch('Trunks',
+          'Trunks connect your PBX to the outside world (SIP, PRI, analog, etc).'
+        ) && (
+          <Section title="Trunks">
+            <h3>What is a Trunk?</h3>
         <p>In FreePBX, a trunk is a connection to an external VoIP service provider (or legacy PSTN carrier) that lets your system send and receive calls outside your PBX. Think of it like a virtual phone line that connects your internal extensions to the public telephone network.</p>
         <h4>Types of Trunks</h4>
         <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
@@ -716,10 +763,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Dial Plans & Outbound Routes */}
-      <Section title="Dial Plans & Outbound Routes">
-        <h3>What Is a Dial Plan?</h3>
+        {/* Dial Plans & Outbound Routes */}
+        {matchesSearch('Dial Plans & Outbound Routes',
+          'Dial Plans and Outbound Routes control how outbound calls are routed from your PBX.'
+        ) && (
+          <Section title="Dial Plans & Outbound Routes">
+            <h3>What Is a Dial Plan?</h3>
         <p>In FreePBX, a dial plan is defined by the Outbound Routes module. It specifies:</p>
         <ul>
           <li>What numbers users can dial</li>
@@ -834,10 +885,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Paging & Intercom */}
-      <Section title="Paging & Intercom">
-        <h3>What is Paging?</h3>
+        {/* Paging & Intercom */}
+        {matchesSearch('Paging & Intercom',
+          'Paging and Intercom features allow you to broadcast audio to one or more phones.'
+        ) && (
+          <Section title="Paging & Intercom">
+            <h3>What is Paging?</h3>
         <p>Paging is a one-way broadcast of audio to one or more endpoints (phones):</p>
         <ul>
           <li>The speaker hears a tone and a message, but cannot respond</li>
@@ -929,10 +984,14 @@ const PBXReference: React.FC = () => {
           <li>Some phones need provisioning templates to define paging behavior</li>
         </ul>
       </Section>
+        )}
 
-      {/* User Management */}
-      <Section title="User Management">
-        <h3>What is User Management in FreePBX?</h3>
+        {/* User Management */}
+        {matchesSearch('User Management',
+          'User Management allows you to manage users, their permissions, and access to features.'
+        ) && (
+          <Section title="User Management">
+            <h3>What is User Management in FreePBX?</h3>
         <p>The User Management module lets you:</p>
         <ul>
           <li>Link extensions to user accounts</li>
@@ -1061,10 +1120,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Administrators */}
-      <Section title="Administrators">
-        <h3>What Is the Administrators Module?</h3>
+        {/* Administrators */}
+        {matchesSearch('Administrators',
+          'Administrators manage the PBX system and have access to the admin interface.'
+        ) && (
+          <Section title="Administrators">
+            <h3>What Is the Administrators Module?</h3>
         <p>The Administrators module in FreePBX lets you:</p>
         <ul>
           <li>Create and manage admin user accounts for the FreePBX GUI</li>
@@ -1163,10 +1226,14 @@ const PBXReference: React.FC = () => {
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Asterisk CLI */}
-      <Section title="Asterisk CLI">
-        <h3>What is the Asterisk CLI?</h3>
+        {/* Asterisk CLI */}
+        {matchesSearch('Asterisk CLI',
+          'The Asterisk CLI provides command-line access to the underlying Asterisk PBX engine.'
+        ) && (
+          <Section title="Asterisk CLI">
+            <h3>What is the Asterisk CLI?</h3>
         <p>The Asterisk CLI is the live shell interface to the Asterisk core. It allows you to:</p>
         <ul>
           <li>See real-time SIP or PJSIP traffic</li>
@@ -1258,10 +1325,14 @@ const PBXReference: React.FC = () => {
           <li>Hang up → turn off logging: <code>pjsip set logger off</code></li>
         </ol>
       </Section>
+        )}
 
-      {/* System Admin */}
-      <Section title="System Admin">
-        <h3>What Is the System Admin Module?</h3>
+        {/* System Admin */}
+        {matchesSearch('System Admin',
+          'System Admin provides access to system-level settings and tools.'
+        ) && (
+          <Section title="System Admin">
+            <h3>What Is the System Admin Module?</h3>
         <p>The System Admin module is a critical administrative interface that gives you access to server-level configuration options outside the scope of standard PBX call handling — things like networking, updates, backups, and SSL certificates.</p>
         <p><b>Note:</b> The System Admin module is only available when you're running the official FreePBX Distro (not when FreePBX is installed on a custom OS like Debian or Ubuntu). Some features also require a commercial license.</p>
         <h4>What Can You Manage?</h4>
@@ -1350,10 +1421,14 @@ const PBXReference: React.FC = () => {
           <li>Reboot from GUI → all settings are now live</li>
         </ol>
       </Section>
+        )}
 
-      {/* CDR (Call Detail Records) */}
-      <Section title="CDR (Call Detail Records)">
-        <h3>What is the CDR Application?</h3>
+        {/* CDR (Call Detail Records) */}
+        {matchesSearch('CDR (Call Detail Records)',
+          'CDR provides call history and reporting.'
+        ) && (
+          <Section title="CDR (Call Detail Records)">
+            <h3>What is the CDR Application?</h3>
         <p>CDR stands for Call Detail Records — a database of every call that passes through Asterisk. It includes:</p>
         <ul>
           <li>Time of call</li>
@@ -1455,10 +1530,14 @@ const PBXReference: React.FC = () => {
           </ul>
         </ul>
       </Section>
+        )}
 
-      {/* CEL (Call Event Logging) */}
-      <Section title="CEL (Call Event Logging)">
-        <h3>What is CEL?</h3>
+        {/* CEL (Call Event Logging) */}
+        {matchesSearch('CEL (Call Event Logging)',
+          'CEL provides detailed event logging for calls.'
+        ) && (
+          <Section title="CEL (Call Event Logging)">
+            <h3>What is CEL?</h3>
         <p>CEL (Call Event Logging) tracks every step of a call’s lifecycle in Asterisk. It logs events like:</p>
         <ul>
           <li>Call start</li>
@@ -1564,10 +1643,14 @@ WHERE LinkedID = '1688650400.1234';
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Asterisk Info */}
-      <Section title="Asterisk Info">
-        <h3>What is the Asterisk Info Module?</h3>
+        {/* Asterisk Info */}
+        {matchesSearch('Asterisk Info',
+          'Asterisk Info provides status and information about the running Asterisk instance.'
+        ) && (
+          <Section title="Asterisk Info">
+            <h3>What is the Asterisk Info Module?</h3>
         <p>The Asterisk Info module in FreePBX provides a real-time dashboard of the Asterisk system's internals. It’s a GUI wrapper for many core Asterisk CLI commands, giving you insight into how the PBX is functioning without needing to drop to the terminal.</p>
         <h4>Where to Find It</h4>
         <ul>
@@ -1628,23 +1711,15 @@ WHERE LinkedID = '1688650400.1234';
             <tr><td>Combine with CDR/CEL for historical call analysis</td><td>Asterisk Info is real-time only</td></tr>
           </tbody>
         </table>
-        <h4>Related Tools</h4>
-        <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
-          <thead>
-            <tr><th>Tool</th><th>Role</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>Asterisk CLI</td><td>Full command-line access and diagnostics</td></tr>
-            <tr><td>CDR Reports</td><td>Historical call summary</td></tr>
-            <tr><td>CEL Reports</td><td>Event-by-event call tracking</td></tr>
-            <tr><td>System Admin</td><td>Server-level status (CPU, disk, etc.)</td></tr>
-          </tbody>
-        </table>
       </Section>
+        )}
 
-      {/* Voicemail Admin */}
-      <Section title="Voicemail Admin">
-        <h3>What is the Voicemail Admin Module?</h3>
+        {/* Voicemail Admin */}
+        {matchesSearch('Voicemail Admin',
+          'Voicemail Admin allows you to manage voicemail settings and mailboxes.'
+        ) && (
+          <Section title="Voicemail Admin">
+            <h3>What is the Voicemail Admin Module?</h3>
         <p>The Voicemail Admin module manages the Asterisk voicemail system (powered by voicemail.conf). It allows you to:</p>
         <ul>
           <li>Define global voicemail behaviors</li>
@@ -1754,10 +1829,14 @@ WHERE LinkedID = '1688650400.1234';
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Call Flow Control */}
-      <Section title="Call Flow Control">
-        <h3>What is the Call Flow Control Module?</h3>
+        {/* Call Flow Control */}
+        {matchesSearch('Call Flow Control',
+          'Call Flow Control allows you to manually override call routing.'
+        ) && (
+          <Section title="Call Flow Control">
+            <h3>What is the Call Flow Control Module?</h3>
         <p>The Call Flow Control module lets you manually toggle call routing behavior — like flipping a switch — without needing to modify time conditions, inbound routes, or IVRs each time. It's commonly used for switching between open/closed hours, enabling emergency modes, or giving users a BLF button to control routing.</p>
         <h4>Where to Find It</h4>
         <ul>
@@ -1842,10 +1921,14 @@ WHERE LinkedID = '1688650400.1234';
           </tbody>
         </table>
       </Section>
+        )}
 
-      {/* Parking */}
-      <Section title="Parking">
-        <h3>What is the Parking Application in FreePBX?</h3>
+        {/* Parking */}
+        {matchesSearch('Parking',
+          'Parking allows you to place calls on hold in a shared parking lot.'
+        ) && (
+          <Section title="Parking">
+            <h3>What is the Parking Application in FreePBX?</h3>
         <p>Call Parking allows users to put a call on hold in a shared “parking lot”, so that any other extension can pick it up — similar to placing a caller on hold, but system-wide.</p>
         <ul>
           <li>Place a caller into a “parking slot” (e.g., 71, 72, 73…)</li>
@@ -1935,10 +2018,14 @@ WHERE LinkedID = '1688650400.1234';
           <li>To see a specific slot status: <code>asterisk -rx "core show hints"</code></li>
         </ul>
       </Section>
+        )}
 
-      {/* Certificate Management */}
-      <Section title="Certificate Management">
-        <h3>What is the Certificate Management Module?</h3>
+        {/* Certificate Management */}
+        {matchesSearch('Certificate Management',
+          'Certificate Management allows you to manage SSL/TLS certificates for secure services.'
+        ) && (
+          <Section title="Certificate Management">
+            <h3>What is the Certificate Management Module?</h3>
         <p>The Certificate Management module in FreePBX is used to create, import, and manage SSL/TLS certificates for securing various PBX services — especially the web interface, UCP, HTTPS provisioning, and Sangoma Connect.</p>
         <ul>
           <li>Create self-signed certificates</li>
@@ -2031,6 +2118,7 @@ WHERE LinkedID = '1688650400.1234';
           </tbody>
         </table>
       </Section>
+        )}
     </div>
     {/* Floating Index Widget */}
     <nav
@@ -2074,8 +2162,6 @@ WHERE LinkedID = '1688650400.1234';
     </nav>
   </div>
 );
-
-  // ...existing code...
 }
 
 export default PBXReference;
