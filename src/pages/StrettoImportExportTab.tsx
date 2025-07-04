@@ -99,8 +99,8 @@ const StrettoImportExportTab: React.FC = () => {
         <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
       </div>
       {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
-      <div style={{ overflowX: 'auto', width: '100%' }}>
-        <table style={{ minWidth: 1200, width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px' }}>
+      <div style={{ width: '100%' }}>
+        <table style={{ minWidth: 'unset', width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', tableLayout: 'auto' }}>
         <thead>
           <tr>
             {columns.map(col => (

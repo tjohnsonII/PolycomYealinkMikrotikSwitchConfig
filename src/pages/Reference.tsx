@@ -7,10 +7,17 @@ const REFERENCE_SUBTABS = [
   { key: 'pbx', label: "PBX's" },
 ];
 
-const PBX_SUBTABS = ['FreePBX', 'UCaaS', 'FusionPBX', 'Intermedia'];
+const PBX_SUBTABS = [
+  'FreePBX',
+  'UCaaS',
+  'FusionPBX',
+  'Intermedia',
+] as const;
+
+type PBXSubtab = typeof PBX_SUBTABS[number] | 'Find Me/Follow Me vs Miscellaneous Destinations' | 'Trunks' | 'Dial Plans & Outbound Routes' | 'Paging & Intercom' | 'User Management' | 'Administrators' | 'Asterisk CLI' | 'System Admin' | 'CDR (Call Detail Records)' | 'CEL (Call Event Logging)' | 'Asterisk Info' | 'Voicemail Admin' | 'Call Flow Control' | 'Parking' | 'Certificate Management';
 
 function PBXReferenceSubnav() {
-  const [pbxSubtab, setPbxSubtab] = useState('FreePBX');
+  const [pbxSubtab, setPbxSubtab] = useState<PBXSubtab>('FreePBX');
   return (
     <div style={{ width: '100%', textAlign: 'left' }}>
       <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 16 }}>PBX Platform Reference</h2>
@@ -1112,119 +1119,193 @@ Voicemail box</span>
               </div>
             </li>
             <li><b>IVR (Interactive Voice Response)</b><br />
-              Menu system for callers.
-              <ul>
-                <li>“Press 1 for Sales, 2 for Support”</li>
-                <li>DTMF input routes to extensions, queues, announcements, etc.</li>
-                <li>Can be nested and time-based.</li>
-              </ul>
+              <div style={{ margin: '12px 0 0 0', padding: '0 0 0 8px', borderLeft: '3px solid #e0e0e0' }}>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎛️ What is an IVR?</b><br />
+                  An IVR (Interactive Voice Response) is an automated phone menu that allows callers to press keys (DTMF) to navigate to different departments, people, or services.<br />
+                  It's commonly known as a "press 1 for Sales, press 2 for Support" system.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧭 What IVRs Do in FreePBX</b></p>
+                <ul style={{ margin: '0 0 8px 0' }}>
+                  <li>Play an audio message (e.g., "Welcome to XYZ Company…")</li>
+                  <li>Let the caller press digits (0–9, *, #) to trigger actions</li>
+                  <li>Route the call to:
+                    <ul>
+                      <li>Extensions</li>
+                      <li>Queues</li>
+                      <li>Ring groups</li>
+                      <li>Announcements</li>
+                      <li>Voicemail</li>
+                      <li>Other IVRs (nested menus)</li>
+                    </ul>
+                  </li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🛠 Where to Configure</b><br />
+                  FreePBX GUI: <b>Applications → IVR</b>
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧩 Core IVR Configuration</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Setting</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>IVR Name</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Internal name (e.g., "Main Menu")</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Announcement</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>The greeting audio (recorded file or uploaded)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Enable Direct Dial</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allows callers to dial extensions at any time</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Timeout</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>How long to wait for input (in seconds)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Invalid Retries</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>How many times to let the caller retry after a wrong input</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Invalid Retry Recording</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>What to play if they press an invalid option</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Timeout Destination</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Where to send the call if the caller does nothing</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Return to IVR</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>After an invalid or timeout destination, return to this IVR</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Allow Key Press Events Early</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Accepts input even while audio is playing</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔢 IVR Entries (Options)</b><br />
+                  Each menu option is a digit (0–9, *, #) that maps to a destination.
+                </p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Key Press</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Destination</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>1</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Sales Queue (600)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>2</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Support Queue (601)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>3</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Billing Ring Group (603)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>0</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Operator Extension (100)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>*</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Voicemail Box</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}>You can also use:</p>
+                <ul style={{ margin: '0 0 8px 0' }}>
+                  <li><b>i</b> → Invalid input destination</li>
+                  <li><b>t</b> → Timeout destination</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>🎧 IVR Audio (Announcement)</b><br />
+                  You must upload or record an audio file that tells the caller what to do.<br />
+                  E.g.: "Thank you for calling. For Sales, press 1. For Support, press 2. To dial an extension, press 0 now."<br />
+                  Create recordings in <b>Admin → System Recordings</b>.
+                </p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔁 Nested IVRs (Multi-Level Menus)</b><br />
+                  You can create submenus by pointing an IVR option to another IVR.<br />
+                  Example:
+                </p>
+                <ul style={{ margin: '0 0 8px 0' }}>
+                  <li>Main Menu (press 2 → Support Menu)</li>
+                  <li>Support Menu (press 1 → Tech Support Queue, 2 → Customer Portal FAQ announcement)</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}>This keeps menus short and easy to follow.</p>
+                <p style={{ margin: '0 0 8px 0' }}><b>🧠 Real-World Example</b><br />
+                  <b>Inbound Route → Time Condition → IVR</b>
+                </p>
+                <span style={{ display: 'block', margin: '8px 0 0 16px', fontFamily: 'monospace', whiteSpace: 'pre' }}>Inbound DID: 248-555-1000
+  ↓
+Time Condition:
+  - Open → Main IVR
+  - Closed → Announcement: "We're closed"
+                       ↓
+                       Voicemail
+
+Main IVR:
+  - 1 → Sales Queue
+  - 2 → Support Queue
+  - 0 → Operator
+  - No input → Timeout → Voicemail</span>
+                <p style={{ margin: '0 0 8px 0' }}><b>🔒 Security & Best Practices</b></p>
+                <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Practice</th>
+                      <th style={{ border: '1px solid #ccc', padding: '4px 8px', background: '#f7fbff' }}>Why</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Disable direct dial unless needed</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Prevents callers from guessing extension numbers</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Set invalid/timeouts</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Prevents infinite loops or dead ends</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Use BLF overrides</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Let staff control menu behavior manually (e.g., *289)</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Keep audio concise</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Avoid long menus; aim for &lt;30 seconds</td>
+                    </tr>
+                    <tr>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Log changes</td>
+                      <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>Document IVR name, options, recordings, and routes</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p style={{ margin: '0 0 8px 0' }}><b>💡 Tips for Design</b></p>
+                <ul style={{ margin: '0 0 8px 0' }}>
+                  <li>Limit to 3–5 options per IVR</li>
+                  <li>Make sure prompts clearly match the options</li>
+                  <li>Reuse audio recordings when possible (e.g., "Our office hours are...")</li>
+                  <li>Use CID name prefixing when routing calls through IVR to help agents identify menu origin</li>
+                </ul>
+                <p style={{ margin: '0 0 8px 0' }}><b>✅ Related Modules</b></p>
+                <ul style={{ margin: '0 0 8px 0' }}>
+                  <li><b>System Recordings:</b> Where you upload or record the audio files</li>
+                  <li><b>Time Conditions:</b> Send calls to different IVRs based on time of day</li>
+                  <li><b>Queues / Ring Groups:</b> Often used as IVR destinations</li>
+                  <li><b>Announcements:</b> Can be played before or inside IVRs</li>
+                </ul>
+              </div>
             </li>
-            <li><b>Find Me/Follow Me vs Miscellaneous Destinations</b><br />
-              <ul>
-                <li><b>Find Me/Follow Me:</b> Per-extension forwarding to ring external numbers (e.g., cell phone) in order or simultaneously.</li>
-                <li><b>Miscellaneous Destinations:</b> Allows routing to external numbers or special dial strings (e.g., analog door phones).</li>
-              </ul>
-            </li>
-            <li><b>Trunks</b><br />
-              Trunks connect your PBX to the outside world.
-              <ul>
-                <li>SIP/IAX2/PRI</li>
-                <li>Outbound and Inbound calls flow through trunks</li>
-                <li>Must be configured with your provider’s details</li>
-              </ul>
-            </li>
-            <li><b>Dial Plans & Outbound Routes</b><br />
-              <ul>
-                <li><b>Dial Plan:</b> Rules that match user dialed numbers (e.g., 9|1NXXNXXXXXX to strip 9 and dial 11-digit US).</li>
-                <li><b>Outbound Routes:</b> Routes based on dialed pattern → send to correct trunk.</li>
-                <li>Can apply caller ID masking, failover trunks, and PIN codes.</li>
-              </ul>
-            </li>
-            <li><b>Paging & Intercom</b><br />
-              <ul>
-                <li><b>Paging:</b> One-way audio broadcast to multiple phones.</li>
-                <li><b>Intercom:</b> Two-way communication using auto-answer.</li>
-                <li>Useful for overhead announcements or internal alerts.</li>
-              </ul>
-            </li>
-            <li><b>User Management</b><br />
-              <ul>
-                <li>Create User Portal (ARI/UCP) logins for voicemail, call logs, recordings.</li>
-                <li>Permissions determine what features users can access (e.g., fax, call control).</li>
-              </ul>
-            </li>
-            <li><b>Administrators</b><br />
-              <ul>
-                <li>Web GUI admins for FreePBX</li>
-                <li>Create multiple admin accounts with role-based access control</li>
-                <li>"Admin", "Superadmin", or custom groups</li>
-              </ul>
-            </li>
-            <li><b>Asterisk CLI</b><br />
-              Command-line interface to the Asterisk core (not FreePBX GUI).
-              <ul>
-                <li>Use <code>asterisk -rvvv</code> to connect</li>
-                <li>Commands: <code>sip show peers</code>, <code>core show calls</code>, <code>dialplan show</code>, <code>reload</code></li>
-              </ul>
-            </li>
-            <li><b>System Admin</b><br />
-              Commercial module (or installed on FreePBX Distro):
-              <ul>
-                <li>Configure network settings, hostname, timezone, updates, etc.</li>
-                <li>Includes firewall, intrusion detection, backup</li>
-              </ul>
-            </li>
-            <li><b>CDR (Call Detail Records)</b><br />
-              <ul>
-                <li>Logs of all calls: date, duration, source/destination, disposition</li>
-                <li>Viewable from GUI</li>
-                <li>Useful for call reporting and troubleshooting</li>
-              </ul>
-            </li>
-            <li><b>CEL (Call Event Logging)</b><br />
-              <ul>
-                <li>More granular than CDR</li>
-                <li>Logs every event in a call (ring, answer, transfer, hangup)</li>
-                <li>Must be enabled and used with caution due to size</li>
-              </ul>
-            </li>
-            <li><b>Asterisk Info</b><br />
-              GUI access to real-time Asterisk stats:
-              <ul>
-                <li>SIP peers</li>
-                <li>Registrations</li>
-                <li>Channels</li>
-                <li>System status</li>
-              </ul>
-            </li>
-            <li><b>Voicemail Admin</b><br />
-              <ul>
-                <li>Set voicemail options globally or per-extension</li>
-                <li>Control greeting behavior, PINs, email delivery</li>
-                <li>Manage mailboxes centrally</li>
-              </ul>
-            </li>
-            <li><b>Call Flow Control</b><br />
-              <ul>
-                <li>Manual override toggles (like a switchboard button)</li>
-                <li>Used to change routing paths manually (e.g., switch between day/night mode)</li>
-                <li>Can be tied to BLF buttons on phones</li>
-              </ul>
-            </li>
-            <li><b>Parking</b><br />
-              <ul>
-                <li>Park a call (e.g., on “701”), then retrieve from another phone</li>
-                <li>Parking lots can have timeouts and return destinations</li>
-                <li>Advanced features in commercial module</li>
-              </ul>
-            </li>
-            <li><b>Certificate Management</b><br />
-              <ul>
-                <li>Install SSL certificates for secure Web GUI and provisioning</li>
-                <li>Supports Let's Encrypt auto-renewal</li>
-                <li>Required for secure UCP and HTTPS provisioning</li>
-              </ul>
-            </li>
+            // ...existing code...
+            // ...existing code...
           </ul>
         </div>
       )}

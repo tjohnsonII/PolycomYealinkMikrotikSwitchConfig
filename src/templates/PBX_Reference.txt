@@ -1,0 +1,715 @@
+Inbound Routes
+What Are Inbound Routes?
+Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like:
+
+An extension
+A ring group
+An IVR
+A queue
+A time condition
+Voicemail
+A custom destination
+Match Criteria
+
+DID Number
+The DID is the phone number dialed by the outside caller.
+When a call hits your trunk, FreePBX looks at this field to determine the route.
+You can:
+Leave it blank to match all DIDs
+Enter a full 10- or 11-digit number (e.g., 2485551234)
+Use partial matches or wildcards (like _248555XXXX)
+Caller ID Number
+Matches based on the incoming caller's number.
+Used for special cases like VIP routing or blocking known spam callers.
+Can be exact match or patterns (e.g., 248555% for area code filtering)
+Key Configuration Options
+
+Description: Internal label (e.g., Main Line, Sales DID, After Hours Route)
+Set Destination: Choose where to send the call: Extension, ring group, IVR, announcement, etc.
+Alert Info: Sends custom alert to phones (e.g., different ring tone). Yealink/Polycom can use this for distinctive ring tones.
+CID Lookup Source: Automatically performs a reverse lookup (e.g., caller name) from a CNAM provider
+Recording Options: Record the call from this point forward. Override global settings.
+Privacy Manager: Forces anonymous callers to enter their number. Useful for blocking spam or anonymous calls.
+Time-Based Routing (Using Time Conditions)
+Inbound Routes can pass calls to Time Conditions, allowing you to:
+
+Route differently during business hours vs. after hours
+Set holiday-specific routes
+Combine with Call Flow Control for manual overrides
+Example:
+Inbound Route (DID: 2485551234) → Time Condition → If open → IVR, If closed → Voicemail
+
+Real-World Examples
+
+Standard Routing: DID 2485551234 → Rings extension 1001
+IVR Menu: DID 2485552000 → Goes to main IVR menu for call routing
+After-Hours Message: All calls → Play announcement: "Our office is currently closed"
+Dispatch Failover: Known caller ID 5865551100 → Ring mobile backup number via Misc Destination
+VIP Routing: Caller ID 2485555555 → Direct to management's ring group
+Advanced Use Cases
+
+Combine multiple inbound routes with overlapping DIDs for layered routing logic.
+Set specific Caller ID entries for numbers that bypass menus and go directly to agents.
+Create "Catch-All" route with blank DID/CID to handle unrecognized calls as a fallback.
+Use Inbound Routes → Time Condition → Call Flow Control for dynamic routing via BLF.
+Tips for Managing Inbound Routes
+
+Tip	Description
+Use descriptive names	e.g., Main Line - Day, Main Line - After Hours
+Keep DID formatting consistent	Match what's sent by your SIP provider (10 vs. 11 digits)
+Route to Time Conditions	Gives you flexible control and easy overrides
+Don’t forget the fallback	A "catch-all" route prevents dropped calls if no DID match occurs
+Document routing logic	Especially useful if using IVRs, queues, or layered flows
+Firewall
+Overview: What Does the FreePBX Firewall Do?
+The FreePBX Firewall:
+Filters traffic by source IP address and port
+Organizes access via zones (internal, external, trusted, etc.)
+Automatically blocks threats and scanning attempts (via Fail2Ban)
+Allows or denies access to services like:
+Web GUI (HTTP/HTTPS)
+SSH
+SIP/PJSIP
+UCP, Zulu, REST API, etc.
+It works hand-in-hand with iptables (on Linux) and can be customized to protect a local system, cloud PBX, or hybrid deployment.
+
+Firewall Zones (Core Concept)
+
+Zone	Description	Use Case
+Trusted	Full access, no restrictions	LAN, VPN peers, known public IPs
+Local	Only for services running on the system (loopback)	127.0.0.1
+Internal	Allows PBX services (phones, UCP, etc.)	Office subnets
+External	Blocked by default, can whitelist services	Internet, unknown IPs
+Other	Catch-all zone for unclassified traffic	Used for alerts/monitoring
+Blacklist	Permanently banned IPs	Malicious traffic, SIP scanners
+Services Controlled by Firewall
+
+Service	Description
+Web Interface (Admin, UCP)	HTTP/HTTPS access to FreePBX GUI
+SIP/PJSIP	Call signaling ports (usually UDP 5060, 5160)
+RTP Media	Voice traffic (UDP ports 10000–20000 by default)
+SSH	Secure shell for remote access
+REST API / AMI	Used by advanced applications or external integrations
+Responsive Firewall	Dynamically adjusts rules based on traffic
+Responsive Firewall
+This feature allows remote phones or clients to connect dynamically:
+Accepts new connections temporarily
+Uses SIP registration attempts to whitelist the IP
+If registration is successful, the IP is added to the Internal zone for a limited time
+Supports PJSIP, IAX, and SIP transport
+Use Case: Remote Yealink or Bria softphone connects from home IP, gets added automatically.
+
+Intrusion Detection (Fail2Ban)
+Monitors logs for brute-force attempts (SIP, SSH, web logins)
+Automatically bans IPs after too many failed attempts
+Ban time and retry limits are configurable
+Logs can be viewed in /var/log/fail2ban.log
+
+Configuration Tabs
+
+Status
+Current firewall mode: Enabled/Disabled/Testing
+Summary of running services and zones
+Interfaces
+Classify each network interface (e.g., eth0) as:
+Trusted / Internal / External
+Typically: WAN = External, LAN = Internal
+Networks
+Whitelist or blacklist specific IPs or ranges
+Add remote offices, admin IPs, or mobile networks here
+Services
+Toggle allowed services (per zone)
+Select which zones can access SIP, HTTP, SSH, etc.
+Advanced
+Adjust default ports
+Modify fail2ban ban times
+Manage logs and performance settings
+Best Practices
+
+✅ Whitelist your management IPs (under "Networks")
+✅ Set your LAN interfaces to Trusted or Internal
+✅ Disable unnecessary services (e.g., Web UI over WAN)
+✅ Use Responsive Firewall for remote phones
+✅ Monitor intrusion logs and adjust thresholds as needed
+✅ Use secure SIP passwords and avoid predictable extensions
+Common Troubleshooting Tips
+
+Symptom	Possible Cause	Fix
+Remote phones can't register	IP not whitelisted or responsive firewall not working	Use Responsive mode or manually allow IP
+GUI unreachable from remote	Web access not allowed for External zone	Temporarily move IP to Trusted zone
+Calls fail or drop	RTP ports not allowed through firewall/NAT	Allow UDP 10000–20000 and ensure correct NAT setup
+Fail2Ban too aggressive	False positives from SIP scanners	Adjust ban time or retry limit in Advanced settings
+Extensions
+What is an Extension?
+An extension in FreePBX represents a user endpoint on the phone system — usually a physical phone, a softphone, or a device that registers via SIP or PJSIP.
+You assign a unique number (like 101, 202, etc.) to each extension. That number becomes the internal "phone number" for that device or user.
+
+Protocol Types (PJSIP)
+When creating an extension, you choose a technology driver:
+PJSIP (recommended for new deployments):
+Modern protocol stack
+Supports multiple registrations (e.g., multiple devices per user)
+
+Common Extension Settings
+
+User Extension: The internal number (e.g., 1001). Unique across the system.
+Display Name: Human-friendly label (e.g., John Smith). Appears on devices and in FreePBX GUI.
+Secret / Password: SIP/PJSIP registration password. Should be long and secure (randomized).
+Voicemail Settings: Enable/disable, email delivery (with or without attachment), greeting preferences, VMX Locater (press-to-redirect options while caller is in voicemail).
+CID Options: Outbound CID controls what caller ID is presented when this extension calls out. Can override trunk-level CID with format: “John Smith” <2485551234>.
+Device Options: NAT (enable for devices behind NAT/firewalls), DTMF Mode (typically RFC2833 or Auto), Transport (UDP / TCP / TLS for SIP signaling).
+Advanced Settings: Call recording (always, never, on-demand), language code (for system prompts), codec preferences (e.g., G722, ulaw, alaw, G729), Qualify/Keepalive (ensures phone is reachable).
+Features Tied to Extensions
+
+Find Me/Follow Me: Enable follow-me behavior for calls to this extension. Ring internal and external numbers sequentially or simultaneously.
+Call Recording: On-demand or always-record per extension. Saved in /var/spool/asterisk/monitor.
+Call Forwarding: Forward all/busy/unavailable to another extension, external number, or voicemail.
+Call Waiting / Call Screening / Call Announce: Fine-grained controls over how additional calls are handled. Can require caller to say their name before connecting.
+Voicemail to Email: Email notifications of new voicemails. Attachments and delete-after-send options.
+User Control Panel (UCP): If enabled, users can:
+Listen to voicemail
+Review call history
+Manage recordings
+Adjust Find Me/Follow Me
+Send/receive faxes (if enabled)
+Chat (with commercial modules)
+Users log into UCP via the FreePBX web interface using their extension number and user password.
+Registration: How Phones Connect
+A phone or softphone must be configured with:
+Username: The extension number (e.g., 1001)
+Password: The SIP/PJSIP secret
+Server: IP or FQDN of the FreePBX system
+Port: Typically 5060 (UDP for SIP, or 5061 for TLS/PJSIP)
+Once registered, the device can:
+Receive calls directly
+Make internal and outbound calls
+Use BLFs and other features
+
+Extension States
+Extensions can be in different states:
+Idle: Available for calls
+In Use: On a call
+Ringing: Incoming call
+Unavailable: Unregistered or not reachable
+These states are used by BLF lights and call center logic
+
+Use Cases
+Personal devices (e.g., desk phones)
+Softphones (e.g., Zoiper, Bria, Linphone)
+Remote users (via VPN or NAT-aware SIP)
+Call groups (used with ring groups/queues)
+
+Ring Groups
+📁 What Is a Ring Group?
+A Ring Group is a way to ring multiple extensions simultaneously or in sequence when a call is received. It’s typically used to reach a department, team, or group of phones (e.g., Sales, Support, Reception).
+Think of it as a mini broadcast system for inbound or internal calls.
+
+🛠️ Common Use Cases
+
+Ring all front desk phones at once
+Call a group of remote support reps in order
+Overflow logic: ring extension 100 for 10 seconds, then ring 101 and 102
+Combine with Inbound Routes, IVRs, or Queues
+🔧 Core Configuration Options
+
+Ring-Group Number
+The internal number to dial this group (e.g., 600).
+Can also be a destination for Inbound Routes or IVRs.
+Group Description
+Label to identify purpose (e.g., Sales Team, Tech Support)
+Extension List
+Add one or more extensions or external numbers (e.g., 100, 101, 2485551234#).
+Use # at the end of external numbers.
+100 101 102 2485557890#
+Ring Strategy
+Controls how the phones ring:
+ringall: Ring all at once
+hunt: Ring one at a time in order
+memoryhunt: Ring one, then add the next, etc.
+firstavailable: Rings the first free extension
+random: Randomized order
+Ring Time
+How long to ring this group (in seconds) before trying the next destination
+Destination if No Answer
+Where to send the call if no one answers (e.g., voicemail, another ring group, queue)
+🔔 Additional Features
+
+CID Name Prefix
+Adds a prefix to the caller ID on phones in the group.
+Example: Sales: makes incoming CID show as Sales:2485551212
+Ignore CF Settings
+Ignore individual extensions' call forwarding (recommended for group integrity)
+Disable Call Forwarding
+Prevent users from forwarding group calls to external destinations
+Enable Call Confirmation
+Required when calling external numbers (e.g., cell phones).
+Prompts remote user to "Press 1 to accept the call"
+Remote Announce / Too-Late Announce
+Audio prompts played to external users when they answer
+🔁 Real-World Examples
+
+🧑‍💼 Sales Group
+Extensions: 100, 101, 102
+Ring Strategy: ringall
+CID Prefix: Sales:
+Timeout Destination: Queue 600 (to queue calls if no answer)
+🧍‍♂️ On-Call Tech
+Extensions: 200
+External: 5865552222#
+Strategy: hunt
+Call Confirm: Enabled (ensures cell phones press 1 to answer)
+🕗 Office Hours Route
+Time Condition → if open → Ring Group Reception
+Time Condition → if closed → Voicemail or Announcement
+🧼 Best Practices
+
+Tip	Why
+Use CID Prefixes	Helps staff know what type of call it is
+Use Call Confirm on external numbers	Prevents calls from hitting personal voicemail
+Limit Ring Time	Avoids long ringing and faster failover
+Document each group’s role	Keeps your call flow organized
+Avoid loops	Don’t send a failed call back into the same group
+🔗 Ring Groups vs. Queues
+
+Feature	Ring Group	Queue
+Call distribution	Simultaneous/sequential	Rules-based (round robin, etc.)
+Music on hold	No	Yes
+Caller position	No	Yes
+Agent login/logout	No	Yes
+Ideal for	Small teams, simple routing	Call centers, advanced control
+Queues
+🎯 What is a Queue?
+A Queue is a structured call-holding system in FreePBX. When callers enter a queue:
+They wait on hold until an available agent can answer.
+Calls are distributed based on defined strategies (e.g., round robin, least recent).
+Agents can log in/out of queues manually or dynamically.
+You can provide music on hold, caller position, and estimated wait time.
+
+🛠️ Where to Configure Queues
+
+Admin GUI: Applications → Queues
+🧩 Core Queue Settings
+
+Queue Number
+Internal extension number for the queue (e.g., 600)
+Queue Name
+Label that appears in reports and agent displays (e.g., Support Line, Billing Queue)
+🧑‍💼 Agent Configuration
+
+Static Agents
+Predefined list of extensions (always part of the queue):
+100 101 102
+Dynamic Agents
+Agents log in/out with feature codes (e.g., *45).
+Good for hot-desking or rotating teams.
+Can also use hotdesk provisioning or Sangoma Phones' presence states.
+🎛️ Key Call Handling Options
+
+📞 Call Distribution Strategy
+Controls how calls are assigned:
+Strategy	Description
+ringall	Ring all agents simultaneously
+rrmemory	Round-robin with memory (next agent after last one)
+leastrecent	Agent who hasn’t taken a call in the longest time
+fewestcalls	Agent who has taken the fewest calls
+random	Random agent
+rrordered	Strict round-robin in order listed
+🕓 Max Wait Time
+How long a caller will wait in the queue before timing out.
+If reached, the call is sent to a failover destination (voicemail, another queue, etc.)
+🔀 Failover Destination
+Where to send the call if no agents answer (voicemail, another queue, ring group)
+🎧 Caller Experience
+
+🎵 Music on Hold
+Keeps caller engaged while waiting.
+Can use custom playlists or default MOH.
+🗣️ Announce Position / Hold Time
+Tells the caller their position in line or estimated wait time.
+Optional and configurable.
+📢 Periodic Announcements
+Audio files played every X seconds to reassure or inform callers
+💬 Agent Experience
+
+🔔 Agent Timeout
+How long to ring an agent before trying the next
+↩️ Agent Wrap-Up Time
+Pause before agent gets another call (useful for after-call work)
+🚫 Skip Busy Agents
+If enabled, agents already on a call won’t be tried
+📲 Call Confirm
+For external agents (e.g., cell phones), prompts “Press 1 to accept this call”
+🧪 Example Call Flow
+
+Inbound Route for DID 2485551000
+Routes to Time Condition (open vs closed)
+If open → Queue 600 (Support)
+If no agent answers in 45 sec → Voicemail
+📈 Queue Reporting & Monitoring
+
+Built-in Tools:
+Reports → Asterisk Info / Queues: See live agent status and queue load
+UCP / FOP2 / Queues Pro (Commercial): Advanced dashboards
+CDR/CEL Logs: Show queue entry and exit times
+🔐 Advanced Features (Commercial Modules)
+
+Feature	Requires Commercial Module
+Agent pause codes	Yes (Queue Pro)
+Wallboard/dashboard	Yes (Queue Wallboard)
+SLA stats and alerts	Yes (Queue Pro)
+Advanced failover logic	Yes
+Real-time supervisor tools	Yes
+✅ Best Practices
+
+Tip	Why
+Use rrmemory or leastrecent for fair call distribution	Prevents burnout or idle agents
+Add periodic announcements	Keeps callers engaged and less likely to hang up
+Enable agent wrap-up	Prevents agents from being overwhelmed
+Set a failover destination	Avoids infinite hold times
+Monitor live stats	Quickly respond to spikes in call volume
+📚 Example Config: Support Queue
+
+Setting	Value
+Queue Number	600
+Queue Name	Support
+Static Agents	101, 102, 103
+Ring Strategy	leastrecent
+Max Wait Time	300 sec
+Failover	Voicemail box 600
+Music on Hold	"TechHoldMix"
+Announce Position	Yes
+Periodic Announcement	Every 45 seconds
+Agent Timeout	25 sec
+Wrap-Up	10 sec
+Time Conditions
+⏰ What is a Time Condition?
+A Time Condition is a logic object that checks the current time against a defined schedule (called a Time Group), and routes the call accordingly.
+It functions like an IF/ELSE statement:
+IF current time matches time group → send call to Destination A ELSE → send call to Destination B
+
+🧩 Key Components
+
+Time Group
+A reusable schedule definition that includes:
+Days of the week
+Time ranges (e.g., 9:00 AM–5:00 PM)
+Specific dates or months (e.g., holidays)
+Combinations of the above
+You can create multiple time groups in:
+Admin → Time Groups
+Time Condition
+A logic block that uses a Time Group to make routing decisions.
+Configure in: Admin → Time Conditions
+Main Fields:
+Field	Description
+Time Condition Name	Label (e.g., "Open Hours Routing")
+Time Group	The schedule to evaluate (e.g., “Office Hours”)
+Destination if time matches	Where the call goes during matching hours
+Destination if time does not match	Where the call goes outside of those hours
+Optional Call Flow Toggle Feature Code	Lets you override the logic manually
+📞 Common Use Case Examples
+
+🏢 Business Hours Routing
+Time Group: “Business Hours”
+Mon–Fri | 9:00 AM – 5:00 PM
+Time Condition: “Main Line Logic”
+If in business hours → go to IVR
+If outside hours → go to after-hours voicemail or announcement
+🎄 Holiday Routing
+Create a “Holiday Dates” time group:
+Add dates: Dec 25, Jan 1, etc.
+Time Condition: "Holiday Check"
+If date matches → route to "We're closed" announcement
+Else → go to normal hours logic
+Inbound Route → Time Condition (Holiday Check) → If YES → Holiday Announcement → If NO → Time Condition (Office Hours) → If YES → Ring Group → If NO → After Hours Voicemail
+⌨️ Manual Override
+Time Conditions optionally support a feature code (like *271):
+Allows users to toggle the logic manually (e.g., early closure)
+Can be tied to a BLF button on phones (shows red/green status)
+🔁 Real-World Examples
+
+Example 1: Office Line with Voicemail Failover
+Time Group: Mon–Fri, 9–5
+Time Condition:
+Match: Ring Group 600 No Match: Voicemail 600
+Example 2: Lunch Break Routing
+Time Group: Mon–Fri, 12:00–1:00 PM
+Time Condition:
+Match: Play "We’re at lunch" announcement No Match: Normal IVR
+✅ Best Practices
+
+Tip	Why
+Name time groups descriptively	Easier to manage multiple schedules
+Use layered logic	Stack holiday, open/close, and lunch conditions
+Use override feature codes	Staff can toggle logic without admin access
+Use separate conditions for holidays	Avoids disrupting normal hours logic
+Add BLF buttons for toggles	Visually monitor and control routing state
+🛠 Time Condition vs. Time Group (Quick Summary)
+
+Feature	Time Group	Time Condition
+Stores schedule data	✅	❌
+Makes routing decisions	❌	✅
+Can be reused across multiple flows	✅	❌
+Uses IF/ELSE logic	❌	✅
+Announcements
+📣 What is an Announcement?
+An Announcement is a module in FreePBX that:
+Plays a pre-recorded message (audio file)
+Then routes the call to another destination
+There’s no user interaction during the announcement — it’s just informational playback before the call proceeds.
+
+🧩 Where to Configure
+
+FreePBX GUI: Applications → Announcements
+🔧 Key Settings
+
+Field	Description
+Announcement Name	Internal label (e.g., “Office Closed Notice”)
+Recording	The audio file to play (choose from system recordings or upload)
+Allow Skip	If enabled, the caller can press # to skip the message
+Repeat Message	Replays the message before moving on
+Return to IVR	If the call came from an IVR, you can return the caller back to it
+Destination after Playback	Where to send the call next (e.g., extension, IVR, voicemail)
+🎙 Recording the Audio
+
+Upload .wav or .mp3 files in Admin → System Recordings
+Record from an extension using *77
+Use Text-to-Speech (via third-party services) to generate audio
+📞 Common Use Cases
+
+🕗 After-Hours Message
+“Thank you for calling. Our office is currently closed. Please leave a message after the tone.”
+Destination: Voicemail
+📦 Shipping or Info Update
+“Due to inclement weather, shipping may be delayed.”
+Destination: Ring Group or Queue
+🚫 Call Blocking / Spam Handling
+“This number does not accept unsolicited calls.” → hang up
+Destination: Terminate Call → Hang Up
+🔁 Loop Back to IVR
+“Please listen carefully to our new menu options.”
+Destination: Return to IVR
+🔁 Integrated Call Flows
+
+Inbound Route (DID: 2485551234) ↓ Time Condition (if outside business hours) ↓ Announcement: “We are closed.” ↓ Voicemail box
+🛠 Tips for Using Announcements
+
+Tip	Why
+Keep messages short	Avoid frustrating callers
+Enable skip (#) for long messages	Allows faster navigation
+Use professional recordings	Enhances credibility
+Test playback volume	Avoid distortion or silence
+Use announcements before IVRs	Sets context for menu options
+✅ Best Practices
+
+Use consistent naming: Name your recordings and announcements clearly (e.g., after_hours_greeting.wav, HolidayNotice2025)
+Segment announcements: Break long messages into reusable pieces (e.g., generic closure message + department-specific routing)
+Use return to IVR carefully: Prevent loops by confirming the call originated from an IVR
+🧠 Related Modules
+
+System Recordings: Where audio files are created or uploaded
+IVRs: Announcements are often used before or inside menus
+Time Conditions: Direct callers to announcements based on time or date
+IVR (Interactive Voice Response)
+🎛️ What is an IVR?
+An IVR (Interactive Voice Response) is an automated phone menu that allows callers to press keys (DTMF) to navigate to different departments, people, or services.
+It's commonly known as a "press 1 for Sales, press 2 for Support" system.
+
+🧭 What IVRs Do in FreePBX
+
+Play an audio message (e.g., "Welcome to XYZ Company…")
+Let the caller press digits (0–9, *, #) to trigger actions
+Route the call to:
+Extensions
+Queues
+Ring groups
+Announcements
+Voicemail
+Other IVRs (nested menus)
+🛠 Where to Configure
+FreePBX GUI: Applications → IVR
+
+🧩 Core IVR Configuration
+
+Setting	Description
+IVR Name	Internal name (e.g., "Main Menu")
+Announcement	The greeting audio (recorded file or uploaded)
+Enable Direct Dial	Allows callers to dial extensions at any time
+Timeout	How long to wait for input (in seconds)
+Invalid Retries	How many times to let the caller retry after a wrong input
+Invalid Retry Recording	What to play if they press an invalid option
+Timeout Destination	Where to send the call if the caller does nothing
+Return to IVR	After an invalid or timeout destination, return to this IVR
+Allow Key Press Events Early	Accepts input even while audio is playing
+🔢 IVR Entries (Options)
+Each menu option is a digit (0–9, *, #) that maps to a destination.
+
+Key Press	Destination
+1	Sales Queue (600)
+2	Support Queue (601)
+3	Billing Ring Group (603)
+0	Operator Extension (100)
+*	Voicemail Box
+You can also use:
+
+i → Invalid input destination
+t → Timeout destination
+🎧 IVR Audio (Announcement)
+You must upload or record an audio file that tells the caller what to do.
+E.g.: "Thank you for calling. For Sales, press 1. For Support, press 2. To dial an extension, press 0 now."
+Create recordings in Admin → System Recordings.
+
+🔁 Nested IVRs (Multi-Level Menus)
+You can create submenus by pointing an IVR option to another IVR.
+Example:
+
+Main Menu (press 2 → Support Menu)
+Support Menu (press 1 → Tech Support Queue, 2 → Customer Portal FAQ announcement)
+This keeps menus short and easy to follow.
+
+🧠 Real-World Example
+Inbound Route → Time Condition → IVR
+
+Inbound DID: 248-555-1000 ↓ Time Condition: - Open → Main IVR - Closed → Announcement: "We're closed" ↓ Voicemail Main IVR: - 1 → Sales Queue - 2 → Support Queue - 0 → Operator - No input → Timeout → Voicemail
+🔒 Security & Best Practices
+
+Practice	Why
+Disable direct dial unless needed	Prevents callers from guessing extension numbers
+Set invalid/timeouts	Prevents infinite loops or dead ends
+Use BLF overrides	Let staff control menu behavior manually (e.g., *289)
+Keep audio concise	Avoid long menus; aim for <30 seconds
+Log changes	Document IVR name, options, recordings, and routes
+💡 Tips for Design
+
+Limit to 3–5 options per IVR
+Make sure prompts clearly match the options
+Reuse audio recordings when possible (e.g., "Our office hours are...")
+Use CID name prefixing when routing calls through IVR to help agents identify menu origin
+✅ Related Modules
+
+System Recordings: Where you upload or record the audio files
+Time Conditions: Send calls to different IVRs based on time of day
+Queues / Ring Groups: Often used as IVR destinations
+Announcements: Can be played before or inside IVRs
+
+🔁 Find Me/Follow Me vs Miscellaneous Destinations
+
+    Find Me/Follow Me: Per-extension forwarding to ring external numbers (e.g., cell phone) in order or simultaneously.
+
+    Miscellaneous Destinations: Allows routing to external numbers or special dial strings (e.g., analog door phones).
+
+🌐 Trunks
+
+Trunks connect your PBX to the outside world.
+
+    SIP/IAX2/PRI
+
+    Outbound and Inbound calls flow through trunks
+
+    Must be configured with your provider’s details
+
+🧭 Dial Plans & Outbound Routes
+
+    Dial Plan: Rules that match user dialed numbers (e.g., 9|1NXXNXXXXXX to strip 9 and dial 11-digit US).
+
+    Outbound Routes: Routes based on dialed pattern → send to correct trunk.
+
+    Can apply caller ID masking, failover trunks, and PIN codes.
+
+📢 Paging & Intercom
+
+    Paging: One-way audio broadcast to multiple phones.
+
+    Intercom: Two-way communication using auto-answer.
+
+    Useful for overhead announcements or internal alerts.
+
+👤 User Management
+
+    Create User Portal (ARI/UCP) logins for voicemail, call logs, recordings.
+
+    Permissions determine what features users can access (e.g., fax, call control).
+
+🔧 Administrators
+
+    Web GUI admins for FreePBX
+
+    Create multiple admin accounts with role-based access control
+
+    "Admin", "Superadmin", or custom groups
+
+🔍 Asterisk CLI
+
+Command-line interface to the Asterisk core (not FreePBX GUI).
+
+    Use asterisk -rvvv to connect
+
+    Commands: sip show peers, core show calls, dialplan show, reload
+
+🛠️ System Admin
+
+Commercial module (or installed on FreePBX Distro):
+
+    Configure network settings, hostname, timezone, updates, etc.
+
+    Includes firewall, intrusion detection, backup
+
+📊 CDR (Call Detail Records)
+
+    Logs of all calls: date, duration, source/destination, disposition
+
+    Viewable from GUI
+
+    Useful for call reporting and troubleshooting
+
+📈 CEL (Call Event Logging)
+
+    More granular than CDR
+
+    Logs every event in a call (ring, answer, transfer, hangup)
+
+    Must be enabled and used with caution due to size
+
+💡 Asterisk Info
+
+GUI access to real-time Asterisk stats:
+
+    SIP peers
+
+    Registrations
+
+    Channels
+
+    System status
+
+📬 Voicemail Admin
+
+    Set voicemail options globally or per-extension
+
+    Control greeting behavior, PINs, email delivery
+
+    Manage mailboxes centrally
+
+🔄 Call Flow Control
+
+    Manual override toggles (like a switchboard button)
+
+    Used to change routing paths manually (e.g., switch between day/night mode)
+
+    Can be tied to BLF buttons on phones
+
+🅿️ Parking
+
+    Park a call (e.g., on “701”), then retrieve from another phone
+
+    Parking lots can have timeouts and return destinations
+
+    Advanced features in commercial module
+
+🔐 Certificate Management
+
+    Install SSL certificates for secure Web GUI and provisioning
+
+    Supports Let's Encrypt auto-renewal
+
+    Required for secure UCP and HTTPS provisioning
