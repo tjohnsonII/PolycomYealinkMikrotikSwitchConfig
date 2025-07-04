@@ -1202,18 +1202,197 @@ const PBXReference: React.FC = () => (
     </Section>
 
     <Section title="System Admin">
-      <p>Commercial module (or installed on FreePBX Distro):</p>
+      <h3>What Is the System Admin Module?</h3>
+      <p>The System Admin module is a critical administrative interface that gives you access to server-level configuration options outside the scope of standard PBX call handling — things like networking, updates, backups, and SSL certificates.</p>
+      <p><b>Note:</b> The System Admin module is only available when you're running the official FreePBX Distro (not when FreePBX is installed on a custom OS like Debian or Ubuntu). Some features also require a commercial license.</p>
+      <h4>What Can You Manage?</h4>
       <ul>
-        <li>Configure network settings, hostname, timezone, updates, etc.</li>
-        <li>Includes firewall, intrusion detection, backup</li>
+        <li>Network interfaces and hostnames</li>
+        <li>Time zone and DNS</li>
+        <li>Certificate management (HTTPS)</li>
+        <li>System updates and upgrades</li>
+        <li>Backups and restores</li>
+        <li>Email server settings</li>
+        <li>Power/reboot/shutdown</li>
       </ul>
+      <h4>Where to Find It</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Admin → System Admin</b></li>
+      </ul>
+      <h4>Tabs and Features Breakdown</h4>
+      <ol>
+        <li><b>Network Settings:</b> Manage IP address (static or DHCP), subnet, gateway, DNS servers, hostname and domain. Ideal for static environments or fixing network issues.</li>
+        <li><b>Time Zone:</b> Set the system time zone. Important for accurate call logs, voicemail timestamps, CDRs, etc.</li>
+        <li><b>Updates:</b> Manage PBX updates (FreePBX modules and Asterisk) and OS updates (via yum). UI for checking/applying security patches, Asterisk updates, and Distro upgrades.</li>
+        <li><b>Email Setup:</b> Configure outbound mail server settings for voicemail-to-email, alerts, cron jobs. Supports SMTP, authentication, TLS/SSL, smart host.</li>
+        <li><b>Power Options:</b> Reboot or power down the server gracefully from the GUI.</li>
+        <li><b>HTTPS Setup (Port Management):</b> Change admin web port, redirect HTTP to HTTPS, harden access.</li>
+        <li><b>Storage & Disk Usage:</b> View available disk space and usage per partition.</li>
+        <li><b>Support and Activation:</b> Register PBX with Sangoma, check license keys, access support tools.</li>
+        <li><b>Backup and Restore (Legacy):</b> GUI-based creation/scheduling of system-level backups (replaced by Backup module in newer versions).</li>
+      </ol>
+      <h4>Licensing Tiers</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Feature</th><th>Free</th><th>Paid</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Basic Network Config</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Certificate Management</td><td>✅</td><td>✅</td></tr>
+          <tr><td>HTTPS/Port Setup</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Mail Configuration</td><td>✅</td><td>✅</td></tr>
+          <tr><td>System Updates (auto)</td><td>❌</td><td>✅ (with maintenance)</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Practice</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use a static IP for production PBX</td><td>Avoid registration and DNS issues</td></tr>
+          <tr><td>Regularly update modules and OS</td><td>Patch security issues and bugs</td></tr>
+          <tr><td>Secure with HTTPS and strong passwords</td><td>Prevent GUI compromise</td></tr>
+          <tr><td>Configure SMTP email</td><td>Ensure voicemail-to-email and alerting works</td></tr>
+          <tr><td>Use GUI reboot for planned downtime</td><td>Avoid filesystem corruption</td></tr>
+        </tbody>
+      </table>
+      <h4>Common Pitfalls</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Mistake</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Setting DHCP on a production box</td><td>IP address changes can break SIP registration</td></tr>
+          <tr><td>Ignoring time zone config</td><td>Incorrect voicemail timestamps and CDR data</td></tr>
+          <tr><td>Failing to configure email</td><td>Missed voicemail or system alerts</td></tr>
+          <tr><td>Using default ports on internet-facing PBX</td><td>Increased attack surface</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Modules</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Firewall</td><td>Controls network access and whitelisting</td></tr>
+          <tr><td>Certificate Management</td><td>Works with System Admin to secure HTTPS access</td></tr>
+          <tr><td>User Management</td><td>Not involved in server config — separate from admin rights</td></tr>
+          <tr><td>Asterisk CLI</td><td>For engine-level control (vs. server-level here)</td></tr>
+        </tbody>
+      </table>
+      <h4>Example Use Case Flow</h4>
+      <ol>
+        <li>Go to Network Settings → set static IP and gateway</li>
+        <li>Go to Time Zone → select your region (e.g., America/New_York)</li>
+        <li>Go to Email Setup → configure SMTP relay</li>
+        <li>Enable HTTPS redirection for secure GUI access</li>
+        <li>Register the system for updates and support</li>
+        <li>Reboot from GUI → all settings are now live</li>
+      </ol>
     </Section>
 
     <Section title="CDR (Call Detail Records)">
+      <h3>What is the CDR Application?</h3>
+      <p>CDR stands for Call Detail Records — a database of every call that passes through Asterisk. It includes:</p>
       <ul>
-        <li>Logs of all calls: date, duration, source/destination, disposition</li>
-        <li>Viewable from GUI</li>
-        <li>Useful for call reporting and troubleshooting</li>
+        <li>Time of call</li>
+        <li>Duration</li>
+        <li>Source and destination numbers</li>
+        <li>Call disposition (answered, failed, etc.)</li>
+        <li>Channel used</li>
+        <li>Trunk or extension involved</li>
+      </ul>
+      <p>You can access it via: <b>Reports → CDR Reports</b></p>
+      <h4>What’s Included in a CDR Record?</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Date/Time</td><td>When the call occurred</td></tr>
+          <tr><td>CallerID</td><td>Who made the call (name + number)</td></tr>
+          <tr><td>Source (SRC)</td><td>Extension or number that originated the call</td></tr>
+          <tr><td>Destination (DST)</td><td>Extension or external number dialed</td></tr>
+          <tr><td>Destination Channel</td><td>Where the call was sent (SIP/Trunk/Local)</td></tr>
+          <tr><td>Disposition</td><td>Call result: ANSWERED, NO ANSWER, BUSY, FAILED</td></tr>
+          <tr><td>Duration</td><td>Total call duration in seconds</td></tr>
+          <tr><td>Billsec</td><td>Time the call was actually answered (excluding ringing)</td></tr>
+          <tr><td>Recording</td><td>Link to the call recording (if enabled)</td></tr>
+        </tbody>
+      </table>
+      <h4>Features of the CDR Module</h4>
+      <ul>
+        <li><b>Filter/Search:</b> By date/time range, source/destination, disposition, duration, trunk/extension, or user</li>
+        <li><b>Play/Download Recordings:</b> If call recording is enabled, play or download files (wav/mp3) for QA or dispute resolution</li>
+        <li><b>Export to CSV:</b> Export filtered or full data for offline analysis, billing, or compliance</li>
+      </ul>
+      <h4>Configuration and Dependencies</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Component</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Asterisk</td><td>Generates the raw CDRs during call events</td></tr>
+          <tr><td>MySQL/MariaDB</td><td>Stores the records for GUI access</td></tr>
+          <tr><td>cdr_mysql module</td><td>Asterisk module that writes records to SQL</td></tr>
+          <tr><td>FreePBX GUI</td><td>Visual interface to search, play, and report on CDRs</td></tr>
+        </tbody>
+      </table>
+      <h4>Example Use Cases</h4>
+      <ul>
+        <li><b>Troubleshooting a Call:</b> Search by source/destination, check disposition, view timestamps, trace call flow</li>
+        <li><b>Billing Report:</b> Export all outbound calls over 30 seconds, filter by date/trunk, export to CSV</li>
+        <li><b>Call Volume Report:</b> See how many calls came into a queue/extension, measure peak hours, monitor missed vs. answered</li>
+      </ul>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Enable recording only where needed</td><td>Saves disk space</td></tr>
+          <tr><td>Purge old CDRs regularly if disk usage is high</td><td>Prevents database bloat</td></tr>
+          <tr><td>Use descriptive CallerIDs on outbound calls</td><td>Helps identify records easily</td></tr>
+          <tr><td>Cross-reference CDR with CEL if deeper analysis needed</td><td>CEL logs mid-call events</td></tr>
+          <tr><td>Give users UCP access to their own CDRs only</td><td>Prevents privacy breaches</td></tr>
+        </tbody>
+      </table>
+      <h4>Common Pitfalls</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Pitfall</th><th>Consequence</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>No CDRs showing</td><td>Likely a broken database connection or missing cdr_mysql.so</td></tr>
+          <tr><td>Recording links not working</td><td>Recording path mismatch or deleted audio files</td></tr>
+          <tr><td>Time zone mismatch</td><td>Set the system and PHP time zones properly in System Admin</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Modules</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Call Recording</td><td>Generates audio files linked to CDRs</td></tr>
+          <tr><td>CEL Reports</td><td>Logs detailed call events (bridging, transfer, etc.)</td></tr>
+          <tr><td>Queue Reports</td><td>Call center stats (commercial module)</td></tr>
+          <tr><td>User Management</td><td>Ties users to CDR visibility in UCP</td></tr>
+        </tbody>
+      </table>
+      <h4>CLI & Database Access</h4>
+      <ul>
+        <li>From CLI:</li>
+        <ul>
+          <li><code>asterisk -rx "core show channels"</code></li>
+          <li><code>asterisk -rx "cdr show status"</code></li>
+        </ul>
+        <li>To query the database directly:</li>
+        <ul>
+          <li><code>USE asteriskcdrdb;</code></li>
+          <li><code>SELECT * FROM cdr ORDER BY calldate DESC LIMIT 10;</code></li>
+        </ul>
       </ul>
     </Section>
 
