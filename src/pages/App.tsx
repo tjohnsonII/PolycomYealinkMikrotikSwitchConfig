@@ -16,6 +16,7 @@ import MikrotikTemplates from './MikrotikTemplates';
 import SwitchTemplates from './SwitchTemplates';
 import OrderTracker from './OrderTracker';
 import StrettoImport from './StrettoImport';
+import Diagnostic from './Diagnostic';
 import '../styles/App.css'; // eslint-disable-line
 
 
@@ -53,7 +54,8 @@ function App() {
                 { to: '/mikrotik', label: 'Mikrotik Templates' },
                 { to: '/switch', label: 'Switch Templates' },
                 { to: '/ordertracker', label: 'Order Tracker' },
-                { to: '/stretto', label: 'Stretto Import' }].map(({ to, label }) => (
+                { to: '/stretto', label: 'Stretto Import' },
+                { to: '/diagnostic', label: 'Diagnostics' }].map(({ to, label }) => (
                   <Link
                     key={to}
                     to={to}
@@ -98,6 +100,7 @@ function App() {
                   <Route path="/switch" element={<SwitchTemplates />} />
                   <Route path="/ordertracker" element={<OrderTracker />} />
                   <Route path="/stretto" element={<StrettoImport />} />
+                  <Route path="/diagnostic" element={<Diagnostic />} />
                 </Routes>
               </div>
             </div>
