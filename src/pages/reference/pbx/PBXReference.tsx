@@ -1872,11 +1872,98 @@ WHERE LinkedID = '1688650400.1234';
     </Section>
 
     <Section title="Certificate Management">
+      <h3>What is the Certificate Management Module?</h3>
+      <p>The Certificate Management module in FreePBX is used to create, import, and manage SSL/TLS certificates for securing various PBX services — especially the web interface, UCP, HTTPS provisioning, and Sangoma Connect.</p>
       <ul>
-        <li>Install SSL certificates for secure Web GUI and provisioning</li>
-        <li>Supports Let's Encrypt auto-renewal</li>
-        <li>Required for secure UCP and HTTPS provisioning</li>
+        <li>Create self-signed certificates</li>
+        <li>Import certificates from trusted Certificate Authorities (CAs)</li>
+        <li>Auto-generate and manage Let’s Encrypt certificates</li>
+        <li>Assign certificates to web services, SIP/TLS, UCP, and more</li>
       </ul>
+      <h4>Where to Find It</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Admin → Certificate Management</b></li>
+      </ul>
+      <h4>Types of Certificates You Can Manage</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Type</th><th>Use Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Self-Signed</td><td>Basic testing and LAN-only use</td></tr>
+          <tr><td>Let’s Encrypt</td><td>Free and trusted public certs (recommended)</td></tr>
+          <tr><td>CA-Signed (Imported)</td><td>Commercial SSL certs from GoDaddy, DigiCert, etc.</td></tr>
+        </tbody>
+      </table>
+      <h4>Core Features</h4>
+      <ul>
+        <li><b>Certificate List:</b> Shows all certificates (active, expired, pending), status, expiration, key length, and usage</li>
+        <li><b>Let’s Encrypt Integration:</b> Generate/renew certs automatically (requires public DNS and port 80 open)</li>
+        <li><b>Certificate Actions:</b> Generate new self-signed, request Let’s Encrypt, upload cert/key pairs, revoke/delete certs</li>
+      </ul>
+      <h4>Where Certificates Are Used in FreePBX</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Service</th><th>How It Uses Certificates</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Admin Web GUI</td><td>Secure HTTPS access (port 443)</td></tr>
+          <tr><td>User Control Panel (UCP)</td><td>HTTPS access and remote user login</td></tr>
+          <tr><td>Sangoma Connect / Zulu</td><td>Secure API and WebSocket connections</td></tr>
+          <tr><td>Endpoint Provisioning (HTTPS)</td><td>Secure phone config file delivery</td></tr>
+          <tr><td>SIP over TLS (PJSIP)</td><td>Optional — for encrypting SIP signaling</td></tr>
+        </tbody>
+      </table>
+      <h4>Real-World Use Case: Enabling Secure Remote Access</h4>
+      <ol>
+        <li>Domain: pbx.company.com points to public IP of PBX</li>
+        <li>Use Let’s Encrypt to create cert for pbx.company.com</li>
+        <li>Apply certificate to Web GUI, UCP, Sangoma Connect</li>
+        <li>Forward ports 80 (temporary) and 443 on your firewall</li>
+        <li>Set up auto-renewal every 60–90 days (Let’s Encrypt default)</li>
+      </ol>
+      <h4>Common Pitfalls</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Issue</th><th>Cause</th><th>Solution</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Let’s Encrypt fails</td><td>Port 80 blocked or DNS mismatch</td><td>Ensure port 80 is reachable and FQDN points to PBX</td></tr>
+          <tr><td>Browser warning on HTTPS</td><td>Expired or self-signed cert</td><td>Renew or install valid cert</td></tr>
+          <tr><td>Remote provisioning fails</td><td>Phones reject self-signed cert</td><td>Use valid CA-signed or Let's Encrypt cert</td></tr>
+          <tr><td>GUI uses wrong cert</td><td>Cert not selected/applied</td><td>Assign in HTTPS Setup under System Admin</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Practice</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use Let's Encrypt if possible</td><td>Free, trusted by all modern browsers</td></tr>
+          <tr><td>Use 2048-bit or 4096-bit key length</td><td>Aligns with modern security standards</td></tr>
+          <tr><td>Schedule auto-renewal of certs</td><td>Prevents outages or lockouts</td></tr>
+          <tr><td>Monitor expiration dates</td><td>GUI shows this in the Cert Management module</td></tr>
+          <tr><td>Apply the correct cert to services</td><td>Double-check System Admin → HTTPS and UCP setup</td></tr>
+        </tbody>
+      </table>
+      <h4>CLI / File Paths (Advanced)</h4>
+      <ul>
+        <li>Certificates are stored under: <code>/etc/asterisk/keys/</code></li>
+        <li>Inspect certs: <code>openssl x509 -in /etc/asterisk/keys/mycert.pem -text -noout</code></li>
+      </ul>
+      <h4>Related Modules and Tools</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>System Admin</td><td>Assign certs to GUI and HTTPS ports</td></tr>
+          <tr><td>User Management / UCP</td><td>Uses certs for secure remote access</td></tr>
+          <tr><td>Firewall</td><td>Must allow ports 80 and 443 for Let’s Encrypt</td></tr>
+          <tr><td>SIP Settings</td><td>Optional use of certs for encrypted SIP (TLS transport)</td></tr>
+        </tbody>
+      </table>
     </Section>
 
   </div>
