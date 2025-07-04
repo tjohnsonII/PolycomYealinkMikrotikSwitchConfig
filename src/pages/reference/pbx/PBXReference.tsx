@@ -1581,11 +1581,115 @@ WHERE LinkedID = '1688650400.1234';
     </Section>
 
     <Section title="Voicemail Admin">
+      <h3>What is the Voicemail Admin Module?</h3>
+      <p>The Voicemail Admin module manages the Asterisk voicemail system (powered by voicemail.conf). It allows you to:</p>
       <ul>
-        <li>Set voicemail options globally or per-extension</li>
-        <li>Control greeting behavior, PINs, email delivery</li>
-        <li>Manage mailboxes centrally</li>
+        <li>Define global voicemail behaviors</li>
+        <li>Create and manage voicemail templates</li>
+        <li>Set default storage options, email notifications, greetings, and PIN policies</li>
+        <li>Access low-level settings not exposed in the Extensions module</li>
       </ul>
+      <h4>Where to Find It</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Settings → Voicemail Admin</b></li>
+        <li><b>Note:</b> This module is not always enabled by default and may need to be installed via Module Admin.</li>
+      </ul>
+      <h4>Key Features and Sections</h4>
+      <ol>
+        <li><b>General Settings (voicemail.conf Options):</b> Configure system-wide behavior for all voicemail boxes.</li>
+      </ol>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Option</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>format</td><td>File format for saved voicemails (wav, gsm, wav49, etc.)</td></tr>
+          <tr><td>serveremail</td><td>The "From" email address for voicemail-to-email messages</td></tr>
+          <tr><td>maxmsg</td><td>Max number of voicemails per mailbox</td></tr>
+          <tr><td>maxsecs</td><td>Max length (in seconds) of each voicemail</td></tr>
+          <tr><td>minsecs</td><td>Minimum required length (to avoid empty messages)</td></tr>
+          <tr><td>emailbody</td><td>Default email template for voicemail messages</td></tr>
+          <tr><td>emailsubject</td><td>Email subject template for voicemail-to-email</td></tr>
+          <tr><td>delete</td><td>Whether to delete the message after sending via email (yes or no)</td></tr>
+          <tr><td>saycid, envelope</td><td>Whether to play caller ID or timestamp in the voicemail playback</td></tr>
+          <tr><td>attach</td><td>Attach the voicemail audio to the email</td></tr>
+        </tbody>
+      </table>
+      <ol start={2}>
+        <li><b>Voicemail Templates:</b> Define common settings and apply them to multiple extensions. Useful for large systems, call centers, or multi-tenant setups. Templates can include PIN requirements, email behaviors, storage location, language, and greeting preferences.</li>
+        <li><b>Voicemail Contexts:</b> Asterisk supports contexts for voicemail boxes (like dialplan contexts). Most systems use a single context (usually default), but you can define custom contexts to separate departments or tenants. Example:</li>
+      </ol>
+      <pre style={{ background: '#f7f7f7', padding: 8, borderRadius: 4 }}>
+[default]
+101 =&gt; 1234,John Smith,john@example.com
+102 =&gt; 5678,Alice Jones,alice@example.com
+      </pre>
+      <p>In FreePBX, this is handled behind the scenes, but Voicemail Admin exposes it.</p>
+      <h4>Advanced Configuration</h4>
+      <ul>
+        <li>Manually edit voicemail.conf from the GUI (advanced use only)</li>
+        <li>Reload voicemail settings without restarting Asterisk</li>
+        <li>Create multiple voicemail profiles for various extension groups</li>
+      </ul>
+      <h4>Voicemail-to-Email Integration</h4>
+      <ul>
+        <li>Manage system-wide email behavior for voicemails</li>
+        <li>SMTP relay setup is done in System Admin → Email Setup</li>
+        <li>serveremail, attach, delete are configured here or per extension</li>
+        <li>Common example: "Send voicemails to the user's email with attachment, but don’t delete from the server."</li>
+      </ul>
+      <h4>Use Case Example</h4>
+      <p><b>Company Policy:</b> All voicemail messages must:</p>
+      <ul>
+        <li>Be saved for 30 days</li>
+        <li>Be no longer than 3 minutes</li>
+        <li>Be emailed to the user with the file attached</li>
+        <li>Require a minimum 4-digit PIN</li>
+      </ul>
+      <p>Using Voicemail Admin:</p>
+      <ul>
+        <li>Set maxsecs=180, minpassword=4, attach=yes, delete=no</li>
+        <li>Define a global email body and subject</li>
+        <li>Apply these via a template to all new extensions</li>
+      </ul>
+      <h4>Common Issues It Helps Prevent</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Issue</th><th>Solution via Voicemail Admin</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Voicemails not sending</td><td>Check serveremail, attach, SMTP setup</td></tr>
+          <tr><td>Users using weak PINs</td><td>Enforce min PIN length globally</td></tr>
+          <tr><td>Empty messages</td><td>Use minsecs=2 to reject &lt;2 sec voicemails</td></tr>
+          <tr><td>Mailboxes filling up</td><td>Set maxmsg limit and retention policy</td></tr>
+          <tr><td>Inconsistent settings</td><td>Use templates to standardize mailbox behavior</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use templates for role-based setups</td><td>Saves time and ensures consistency</td></tr>
+          <tr><td>Enable attach=yes + delete=no</td><td>Users get a copy via email but PBX retains backups</td></tr>
+          <tr><td>Set a reasonable maxsecs</td><td>Prevent abuse or accidental long voicemails</td></tr>
+          <tr><td>Require minpassword of 4+</td><td>Prevent easy brute force on mailboxes</td></tr>
+          <tr><td>Enable envelope=yes</td><td>Helps users know when the message was left</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Modules</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>User Management</td><td>Grants voicemail access to UCP</td></tr>
+          <tr><td>Voicemail Blast Groups</td><td>Sends a message to multiple mailboxes (e.g., team voicemails)</td></tr>
+          <tr><td>Call Flow Control / Time Conditions</td><td>Route to voicemail or announcements based on schedule</td></tr>
+          <tr><td>Email Setup (System Admin)</td><td>Controls actual outbound email delivery</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Call Flow Control">
