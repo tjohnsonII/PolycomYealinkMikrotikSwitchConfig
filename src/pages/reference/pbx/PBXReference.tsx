@@ -782,10 +782,96 @@ const PBXReference: React.FC = () => (
     </Section>
 
     <Section title="Paging & Intercom">
+      <h3>What is Paging?</h3>
+      <p>Paging is a one-way broadcast of audio to one or more endpoints (phones):</p>
       <ul>
-        <li><strong>Paging:</strong> One-way audio broadcast to multiple phones.</li>
-        <li><strong>Intercom:</strong> Two-way communication using auto-answer.</li>
-        <li>Useful for overhead announcements or internal alerts.</li>
+        <li>The speaker hears a tone and a message, but cannot respond</li>
+        <li>Used for announcements, emergency messages, or group notifications</li>
+        <li>No ringing — the call is auto-answered by recipient phones</li>
+      </ul>
+      <h3>What is Intercom?</h3>
+      <p>Intercom is a two-way audio communication:</p>
+      <ul>
+        <li>Auto-answers on the target phone (usually on speakerphone)</li>
+        <li>Both parties can speak and hear immediately</li>
+        <li>Great for quick internal communication</li>
+      </ul>
+      <h4>Where It’s Configured</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Applications → Paging and Intercom</b></li>
+      </ul>
+      <h4>Key Configuration Options</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Option</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Paging Group Number</td><td>The extension number used to initiate the page (e.g., 700)</td></tr>
+          <tr><td>Display Name</td><td>Descriptive name (e.g., "All Phones", "Front Desk", "Warehouse Page")</td></tr>
+          <tr><td>Group Type</td><td>Page (1-way), Intercom (2-way), Spying/Whisper/Barge (advanced monitoring modes)</td></tr>
+          <tr><td>Device List</td><td>Select which extensions/devices should receive the page/intercom call (desk phones, softphones, multicast devices)</td></tr>
+          <tr><td>Duplex Mode</td><td>If enabled, allows two-way audio (turns page into intercom); disable for one-way only</td></tr>
+          <tr><td>Force if Busy</td><td>Forces page even if recipient is on a call (disruptive, use for emergencies)</td></tr>
+          <tr><td>Volume</td><td>Adjust page volume for receiving devices</td></tr>
+        </tbody>
+      </table>
+      <h4>Multicast Paging (Advanced)</h4>
+      <p>Multicast allows one audio stream to be sent to many phones at once, ideal for large deployments (saves bandwidth). Supported by most modern phones (e.g., Yealink, Polycom, Grandstream).</p>
+      <ul>
+        <li>Phones are configured to listen to a multicast IP/port</li>
+        <li>FreePBX sends the page to that IP instead of dialing devices individually</li>
+      </ul>
+      <h4>Feature Code Intercom (Direct Dial)</h4>
+      <p>You can use feature codes to initiate intercom calls directly between phones:</p>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Action</th><th>Default Code</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Intercom to extension 101</td><td>*80101</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>Calling *80101 from your phone will auto-answer on 101 and start a 2-way call.</li>
+        <li>Must be enabled per extension under Advanced → Intercom Allow/Deny</li>
+      </ul>
+      <h4>Real-World Use Cases</h4>
+      <ul>
+        <li><b>Schools:</b> Page all classrooms at once (fire drill, lockdown)</li>
+        <li><b>Office:</b> Intercom to front desk or manager; page all phones to announce a visitor</li>
+        <li><b>Warehouse:</b> Overhead paging through SIP speakers; staff announcements</li>
+        <li><b>Emergency:</b> Create an “Emergency Page” group that overrides DND and busy states</li>
+      </ul>
+      <h4>Security & Etiquette</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Setting</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Intercom Whitelist</td><td>Prevents unauthorized extensions from initiating intercom</td></tr>
+          <tr><td>DND Respect</td><td>Stops pages from interrupting private calls (unless overridden)</td></tr>
+          <tr><td>Override Busy</td><td>Only enable for emergency groups</td></tr>
+          <tr><td>Use Volume Control</td><td>Avoid blaring audio to sensitive areas</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Separate paging groups by department</td><td>Prevents disruption and accidental broadcasts</td></tr>
+          <tr><td>Use multicast for large deployments</td><td>Saves bandwidth and reduces paging lag</td></tr>
+          <tr><td>Document who has access to initiate pages</td><td>Prevent misuse</td></tr>
+          <tr><td>Test with various phone models</td><td>Not all phones handle paging equally</td></tr>
+          <tr><td>Use distinctive ring tones for intercom vs. calls</td><td>Helps users recognize the type of call</td></tr>
+        </tbody>
+      </table>
+      <h4>Compatibility</h4>
+      <ul>
+        <li>Works best with phones that support auto-answer via SIP headers</li>
+        <li>Common brands like Yealink, Polycom, Grandstream, and Sangoma support this out of the box</li>
+        <li>Some phones need provisioning templates to define paging behavior</li>
       </ul>
     </Section>
 
