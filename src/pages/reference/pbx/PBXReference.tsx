@@ -876,26 +876,329 @@ const PBXReference: React.FC = () => (
     </Section>
 
     <Section title="User Management">
+      <h3>What is User Management in FreePBX?</h3>
+      <p>The User Management module lets you:</p>
       <ul>
-        <li>Create User Portal (ARI/UCP) logins for voicemail, call logs, recordings.</li>
-        <li>Permissions determine what features users can access (e.g., fax, call control).</li>
+        <li>Link extensions to user accounts</li>
+        <li>Manage access to modules (like voicemail, call history, recordings)</li>
+        <li>Set UCP (User Control Panel) permissions</li>
+        <li>Assign users to groups with common roles</li>
+        <li>Define login credentials for UCP and REST-based services (e.g., Zulu, Sangoma Connect)</li>
       </ul>
+      <h4>Where to Configure</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Admin → User Management</b></li>
+      </ul>
+      <h4>Key Components</h4>
+      <ul>
+        <li><b>Users:</b> Each user is an account associated with one or more extensions, a username/password for login, and permissions for UCP modules.</li>
+        <li><b>Groups:</b> Define shared access profiles. Assign permissions at the group level (e.g., “All Users”, “Supervisors”, “Fax Users”, “Sales Team”).</li>
+        <li><b>UCP Access:</b> UCP = User Control Panel (<a href="https://yourpbxip/ucp" target="_blank" rel="noopener noreferrer">https://yourpbxip/ucp</a>)</li>
+      </ul>
+      <h4>What Can Users Do in UCP?</h4>
+      <ul>
+        <li>Listen to voicemail</li>
+        <li>Manage Find Me/Follow Me</li>
+        <li>View call logs and recordings</li>
+        <li>Chat (if enabled)</li>
+        <li>Control presence</li>
+        <li>View device status</li>
+        <li>Send/receive faxes (if module installed)</li>
+      </ul>
+      <h4>User Credentials</h4>
+      <ul>
+        <li>Username: Can be extension number or custom name</li>
+        <li>Password: For UCP and REST apps (e.g., Zulu, Sangoma Talk)</li>
+        <li>PIN: Optional, used in some IVR or voicemail scenarios</li>
+      </ul>
+      <h4>Linking Users to Extensions</h4>
+      <ul>
+        <li>A user may be associated with a primary extension, additional extensions (e.g., hotdesking users), and optional devices (softphones, desk phones)</li>
+        <li>Map users to extensions in <b>User Management → Users → Extension Assignment</b></li>
+      </ul>
+      <h4>Permissions & Module Access</h4>
+      <ul>
+        <li>Each user or group can be given access to UCP modules like:</li>
+        <ul>
+          <li>Voicemail</li>
+          <li>Call History (CDR)</li>
+          <li>Call Recording</li>
+          <li>Presence control</li>
+          <li>Conference rooms</li>
+          <li>Queues</li>
+          <li>Contacts</li>
+          <li>Phone apps (REST APIs)</li>
+        </ul>
+        <li>Admins can enable or restrict these per user or group.</li>
+      </ul>
+      <h4>Groups & Inheritance</h4>
+      <ul>
+        <li>Using groups helps scale your permissions:</li>
+        <ul>
+          <li>Create a group like Sales Team</li>
+          <li>Grant voicemail + call log access</li>
+          <li>Assign 10 users to that group</li>
+          <li>Any future permission changes apply to the whole group</li>
+        </ul>
+      </ul>
+      <h4>REST Integration (Sangoma Apps)</h4>
+      <ul>
+        <li>User Management ties into:</li>
+        <ul>
+          <li>Sangoma Connect (mobile softphone)</li>
+          <li>Zulu (desktop softphone/chat)</li>
+          <li>UCP chat</li>
+          <li>Presence syncing</li>
+        </ul>
+        <li>Permissions for these are set per user or group.</li>
+      </ul>
+      <h4>Related Modules</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Voicemail Admin</td><td>Manage voicemail settings globally</td></tr>
+          <tr><td>UCP</td><td>End-user portal to manage their extension and features</td></tr>
+          <tr><td>Phone Apps / REST API</td><td>Allows hotdesking, presence, queue control on phones</td></tr>
+          <tr><td>Feature Codes</td><td>Can restrict some features to users/groups</td></tr>
+        </tbody>
+      </table>
+      <h4>Real-World Example</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Role</th><th>Access Needs</th><th>Group</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Agent</td><td>Voicemail, CDR, call recordings</td><td>Agents</td></tr>
+          <tr><td>Supervisor</td><td>Voicemail, CDR, call recordings, queue stats</td><td>Supervisors</td></tr>
+          <tr><td>Admin</td><td>All access (Admin + UCP)</td><td>Admins</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>Assign Jane to Agents, link to extension 101</li>
+        <li>Assign Bob to Supervisors, link to extension 200</li>
+      </ul>
+      <h4>Common Mistakes</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Mistake</th><th>Consequence</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Not assigning user to extension</td><td>User has no voicemail or CDR access</td></tr>
+          <tr><td>Giving too many UCP permissions</td><td>Users can view other people's data</td></tr>
+          <tr><td>Not setting passwords</td><td>Users can’t log in</td></tr>
+          <tr><td>Not syncing group changes</td><td>Permissions don’t apply to new users</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use groups to manage permissions</td><td>Easier scaling and consistency</td></tr>
+          <tr><td>Document user credentials securely</td><td>For support and recovery</td></tr>
+          <tr><td>Disable unused users</td><td>Avoid security issues</td></tr>
+          <tr><td>Use strong passwords</td><td>Prevent UCP/web access abuse</td></tr>
+          <tr><td>Test UCP access before rollout</td><td>Ensure proper visibility for users</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Administrators">
+      <h3>What Is the Administrators Module?</h3>
+      <p>The Administrators module in FreePBX lets you:</p>
       <ul>
-        <li>Web GUI admins for FreePBX</li>
-        <li>Create multiple admin accounts with role-based access control</li>
-        <li>"Admin", "Superadmin", or custom groups</li>
+        <li>Create and manage admin user accounts for the FreePBX GUI</li>
+        <li>Assign role-based access control (RBAC) permissions</li>
+        <li>Define which modules each admin can view or modify</li>
+        <li>Secure the PBX from unauthorized changes</li>
       </ul>
+      <h4>Where to Configure</h4>
+      <ul>
+        <li>GUI path: <b>Admin → Administrators</b></li>
+      </ul>
+      <h4>Types of Admin Users</h4>
+      <ul>
+        <li><b>Superuser (All Access):</b> Can access and modify everything. Created during initial FreePBX setup. Cannot be restricted.</li>
+        <li><b>Restricted Admin:</b> Can be given access to specific modules only. Useful for helpdesk techs, voicemail-only admins, SIP trunk providers, support staff.</li>
+      </ul>
+      <h4>Administrator Fields</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Username</td><td>Used to log in to FreePBX admin portal</td></tr>
+          <tr><td>Password</td><td>Secure login credential</td></tr>
+          <tr><td>Administrator Type</td><td>Choose User Manager (for centralized management) or Legacy</td></tr>
+          <tr><td>Modules Access</td><td>Select which GUI modules this admin can access (e.g., only Voicemail Admin and Extensions)</td></tr>
+        </tbody>
+      </table>
+      <h4>Permissions Granularity</h4>
+      <p>You can give or restrict access to any module in FreePBX, including:</p>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Typical Access Case</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Extensions</td><td>Allowed for provisioning techs</td></tr>
+          <tr><td>Voicemail Admin</td><td>For voicemail-only helpdesk</td></tr>
+          <tr><td>Queues</td><td>For call center supervisor</td></tr>
+          <tr><td>System Admin</td><td>Typically not shared (critical settings)</td></tr>
+          <tr><td>Firewall</td><td>Security team only</td></tr>
+          <tr><td>CDR Reports</td><td>For billing or supervisors</td></tr>
+        </tbody>
+      </table>
+      <p>Each module can be set to: Allow, Deny, or (sometimes) View Only.</p>
+      <h4>Example Use Cases</h4>
+      <ul>
+        <li><b>Level 1 Helpdesk Admin:</b> Access to: Extensions, Voicemail Admin, UCP Logs. No access to: Trunks, System Admin, Firewall.</li>
+        <li><b>Call Center Supervisor:</b> Access to: Queues, CDR Reports, User Management. No access to: System modules or trunk settings.</li>
+        <li><b>SIP Carrier Support:</b> Access to: Trunks and Inbound/Outbound Routes. Denied access to users, voicemail, recordings.</li>
+      </ul>
+      <h4>Security Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Practice</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Never share the admin superuser login</td><td>Prevents audit trails and increases breach risk</td></tr>
+          <tr><td>Assign unique usernames per person</td><td>Enables role control and logging</td></tr>
+          <tr><td>Use strong passwords</td><td>Protect the web GUI</td></tr>
+          <tr><td>Audit admin access regularly</td><td>Remove unused or former employee accounts</td></tr>
+          <tr><td>Use least privilege</td><td>Grant access only to needed modules</td></tr>
+        </tbody>
+      </table>
+      <h4>User Manager Integration</h4>
+      <ul>
+        <li>If you enable User Manager-based administrators, you can manage admin accounts centrally, similar to regular users. This allows:</li>
+        <ul>
+          <li>Unified password control</li>
+          <li>Future LDAP/Active Directory integration</li>
+          <li>Cleaner separation between GUI and backend services</li>
+        </ul>
+      </ul>
+      <h4>Related Tools</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tool</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>User Management</td><td>Manages UCP logins for end-users</td></tr>
+          <tr><td>Firewall → Services</td><td>Ensure web GUI is not open to the whole internet</td></tr>
+          <tr><td>Fail2Ban</td><td>Blocks brute-force login attempts</td></tr>
+          <tr><td>System Admin</td><td>Lets you enable HTTPS-only GUI access</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Create named admin accounts per person</td><td>Avoid shared logins</td></tr>
+          <tr><td>Assign roles per job function</td><td>Enforces least-privilege principle</td></tr>
+          <tr><td>Deny access to System Admin and Trunks unless necessary</td><td>Protects core settings</td></tr>
+          <tr><td>Use 2FA via a reverse proxy or VPN</td><td>GUI doesn’t support native 2FA</td></tr>
+          <tr><td>Keep a secure offline record of superuser credentials</td><td>For recovery scenarios</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Asterisk CLI">
-      <p>Command-line interface to the Asterisk core (not FreePBX GUI).</p>
+      <h3>What is the Asterisk CLI?</h3>
+      <p>The Asterisk CLI is the live shell interface to the Asterisk core. It allows you to:</p>
       <ul>
-        <li>Use <code>asterisk -rvvv</code> to connect</li>
-        <li>Commands: <code>sip show peers</code>, <code>core show calls</code>, <code>dialplan show</code>, <code>reload</code></li>
+        <li>See real-time SIP or PJSIP traffic</li>
+        <li>Monitor active calls and channels</li>
+        <li>Reload specific modules</li>
+        <li>Trace dialplans</li>
+        <li>Debug issues not visible in the FreePBX GUI</li>
       </ul>
+      <h4>How to Access It</h4>
+      <ol>
+        <li>SSH into your FreePBX server</li>
+        <li>Run: <code>asterisk -rvvv</code></li>
+        <ul>
+          <li><b>-r:</b> Remote into running Asterisk instance</li>
+          <li><b>-vvv:</b> Verbosity level (more v’s = more output)</li>
+        </ul>
+        <li>You’ll enter the Asterisk CLI prompt: <code>*CLI&gt;</code></li>
+        <li>To exit, type: <code>exit</code></li>
+      </ol>
+      <h4>Commonly Used CLI Commands</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Command</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>core show channels</td><td>View active calls (live channels)</td></tr>
+          <tr><td>core show help</td><td>List all available CLI commands</td></tr>
+          <tr><td>sip show peers</td><td>List SIP peers (chan_sip)</td></tr>
+          <tr><td>pjsip show endpoints</td><td>List PJSIP devices and status</td></tr>
+          <tr><td>pjsip show registrations</td><td>See trunk registration status</td></tr>
+          <tr><td>core reload</td><td>Reload core modules (NOT the whole system)</td></tr>
+          <tr><td>dialplan show</td><td>View the current dialplan</td></tr>
+          <tr><td>module reload</td><td>Reload individual Asterisk modules</td></tr>
+          <tr><td>sip set debug on</td><td>Enable SIP packet tracing (chan_sip)</td></tr>
+          <tr><td>pjsip set logger on</td><td>Enable SIP packet tracing (PJSIP)</td></tr>
+          <tr><td>queue show</td><td>See queue members, callers, status</td></tr>
+          <tr><td>voicemail show users</td><td>List voicemail boxes per context</td></tr>
+          <tr><td>pri show spans</td><td>Check PRI/T1 interface (if DAHDI installed)</td></tr>
+        </tbody>
+      </table>
+      <h4>Real-Time Call Tracing Example</h4>
+      <ol>
+        <li>Log in: <code>asterisk -rvvv</code></li>
+        <li>Enable SIP logging: <code>pjsip set logger on</code></li>
+        <li>Place a test call and watch the SIP packets flow</li>
+        <li>To stop logging: <code>pjsip set logger off</code></li>
+        <li>For chan_sip: <code>sip set debug on</code> / <code>sip set debug off</code></li>
+      </ol>
+      <h4>CLI vs. FreePBX GUI</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Function</th><th>CLI</th><th>FreePBX GUI</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Real-time call monitoring</td><td>✅</td><td>❌</td></tr>
+          <tr><td>SIP packet debugging</td><td>✅</td><td>❌</td></tr>
+          <tr><td>Module reloads</td><td>✅</td><td>✅ (limited)</td></tr>
+          <tr><td>Dialplan tracing</td><td>✅</td><td>❌</td></tr>
+          <tr><td>CDR access</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Extension setup</td><td>❌</td><td>✅</td></tr>
+        </tbody>
+      </table>
+      <h4>Use Cases</h4>
+      <ul>
+        <li><b>Diagnose a SIP registration issue:</b> <code>pjsip show registrations</code></li>
+        <li><b>See active calls:</b> <code>core show channels</code></li>
+        <li><b>Reload dialplan after config change:</b> <code>dialplan reload</code></li>
+        <li><b>Troubleshoot an extension not ringing:</b> <code>pjsip show endpoint 101</code></li>
+      </ul>
+      <h4>Tips & Safety</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Avoid <code>core restart now</code> during business hours</td><td>It forcefully drops all calls</td></tr>
+          <tr><td>Use <code>reload</code> instead of restarting Asterisk</td><td>Less disruptive to active calls</td></tr>
+          <tr><td>Use verbosity wisely</td><td><code>-vvv</code> is usually enough; <code>-vvvvvv</code> can be overwhelming</td></tr>
+          <tr><td>Don’t make dialplan changes directly in CLI</td><td>Changes are overwritten by FreePBX GUI reloads</td></tr>
+          <tr><td>Watch for chan_sip vs pjsip confusion</td><td>Only one driver is active per extension or trunk</td></tr>
+        </tbody>
+      </table>
+      <h4>Example Diagnostic Flow</h4>
+      <ol>
+        <li>Log in: <code>asterisk -rvvv</code></li>
+        <li>Enable SIP logging: <code>pjsip set logger on</code></li>
+        <li>Watch for messages: INVITE, 100 Trying, 180 Ringing, 200 OK, ACK</li>
+        <li>Check active call: <code>core show channels</code></li>
+        <li>Hang up → turn off logging: <code>pjsip set logger off</code></li>
+      </ol>
     </Section>
 
     <Section title="System Admin">
