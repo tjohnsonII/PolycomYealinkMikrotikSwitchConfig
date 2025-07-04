@@ -665,11 +665,120 @@ const PBXReference: React.FC = () => (
     </Section>
 
     <Section title="Dial Plans & Outbound Routes">
+      <h3>What Is a Dial Plan?</h3>
+      <p>In FreePBX, a dial plan is defined by the Outbound Routes module. It specifies:</p>
       <ul>
-        <li><strong>Dial Plan:</strong> Rules that match user dialed numbers (e.g., 9|1NXXNXXXXXX to strip 9 and dial 11-digit US).</li>
-        <li><strong>Outbound Routes:</strong> Routes based on dialed pattern → send to correct trunk.</li>
-        <li>Can apply caller ID masking, failover trunks, and PIN codes.</li>
+        <li>What numbers users can dial</li>
+        <li>What trunk(s) to send those calls through</li>
+        <li>How to manipulate the number before sending it out</li>
       </ul>
+      <p>It's essentially the logic that tells FreePBX: “When a user dials X, send it through Trunk Y, and maybe strip or prepend digits.”</p>
+      <h3>What Is an Outbound Route?</h3>
+      <ul>
+        <li>Matches user-dialed numbers using patterns</li>
+        <li>Sends the call to one or more trunks</li>
+        <li>Optionally alters the number (strip, prepend)</li>
+        <li>Can restrict access based on extension, caller ID, or time</li>
+      </ul>
+      <h4>Where to Configure</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Connectivity → Outbound Routes</b></li>
+      </ul>
+      <h4>Key Configuration Settings</h4>
+      <ol>
+        <li><b>Route Name:</b> Internal label for the route (e.g., Local, Long Distance, Emergency)</li>
+        <li><b>Route CID (optional):</b> Overrides caller ID when using this route. Format: "Company Name" &lt;2485551234&gt;. Can be overridden by extension-level CID settings.</li>
+        <li><b>Trunk Sequence for Matched Routes:</b> Priority-ordered list of trunks to use. FreePBX tries Trunk 1 → if it fails, tries Trunk 2, etc.</li>
+        <li><b>Dial Patterns:</b> Define which dialed numbers will trigger this route.</li>
+      </ol>
+      <h5>Dial Pattern Fields</h5>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Prefix</td><td>What digits must appear before the pattern (and will be removed)</td></tr>
+          <tr><td>Match Pattern</td><td>The actual number pattern</td></tr>
+          <tr><td>CallerID Match (optional)</td><td>Restrict route to specific extensions or CID</td></tr>
+        </tbody>
+      </table>
+      <h5>Pattern Syntax</h5>
+      <ul>
+        <li><b>N</b> = 2–9</li>
+        <li><b>X</b> = 0–9</li>
+        <li><b>Z</b> = 1–9</li>
+        <li><b>.</b> = One or more digits (wildcard)</li>
+        <li><b>!</b> = Zero or more digits (dangerous, rarely used)</li>
+      </ul>
+      <h5>Examples</h5>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Pattern</th><th>Matches</th><th>Strips</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>9|1NXXNXXXXXX</td><td>9+1+10-digit number</td><td>9</td></tr>
+          <tr><td>NXXNXXXXXX</td><td>10-digit US numbers</td><td>None</td></tr>
+          <tr><td>911</td><td>Emergency calls</td><td>None</td></tr>
+          <tr><td>011.</td><td>International calls</td><td>None</td></tr>
+        </tbody>
+      </table>
+      <h5>Time Groups (Optional)</h5>
+      <p>Limit when this route is active. Example: Route only available during business hours.</p>
+      <h5>PIN Sets (Optional)</h5>
+      <p>Require a PIN to use this route. Great for long-distance or international calls.</p>
+      <h4>Example Outbound Route Table</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Route Name</th><th>Pattern</th><th>Trunk Used</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Local</td><td>NXXNXXXXXX</td><td>SIPStation</td><td>10-digit local</td></tr>
+          <tr><td>Long Distance</td><td>1NXXNXXXXXX</td><td>SIPStation</td><td>11-digit</td></tr>
+          <tr><td>Emergency</td><td>911</td><td>SIPStation</td><td>Route for 911 only</td></tr>
+          <tr><td>International</td><td>011.</td><td>Twilio_Int</td><td>011 + international dialing</td></tr>
+          <tr><td>Failover</td><td>.</td><td>Backup_Trunk</td><td>Catch-all fallback route</td></tr>
+        </tbody>
+      </table>
+      <h4>Outbound Route Priority</h4>
+      <p>Outbound routes are evaluated top-down. FreePBX stops at the first match, so order matters.</p>
+      <p><b>Best Practice:</b> Put specific routes (like 911 or emergency numbers) above catch-all routes.</p>
+      <h4>Advanced Dial Plan Use Case: Dialing Out With a 9 Prefix</h4>
+      <p>Users dial: 9 + 1 + 2485551234</p>
+      <p>Outbound Route: Pattern: 9|1NXXNXXXXXX. Strip 9, dial 1NXXNXXXXXX out the trunk. This mimics traditional phone systems where dialing 9 means "get an outside line."</p>
+      <h4>Dial Plan Debugging</h4>
+      <ul>
+        <li>Asterisk CLI: <code>asterisk -rvvv</code></li>
+        <li>Commands:
+          <ul>
+            <li><code>dialplan show outbound-allroutes</code></li>
+            <li><code>pjsip show history</code> or <code>sip set debug on</code></li>
+          </ul>
+        </li>
+        <li>CDR logs: Check what was dialed and where it went</li>
+      </ul>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Put 911 and 988 at the top</td><td>Avoid routing delays or failures</td></tr>
+          <tr><td>Match the dial format your users use</td><td>Strip or prepend digits accordingly</td></tr>
+          <tr><td>Use fallback trunks</td><td>Ensure continuity if a provider fails</td></tr>
+          <tr><td>Document your dial patterns</td><td>For compliance and debugging</td></tr>
+          <tr><td>Test new routes with a test extension</td><td>Prevent disruptions during rollout</td></tr>
+        </tbody>
+      </table>
+      <h4>Summary: Dial Plan vs. Outbound Route</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Feature</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Dial Plan</td><td>The logic for interpreting dialed numbers</td></tr>
+          <tr><td>Outbound Route</td><td>A FreePBX object that contains dial plan patterns and routes calls to trunks</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Paging & Intercom">
