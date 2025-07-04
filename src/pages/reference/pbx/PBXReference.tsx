@@ -1780,10 +1780,94 @@ WHERE LinkedID = '1688650400.1234';
     </Section>
 
     <Section title="Parking">
+      <h3>What is the Parking Application in FreePBX?</h3>
+      <p>Call Parking allows users to put a call on hold in a shared “parking lot”, so that any other extension can pick it up — similar to placing a caller on hold, but system-wide.</p>
       <ul>
-        <li>Park a call (e.g., on “701”), then retrieve from another phone</li>
-        <li>Parking lots can have timeouts and return destinations</li>
-        <li>Advanced features in commercial module</li>
+        <li>Place a caller into a “parking slot” (e.g., 71, 72, 73…)</li>
+        <li>Announce "Call on 71!" over intercom or paging</li>
+        <li>Let someone else dial 71 to retrieve the parked call</li>
+        <li>Anyone can pick up the call, not just a specific extension</li>
+      </ul>
+      <h4>Where to Find It</h4>
+      <ul>
+        <li>FreePBX GUI: <b>Applications → Parking</b></li>
+      </ul>
+      <h4>Key Features & Options</h4>
+      <ul>
+        <li><b>Parking Lot Extension:</b> Number to dial/transfer to park a call (default: 70). Example: Transfer to 70 → Asterisk parks in slot 71 and announces "Call parked on 71"</li>
+        <li><b>Parking Slots:</b> Range of slots (e.g., 71–75). Each slot is a parked call; others can dial the slot to retrieve.</li>
+        <li><b>Parked Music on Hold:</b> Music played to caller while waiting. Can be department-specific.</li>
+        <li><b>Timeout and Return Destination:</b> If not picked up in time, call returns to parker or fallback (e.g., voicemail, receptionist).</li>
+        <li><b>Number of Slots:</b> Default is 5 (71–75), can be expanded for high call volume.</li>
+        <li><b>BLF Integration:</b> Phones can monitor slots with BLF keys (red = occupied, green = free). Pressing the key dials the slot.</li>
+      </ul>
+      <h4>How the Flow Works</h4>
+      <ol>
+        <li>Receptionist answers call from customer</li>
+        <li>Receptionist presses Transfer → dials 70</li>
+        <li>System responds: “Call parked at 71”</li>
+        <li>Receptionist pages “John, you have a call on 71”</li>
+        <li>John picks up his phone, dials 71 → connects to the caller</li>
+      </ol>
+      <h4>Permissions</h4>
+      <ul>
+        <li>Any user/extension can park or retrieve a call (unless restricted via custom dialplan)</li>
+        <li>Access is usually unrestricted on internal systems</li>
+      </ul>
+      <h4>Advanced Features (Parking Pro)</h4>
+      <ul>
+        <li>Multiple parking lots (per department, site, or group)</li>
+        <li>Custom slot ranges (e.g., 81–89 for Support, 91–99 for Sales)</li>
+        <li>Directed call parking (send to a specific slot like ##71)</li>
+        <li>Customize lot-specific timeouts, music, and return behavior</li>
+      </ul>
+      <h4>Real-World Use Cases</h4>
+      <ul>
+        <li><b>Office Reception:</b> Receptionist parks calls while locating staff; announces slot over intercom or BLF lights up</li>
+        <li><b>Overflow Parking:</b> Queue agents park the call to take a break or transfer to a specialist later</li>
+        <li><b>Warehouse or Shop Floor:</b> Staff can retrieve calls from any phone using slot number</li>
+      </ul>
+      <h4>Common Pitfalls</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Pitfall</th><th>Solution</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Caller hangs up after timeout</td><td>Set a shorter timeout and return to receptionist</td></tr>
+          <tr><td>Staff forget slot number</td><td>Use phone BLF keys labeled Park 71, Park 72, etc.</td></tr>
+          <tr><td>Too few slots</td><td>Increase slot count or enable Parking Pro</td></tr>
+          <tr><td>Wrong pickup attempt</td><td>Train users not to dial the parking lot (70), but the slot (71–75)</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Practice</th><th>Reason</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use BLF keys to monitor slots</td><td>Easier than remembering slot numbers</td></tr>
+          <tr><td>Announce slot number clearly</td><td>Prevents caller abandonment</td></tr>
+          <tr><td>Set appropriate timeout + return destination</td><td>Avoid lost or forgotten parked calls</td></tr>
+          <tr><td>Standardize parking use in staff training</td><td>Ensures smooth call handoff</td></tr>
+          <tr><td>Use multiple lots (Pro) for large orgs</td><td>Isolates call parking by team or site</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Modules and Features</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Paging and Intercom</td><td>Announce parked calls</td></tr>
+          <tr><td>Call Flow Control</td><td>Override return destinations during emergencies</td></tr>
+          <tr><td>Voicemail</td><td>Used as fallback if parked call times out</td></tr>
+          <tr><td>Time Conditions</td><td>Route return destination based on business hours</td></tr>
+        </tbody>
+      </table>
+      <h4>CLI Commands</h4>
+      <ul>
+        <li>To view parked calls: <code>asterisk -rvvv</code> then <code>parkedcalls show</code></li>
+        <li>To see a specific slot status: <code>asterisk -rx "core show hints"</code></li>
       </ul>
     </Section>
 
