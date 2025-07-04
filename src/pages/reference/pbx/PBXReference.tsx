@@ -43,31 +43,12 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   );
 };
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 
 const PBXReference: React.FC = () => {
   const [search, setSearch] = useState('');
 
-  // Helper to filter sections by search
-  const filterSection = (title: string, content: string) => {
-    if (!search.trim()) return true;
-    const s = search.toLowerCase();
-    return title.toLowerCase().includes(s) || content.toLowerCase().includes(s);
-  };
-
-  // Section content as array for search
-  const sections = [
-    {
-      title: 'Inbound Routes',
-      content: `Inbound Routes control how FreePBX handles incoming calls from external sources — usually via SIP trunks. These routes match on one or more conditions (like the dialed number or caller ID), and then send the call to a destination like: ...existing code...`,
-      jsx: (
-        <Section title="Inbound Routes">
-          {/* ...existing code for Inbound Routes... */}
-        </Section>
-      ),
-    },
-    // ...repeat for each section, using the section title and a string summary of the content for search...
-  ];
+  // ...existing code...
 
   // For now, render the search field and the original content below
   return (
