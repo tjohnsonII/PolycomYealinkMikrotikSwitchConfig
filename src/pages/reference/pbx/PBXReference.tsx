@@ -1397,21 +1397,187 @@ const PBXReference: React.FC = () => (
     </Section>
 
     <Section title="CEL (Call Event Logging)">
+      <h3>What is CEL?</h3>
+      <p>CEL (Call Event Logging) tracks every step of a call’s lifecycle in Asterisk. It logs events like:</p>
       <ul>
-        <li>More granular than CDR</li>
-        <li>Logs every event in a call (ring, answer, transfer, hangup)</li>
-        <li>Must be enabled and used with caution due to size</li>
+        <li>Call start</li>
+        <li>Ringing</li>
+        <li>Answered</li>
+        <li>Transferred</li>
+        <li>Parked</li>
+        <li>Hung up</li>
       </ul>
+      <p>This allows you to see how a call flowed, pinpoint where it failed or routed, and track complex events like blind transfers, attended transfers, parking, and bridges.</p>
+      <h4>Where to Access CEL in FreePBX</h4>
+      <ul>
+        <li>GUI path: <b>Reports → Asterisk Logfiles → CEL Reports</b></li>
+        <li>Note: The CEL module must be enabled in both Asterisk and the FreePBX GUI. It’s often not enabled by default on some custom installs.</li>
+      </ul>
+      <h4>What’s in a CEL Record?</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>EventTime</td><td>Timestamp of the specific event</td></tr>
+          <tr><td>EventType</td><td>Type of event (e.g., CHAN_START, ANSWER, BRIDGE_ENTER)</td></tr>
+          <tr><td>UserField</td><td>Usually blank unless set manually</td></tr>
+          <tr><td>CallerIDNum / Name</td><td>Caller ID info at that event moment</td></tr>
+          <tr><td>UniqueID</td><td>Asterisk's unique call identifier (links CDR & CEL together)</td></tr>
+          <tr><td>LinkedID</td><td>ID shared across related calls (e.g., in transfers)</td></tr>
+          <tr><td>CID Name/Number</td><td>Caller ID at that point</td></tr>
+          <tr><td>AppName</td><td>Application executed (e.g., Dial, Playback)</td></tr>
+          <tr><td>Context / Extension</td><td>Where in the dialplan the event occurred</td></tr>
+          <tr><td>Channel / Peer</td><td>Which SIP/PJSIP/local channel was involved</td></tr>
+        </tbody>
+      </table>
+      <h4>Common CEL Event Types</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>EventType</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>CHAN_START</td><td>Channel created (call began)</td></tr>
+          <tr><td>ANSWER</td><td>Call was answered</td></tr>
+          <tr><td>BRIDGE_ENTER</td><td>Call entered a bridge (two-way media started)</td></tr>
+          <tr><td>BRIDGE_EXIT</td><td>Call left the bridge</td></tr>
+          <tr><td>TRANSFER</td><td>Call was transferred</td></tr>
+          <tr><td>PARK_START</td><td>Call was parked</td></tr>
+          <tr><td>HANGUP</td><td>Channel was hung up</td></tr>
+        </tbody>
+      </table>
+      <h4>CEL vs. CDR: Key Differences</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Feature</th><th>CDR</th><th>CEL</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>One row per call</td><td>✅</td><td>❌</td></tr>
+          <tr><td>Tracks transfers and events</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Stores ring time, answer time, bridge time separately</td><td>❌</td><td>✅</td></tr>
+          <tr><td>Best for reporting</td><td>✅</td><td>🚫 (too granular)</td></tr>
+          <tr><td>Best for diagnostics and tracing</td><td>🚫</td><td>✅</td></tr>
+        </tbody>
+      </table>
+      <h4>Use Case Examples</h4>
+      <ul>
+        <li><b>Troubleshooting a Transfer Issue:</b> CDR only shows call start → end; CEL shows ANSWER, TRANSFER, BRIDGE_ENTER, HANGUP, and timing.</li>
+        <li><b>Auditing Call Flow for Compliance:</b> CEL reveals the entire timeline, second-by-second, including answer, transfer, hold, park, etc.</li>
+      </ul>
+      <h4>Database and Backend</h4>
+      <p>CEL records are stored in the <code>asteriskcdrdb.cel</code> table.</p>
+      <pre style={{ background: '#f7f7f7', padding: 8, borderRadius: 4 }}>
+SELECT EventTime, EventType, CallerIDNum, Extension, Application 
+FROM cel 
+WHERE LinkedID = '1688650400.1234';
+      </pre>
+      <p>You can join this with CDR data via <code>uniqueid</code> or <code>linkedid</code>.</p>
+      <h4>Enabling CEL (if not already enabled)</h4>
+      <ol>
+        <li>In FreePBX: Go to Module Admin, ensure CEL is installed and enabled</li>
+        <li>In <code>cel.conf</code> and <code>cel_mysql.conf</code>: set <b>enabled=yes</b> and configure MySQL credentials</li>
+        <li>Restart Asterisk: <code>fwconsole restart</code></li>
+      </ol>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use CDR for reports, CEL for troubleshooting</td><td>CDR is high-level; CEL is event-level</td></tr>
+          <tr><td>Link CDR and CEL with linkedid</td><td>Tracks multi-leg calls and transfers</td></tr>
+          <tr><td>Filter by EventType to narrow analysis</td><td>Focus only on BRIDGE, ANSWER, HANGUP, etc.</td></tr>
+          <tr><td>Retain only as needed</td><td>CEL grows fast — archive or purge for disk space</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Modules and Tools</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Module</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>CDR Reports</td><td>Summary-level call history</td></tr>
+          <tr><td>Asterisk Logfiles</td><td>View Asterisk debug logs</td></tr>
+          <tr><td>Asterisk CLI</td><td>Real-time CLI monitoring of calls</td></tr>
+          <tr><td>Queue Reports</td><td>For tracking queue-specific call flows (commercial)</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Asterisk Info">
-      <p>GUI access to real-time Asterisk stats:</p>
+      <h3>What is the Asterisk Info Module?</h3>
+      <p>The Asterisk Info module in FreePBX provides a real-time dashboard of the Asterisk system's internals. It’s a GUI wrapper for many core Asterisk CLI commands, giving you insight into how the PBX is functioning without needing to drop to the terminal.</p>
+      <h4>Where to Find It</h4>
       <ul>
-        <li>SIP peers</li>
-        <li>Registrations</li>
-        <li>Channels</li>
-        <li>System status</li>
+        <li>FreePBX GUI: <b>Reports → Asterisk Info</b></li>
       </ul>
+      <h4>What Does Asterisk Info Show?</h4>
+      <ol>
+        <li><b>System Information:</b> Asterisk version, uptime, active calls/channels, load average. <br /><i>CLI: core show uptime, core show calls</i></li>
+        <li><b>SIP / PJSIP Peers:</b> Lists endpoints, registration status, IPs, ports, latency. <br /><i>CLI: pjsip show endpoints, sip show peers</i></li>
+        <li><b>IAX2 Peers:</b> IAX2 endpoints, status, connection details. <br /><i>CLI: iax2 show peers</i></li>
+        <li><b>Registries:</b> Outbound trunk registrations. <br /><i>CLI: pjsip show registrations, sip show registry</i></li>
+        <li><b>Channels:</b> Real-time list of active channels (calls in progress), source/destination, codec, duration. <br /><i>CLI: core show channels</i></li>
+        <li><b>Codecs:</b> Available codecs, formats, priority order. <br /><i>CLI: core show codecs</i></li>
+        <li><b>Dialplan:</b> Current dialplan contexts, call routing. <br /><i>CLI: dialplan show</i></li>
+        <li><b>Modules:</b> Loaded Asterisk modules, status, dependencies. <br /><i>CLI: module show</i></li>
+        <li><b>Applications:</b> Dialplan applications available. <br /><i>CLI: core show applications</i></li>
+        <li><b>Functions:</b> Asterisk functions for dialplan logic. <br /><i>CLI: core show functions</i></li>
+      </ol>
+      <h4>Registries Table Example</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Field</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Username</td><td>SIP or PJSIP username</td></tr>
+          <tr><td>Domain</td><td>Provider host</td></tr>
+          <tr><td>Refresh Time</td><td>Time before re-registration</td></tr>
+          <tr><td>State</td><td>Registered, Request Sent, Rejected, etc.</td></tr>
+        </tbody>
+      </table>
+      <h4>Use Cases and Examples</h4>
+      <ul>
+        <li><b>Verify Phone Registration:</b> Go to PJSIP/SIP Peers → Check if extension 101 is listed and reachable.</li>
+        <li><b>Check Trunk Registration:</b> Registries tab → Look for Registered status on your SIP trunk.</li>
+        <li><b>Monitor Live Calls:</b> Channels tab → See real-time calls, duration, and codec.</li>
+        <li><b>Debug Codec Issues:</b> Codecs tab → Ensure both phones/trunks support G711, G722, etc.</li>
+      </ul>
+      <h4>Limitations</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Limitation</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Read-only</td><td>Cannot execute changes — just view status</td></tr>
+          <tr><td>Less detailed than CLI for real-time issues</td><td>CLI has live SIP trace and event logs</td></tr>
+          <tr><td>May not refresh instantly</td><td>Manual page refresh needed for updates</td></tr>
+        </tbody>
+      </table>
+      <h4>Best Practices</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tip</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Use for quick health checks</td><td>Especially useful for NOC or helpdesk tiers</td></tr>
+          <tr><td>Monitor channels before updates</td><td>Avoid reboots or reloads during active calls</td></tr>
+          <tr><td>Cross-check with CLI when deeper debugging is needed</td><td>GUI gives overview; CLI provides event-level trace</td></tr>
+          <tr><td>Combine with CDR/CEL for historical call analysis</td><td>Asterisk Info is real-time only</td></tr>
+        </tbody>
+      </table>
+      <h4>Related Tools</h4>
+      <table style={{ borderCollapse: 'collapse', marginBottom: 8 }}>
+        <thead>
+          <tr><th>Tool</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Asterisk CLI</td><td>Full command-line access and diagnostics</td></tr>
+          <tr><td>CDR Reports</td><td>Historical call summary</td></tr>
+          <tr><td>CEL Reports</td><td>Event-by-event call tracking</td></tr>
+          <tr><td>System Admin</td><td>Server-level status (CPU, disk, etc.)</td></tr>
+        </tbody>
+      </table>
     </Section>
 
     <Section title="Voicemail Admin">
