@@ -104,7 +104,7 @@ set udplite disabled=yes
 set dccp disabled=yes
 set sctp disabled=yes
 /ip route
-add distance=1 gateway={{gateway}} (generally provided by customer)
+add distance=1 gateway={{gateway}}
 /ip service
 set telnet address=66.103.225.120/29,216.234.96.0/23,192.168.88.0/24
 set ftp disabled=yes
