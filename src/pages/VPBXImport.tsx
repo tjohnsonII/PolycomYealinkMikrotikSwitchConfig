@@ -10,14 +10,58 @@ import { useRef, useState } from 'react';
  * - Dynamic column management (add/delete columns)
  * - Dynamic row management (add/delete rows)
  * - Real-time editing of cell data
+ * - Dropdown selection for phone models (ensures valid model selection)
  * - Responsive table design optimized for 100% browser zoom
  * - Word-wrapped column headers for better readability
+ * 
+ * Special UI Elements:
+ * - "model" column uses a dropdown with predefined phone models from phone_models.txt
+ * - All other columns use standard text inputs
  * 
  * Table sizing strategy:
  * - Data columns: 100px width (allows ~21 columns + actions to fit on standard screens)
  * - Actions column: 80px width
  * - Total estimated width: ~2,180px (fits most 1920px+ screens at 100% zoom)
  */
+
+// Phone model options for the dropdown - imported from phone_models.txt
+const PHONE_MODELS = [
+  "VVX400",
+  "VVX500", 
+  "VVX600",
+  "SIP-T46S",
+  "SIP-T46U",
+  "SIP-T48S",
+  "SIP-T48U",
+  "T54W",
+  "T57W",
+  "56h Dect w/ 60p Base",
+  "56h Dect w/ 76p Base",
+  "56h Dect Handset",
+  "Stand Alone Softphone",
+  "SideCar Entry",
+  "Trio 8500 Conference",
+  "SSIP7000",
+  "SSIP700-Mic",
+  "SSIP6000",
+  "SSIP330",
+  "HT813 ATA",
+  "8180 IP Loud Ringer",
+  "8301 Paging Server",
+  "8186",
+  "W56P",
+  "W60P",
+  "CP-7842-3PCC",
+  "CP-8832-K9",
+  "CP-7832-3PCC",
+  "CP-8832-3PCC",
+  "SPA-122 ATA",
+  "CP-7811-3PCC",
+  "CP960",
+  "CP9200",
+  "D230",
+  "i12 Door Strike"
+];
 
 // Default VPBX fields - these represent common Virtual PBX configuration fields
 // Note: VPBX includes additional fields like "mac" and "model" for device management
@@ -58,10 +102,11 @@ const VPBXImport: React.FC = () => {
   const tableContainerRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Handles changes to individual cell inputs
+   * Handles changes to individual cell inputs and dropdowns
    * Updates the specific row and field with the new value
+   * Supports both input elements and select dropdowns
    */
-  const handleVpbxChange = (idx: number, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVpbxChange = (idx: number, e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setVpbxRows(rows => rows.map((row, i) => i === idx ? { ...row, [name]: value } : row));
   };
@@ -316,21 +361,52 @@ const VPBXImport: React.FC = () => {
                     verticalAlign: 'middle',
                     boxSizing: 'border-box'
                   }}>
-                    {/* Input field for editing cell data */}
-                    <input
-                      name={f}
-                      value={row[f] || ''}
-                      onChange={e => handleVpbxChange(idx, e)}
-                      style={{ 
-                        width: '95%', // Slight margin within cell
-                        padding: '5px',
-                        border: '1px solid #ddd',
-                        borderRadius: '3px',
-                        fontSize: '14px',
-                        textAlign: 'center',
-                        boxSizing: 'border-box'
-                      }}
-                    />
+                    {/* 
+                      Conditional rendering: 
+                      - Use dropdown for "model" column to ensure valid phone model selection
+                      - Use regular input for all other columns 
+                    */}
+                    {f === 'model' ? (
+                      <select
+                        name={f}
+                        value={row[f] || ''}
+                        onChange={e => handleVpbxChange(idx, e as any)}
+                        style={{ 
+                          width: '95%', // Slight margin within cell
+                          padding: '5px',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          fontSize: '14px',
+                          textAlign: 'center',
+                          boxSizing: 'border-box',
+                          backgroundColor: 'white',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="">Select Model</option>
+                        {PHONE_MODELS.map(model => (
+                          <option key={model} value={model}>
+                            {model}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        name={f}
+                        value={row[f] || ''}
+                        onChange={e => handleVpbxChange(idx, e)}
+                        style={{ 
+                          width: '95%', // Slight margin within cell
+                          padding: '5px',
+                          border: '1px solid #ddd',
+                          borderRadius: '3px',
+                          fontSize: '14px',
+                          textAlign: 'center',
+                          boxSizing: 'border-box'
+                        }}
+                        placeholder={`Enter ${f}`}
+                      />
+                    )}
                   </td>
                 ))}
                 
