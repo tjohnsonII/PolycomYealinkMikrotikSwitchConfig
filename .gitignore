@@ -22,6 +22,11 @@ dist-ssr
 backend/users.json
 backend/*.log
 
+# VPN configuration files (never commit these!)
+*.ovpn
+backend/*.ovpn
+/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/*.ovpn
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
