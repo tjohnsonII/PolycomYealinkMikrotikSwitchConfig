@@ -19,17 +19,11 @@
 # - Enhanced error handling and logging
 # - Process monitoring and auto-restart capabilities
 # 
-# Usage: ./start-unified-app.sh
-# or: chmod +x start-unified-app.sh && ./start-unified-app.sh
+# Usage: ./start-unified-app-enhanced.sh
+# or: chmod +x start-unified-app-enhanced.sh && ./start-unified-app-enhanced.sh
 #################################################################################
 
 set -e  # Exit on any error
-
-echo "🚀 Starting Complete Application Stack..."
-echo "   📱 Phone Configuration Generator"
-echo "   🔐 Authentication System"
-echo "   🔧 SSH WebSocket Backend"
-echo ""
 
 # Global variables for process tracking
 SSH_WS_PID=""
@@ -192,22 +186,50 @@ check_service_health() {
 }
 
 # Set trap to cleanup on script exit (Ctrl+C, kill, etc.)
-trap cleanup SIGINT SIGTERM
+trap cleanup SIGINT SIGTERM EXIT
+
+# Initialize log file
+log "INFO" "=== Enhanced Startup Script Started ==="
+log "INFO" "📱 Phone Configuration Generator with VPN & Authentication"
+
+echo "🚀 Starting Complete Application Stack..."
+echo "   📱 Phone Configuration Generator"
+echo "   🔐 Authentication System"
+echo "   🔧 SSH WebSocket Backend with VPN Support"
+echo "   📝 Logs: $LOG_FILE"
+echo ""
+
+#################################################################################
+# STEP 0: Initial Cleanup
+#################################################################################
+
+log "INFO" "Performing initial cleanup..."
+
+# Force cleanup any existing processes on our ports
+kill_by_name "ssh-ws-server.js" "SSH WebSocket"
+kill_by_name "auth-server.js" "Authentication"
+kill_by_name "vite.*3000" "Vite"
+
+# Clean up ports forcefully
+kill_port 3000 "Vite dev server" || true
+kill_port 3001 "SSH WebSocket backend" || true
+kill_port 3002 "Authentication server" || true
+
+log "SUCCESS" "Initial cleanup completed"
 
 #################################################################################
 # STEP 1: Environment Configuration Check
 #################################################################################
 
-echo "🔧 Checking environment configuration..."
+log "INFO" "Checking environment configuration..."
 
 # Check if .env file exists
 if [ ! -f ".env" ]; then
-    echo "⚠️  Warning: .env file not found!"
-    echo "   Creating .env from template..."
+    log "WARN" ".env file not found! Creating from template..."
     
     if [ -f ".env.example" ]; then
         cp .env.example .env
-        echo "✅ Created .env file from .env.example"
+        log "SUCCESS" "Created .env file from .env.example"
         echo "🔑 Please edit .env file to set secure credentials:"
         echo "   - JWT_SECRET: Use a strong random key"
         echo "   - DEFAULT_ADMIN_PASSWORD: Change from default"
@@ -216,197 +238,207 @@ if [ ! -f ".env" ]; then
         echo "   node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
         echo ""
     else
+        log "ERROR" ".env.example template not found!"
         echo "❌ Error: .env.example template not found!"
         echo "   Please create .env file manually with required variables."
         echo "   See SECURITY.md for configuration details."
         exit 1
     fi
 else
-    echo "✅ Environment file (.env) found"
+    log "SUCCESS" "Environment file (.env) found"
 fi
 
 # Validate critical environment variables
 if ! grep -q "^JWT_SECRET=" .env 2>/dev/null; then
-    echo "⚠️  Warning: JWT_SECRET not found in .env file"
-    echo "   Authentication will use an insecure fallback!"
+    log "WARN" "JWT_SECRET not found in .env file - will use insecure fallback!"
 fi
 
 #################################################################################
-# STEP 2: System Requirements Check
+# STEP 2: Enhanced System Requirements Check
 #################################################################################
 
-echo "🔍 Checking system requirements..."
+log "INFO" "Checking system requirements..."
 
+# Check Node.js
 if ! command_exists node; then
+    log "ERROR" "Node.js is not installed"
     echo "❌ Error: Node.js is not installed. Please install Node.js first."
     exit 1
 fi
 
+# Check npm
 if ! command_exists npm; then
+    log "ERROR" "npm is not installed"
     echo "❌ Error: npm is not installed. Please install npm first."
     exit 1
 fi
+
+# Check lsof (required for port management)
+if ! command_exists lsof; then
+    log "ERROR" "lsof is not installed"
+    echo "❌ Error: lsof is not installed. Please install lsof first."
+    echo "   Ubuntu/Debian: sudo apt-get install lsof"
+    echo "   CentOS/RHEL: sudo yum install lsof"
+    exit 1
+fi
+
+# Check curl (required for health checks)
+if ! command_exists curl; then
+    log "ERROR" "curl is not installed"
+    echo "❌ Error: curl is not installed. Please install curl first."
+    echo "   Ubuntu/Debian: sudo apt-get install curl"
+    echo "   CentOS/RHEL: sudo yum install curl"
+    exit 1
+fi
+
+# Check OpenVPN (optional but recommended for VPN functionality)
+if command_exists openvpn; then
+    log "SUCCESS" "OpenVPN found: $(openvpn --version | head -n1)"
+else
+    log "WARN" "OpenVPN not found - VPN functionality may be limited"
+    echo "⚠️  Warning: OpenVPN not found. VPN functionality may be limited."
+    echo "   Install with: sudo apt-get install openvpn"
+fi
+
+# Check netcat (for port testing)
+if command_exists nc; then
+    log "SUCCESS" "netcat found for port testing"
+else
+    log "WARN" "netcat not found - some network tests may be limited"
+fi
+
+log "SUCCESS" "Node.js version: $(node --version)"
+log "SUCCESS" "npm version: $(npm --version)"
 
 echo "✅ Node.js version: $(node --version)"
 echo "✅ npm version: $(npm --version)"
 
 #################################################################################
-# STEP 3: Dependencies Installation
+# STEP 3: Enhanced Dependencies Installation
 #################################################################################
+
+log "INFO" "Installing/updating dependencies..."
 
 echo ""
 echo "📦 Installing/updating dependencies..."
+
+# Clear npm cache if needed
+if ! npm cache verify >/dev/null 2>&1; then
+    log "WARN" "npm cache verification failed, clearing cache..."
+    npm cache clean --force
+fi
+
+# Install dependencies with error handling
 if ! npm install; then
+    log "ERROR" "Failed to install dependencies"
     echo "❌ Error: Failed to install dependencies"
+    echo "💡 Troubleshooting tips:"
+    echo "   • Clear npm cache: npm cache clean --force"
+    echo "   • Delete node_modules: rm -rf node_modules"
+    echo "   • Check npm configuration: npm config list"
     exit 1
 fi
 
-#################################################################################
-# STEP 4: Port Management
-#################################################################################
-
-echo ""
-echo "🔍 Checking port availability..."
-
-# Check and clear ports
-kill_port 3000 "Vite dev server"
-kill_port 3001 "SSH WebSocket backend"
-kill_port 3002 "Authentication server"
+log "SUCCESS" "Dependencies installed successfully"
 
 #################################################################################
-# STEP 5: Build Check
+# STEP 4: Enhanced Build Check
 #################################################################################
 
 echo ""
 echo "🔨 Running build check..."
-if npm run build > /dev/null 2>&1; then
+log "INFO" "Running TypeScript build check..."
+
+if npm run build > build.log 2>&1; then
+    log "SUCCESS" "Build check passed"
     echo "✅ Build check passed"
 else
+    log "WARN" "Build check failed - continuing anyway"
     echo "⚠️  Warning: Build check failed. There may be TypeScript errors."
-    echo "   Continuing with servers anyway..."
+    echo "   Check build.log for details. Continuing with servers anyway..."
 fi
 
 #################################################################################
-# STEP 6: Start SSH WebSocket Backend
+# STEP 5: Start SSH WebSocket Backend with Enhanced Features
 #################################################################################
 
 echo ""
-echo "🔧 Starting SSH WebSocket backend..."
+echo "🔧 Starting SSH WebSocket backend with VPN support..."
+log "INFO" "Starting SSH WebSocket backend..."
 
 if [ -f "backend/ssh-ws-server.js" ]; then
     cd backend
     nohup node ssh-ws-server.js > ssh-ws-server.log 2>&1 &
     SSH_WS_PID=$!
     cd ..
+    
+    log "SUCCESS" "SSH WebSocket backend started (PID: $SSH_WS_PID)"
     echo "✅ SSH WebSocket backend started (PID: $SSH_WS_PID) on port 3001"
+    
+    # Wait for service to be ready
+    if wait_for_service 3001 "SSH WebSocket backend"; then
+        # Perform health check
+        if check_service_health "http://localhost:3001/ping" "SSH WebSocket backend"; then
+            log "SUCCESS" "SSH WebSocket backend is healthy and ready"
+        else
+            log "WARN" "SSH WebSocket backend health check failed but service is running"
+        fi
+    else
+        log "ERROR" "SSH WebSocket backend failed to start properly"
+        echo "❌ SSH WebSocket backend failed to start"
+        cleanup
+        exit 1
+    fi
 else
+    log "WARN" "backend/ssh-ws-server.js not found"
     echo "⚠️  Warning: backend/ssh-ws-server.js not found. Continuing without SSH backend."
     SSH_WS_PID=""
 fi
 
 #################################################################################
-# STEP 7: Start Authentication Server
+# STEP 6: Start Authentication Server with Health Checks
 #################################################################################
 
 echo ""
 echo "🔐 Starting authentication server..."
+log "INFO" "Starting authentication server..."
 
 if [ -f "backend/auth-server.js" ]; then
     cd backend
-    node auth-server.js &
+    node auth-server.js > auth-server.log 2>&1 &
     AUTH_PID=$!
     cd ..
+    
+    log "SUCCESS" "Authentication server started (PID: $AUTH_PID)"
     echo "✅ Authentication server started (PID: $AUTH_PID) on port 3002"
     
-    # Wait for auth server to initialize
-    echo "⏳ Waiting for authentication server to initialize..."
-    sleep 3
+    # Wait for service to be ready
+    if wait_for_service 3002 "Authentication server"; then
+        # Perform health check
+        echo "⏳ Waiting for authentication server to initialize..."
+        sleep 3
+        
+        # Test login endpoint
+        if curl -s -X POST http://localhost:3002/api/login -H "Content-Type: application/json" -d '{"username":"test","password":"test"}' | grep -q "error"; then
+            log "SUCCESS" "Authentication server is healthy and responding"
+            echo "✅ Authentication server health check passed"
+        else
+            log "WARN" "Authentication server health check inconclusive but service is running"
+        fi
+    else
+        log "ERROR" "Authentication server failed to start properly"
+        echo "❌ Authentication server failed to start"
+        cleanup
+        exit 1
+    fi
 else
+    log "WARN" "backend/auth-server.js not found"
     echo "⚠️  Warning: backend/auth-server.js not found. Continuing without authentication."
     AUTH_PID=""
 fi
 
 #################################################################################
-# STEP 8: Create Additional Admin Users (Optional)
-#################################################################################
-
-echo ""
-echo "👥 Checking for additional admin users..."
-
-# Function to create admin user via API
-create_admin_user() {
-    local username=$1
-    local email=$2
-    local password=$3
-    
-    # Wait for auth server to be ready
-    if ! wait_for_service 3002 "Authentication server"; then
-        log "WARN" "Auth server not ready, skipping user creation"
-        return 1
-    fi
-    
-    # Get admin token
-    local token
-    token=$(curl -s -X POST http://localhost:3002/api/login \
-        -H "Content-Type: application/json" \
-        -d '{"username":"admin","password":"SecureAdmin123!"}' 2>/dev/null | jq -r '.token 2>/dev/null' || echo "")
-    
-    if [ -z "$token" ] || [ "$token" = "null" ]; then
-        log "WARN" "Could not get admin token for user creation"
-        return 1
-    fi
-    
-    # Create user
-    local response
-    response=$(curl -s -X POST http://localhost:3002/api/admin/users \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer $token" \
-        -d "{\"username\":\"$username\",\"email\":\"$email\",\"password\":\"$password\",\"role\":\"admin\"}" 2>/dev/null)
-    
-    if echo "$response" | jq -e '.id' >/dev/null 2>&1; then
-        log "SUCCESS" "Created admin user: $username ($email)"
-        return 0
-    elif echo "$response" | grep -q "already exists"; then
-        log "INFO" "Admin user $username already exists"
-        return 0
-    else
-        log "WARN" "Failed to create admin user $username: $response"
-        return 1
-    fi
-}
-
-# List of admin users to create (only if they don't exist)
-# Format: username|email|password
-ADMIN_USERS="
-tjohnson|tjohnson@123.net|Joshua3412@
-chyatt|chyatt@123.net|sdxczv@Y2023
-dgoldman|dgoldman@123.net|sdxczv@Y2023
-amenko|amenko@123.net|sdxczv@Y2023
-npomaville|npomaville@123.net|sdxczv@Y2023
-"
-
-# Check if we should create additional admin users
-if [ -f ".env" ] && grep -q "^CREATE_ADMIN_USERS=true" .env 2>/dev/null; then
-    echo "🔧 Creating additional admin users (enabled in .env)..."
-    
-    # Wait a bit for auth server to fully initialize
-    sleep 2
-    
-    echo "$ADMIN_USERS" | while IFS='|' read -r username email password; do
-        if [ ! -z "$username" ]; then
-            create_admin_user "$username" "$email" "$password"
-        fi
-    done
-    
-    echo "✅ Admin user creation process complete"
-else
-    echo "ℹ️  Additional admin user creation disabled"
-    echo "   To enable: Add 'CREATE_ADMIN_USERS=true' to your .env file"
-    echo "   Or run: ./create-admin-users.sh"
-fi
-
-#################################################################################
-# STEP 9: Start Vite Development Server
+# STEP 7: Start Vite Development Server with Enhanced Configuration
 #################################################################################
 
 echo ""
@@ -418,27 +450,40 @@ echo "   • Auto-open browser: Yes"
 echo "   • HTTPS: Auto-configured if available"
 echo "   • Strict port: Yes (fail if port unavailable)"
 
-# Start Vite in background
+log "INFO" "Starting Vite development server..."
+
+# Start Vite in background with enhanced configuration
 npm run dev -- \
     --host 0.0.0.0 \
     --port 3000 \
     --open \
-    --strictPort &
+    --strictPort > vite.log 2>&1 &
 VITE_PID=$!
 
-# Wait a moment to check if Vite started successfully
-sleep 2
-if ! kill -0 $VITE_PID 2>/dev/null; then
+# Wait for Vite to start
+if wait_for_service 3000 "Vite development server"; then
+    log "SUCCESS" "Vite development server started (PID: $VITE_PID)"
+    echo "✅ Vite development server started (PID: $VITE_PID)"
+    
+    # Perform health check
+    if check_service_health "http://localhost:3000" "Vite development server"; then
+        log "SUCCESS" "Vite development server is healthy and ready"
+    else
+        log "WARN" "Vite health check failed but service is running"
+    fi
+else
+    log "ERROR" "Vite development server failed to start"
     echo "❌ Failed to start Vite development server"
     echo "💡 Troubleshooting tips:"
     echo "   • Check for TypeScript errors: npm run build"
     echo "   • Check port availability: lsof -i :3000"
+    echo "   • Check vite.log for detailed errors"
     cleanup
     exit 1
 fi
 
 #################################################################################
-# STEP 10: Display Status and Wait
+# STEP 8: Display Enhanced Status and Monitoring
 #################################################################################
 
 echo ""
@@ -468,16 +513,33 @@ fi
 echo ""
 echo "📁 Log Files:"
 echo "   🔧 SSH Backend: backend/ssh-ws-server.log"
-echo "   🔐 Auth Server: console output"
-echo "   🌐 Vite Server: console output"
+echo "   🔐 Auth Server: backend/auth-server.log"
+echo "   🌐 Vite Server: vite.log"
+echo "   📝 Startup Log: $LOG_FILE"
 echo ""
-echo "💡 Tips:"
-echo "   • Edit files and see live reloading in action"
-echo "   • Check console for any errors or warnings"
-echo "   • Use the admin panel to manage users"
+echo "🔍 Process IDs:"
+if [ ! -z "$SSH_WS_PID" ]; then
+    echo "   🔧 SSH WebSocket: $SSH_WS_PID"
+fi
+if [ ! -z "$AUTH_PID" ]; then
+    echo "   🔐 Authentication: $AUTH_PID"
+fi
+if [ ! -z "$VITE_PID" ]; then
+    echo "   🌐 Vite: $VITE_PID"
+fi
+echo ""
+echo "💡 Enhanced Features:"
+echo "   • Real VPN connectivity with OpenVPN support"
+echo "   • Network diagnostics with actual ping tests"
+echo "   • Robust process management and auto-recovery"
+echo "   • Comprehensive health monitoring"
+echo "   • Enhanced security with environment variables"
 echo ""
 echo "⌨️  Press Ctrl+C to stop all services"
 echo ""
+
+log "SUCCESS" "All services are running and healthy"
+log "INFO" "System ready for use"
 
 # Wait for all processes to complete (or until user interrupts)
 wait

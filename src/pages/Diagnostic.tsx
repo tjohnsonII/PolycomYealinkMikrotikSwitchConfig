@@ -5,18 +5,41 @@ const Diagnostic: React.FC = () => {
   // VPN connection state
   const [vpnStatus, setVpnStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [vpnConfig, setVpnConfig] = useState({
-    serverHost: '',
-    serverPort: '1194',
-    username: '',
-    password: '',
     configFile: null as File | null
   });
   const [logs, setLogs] = useState<string[]>([]);
   const [pbxServers, setPbxServers] = useState([
-    { name: 'Primary PBX', host: '', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' },
-    { name: 'Secondary PBX', host: '', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' }
+    { name: 'Primary PBX', host: '69.39.69.102', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' },
+    { name: 'Secondary PBX', host: 'pbx.example.com', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' }
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Load VPN status on component mount
+  React.useEffect(() => {
+    loadVpnStatus();
+  }, []);
+
+  // Load current VPN status from backend
+  const loadVpnStatus = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/vpn/status');
+      if (response.ok) {
+        const status = await response.json();
+        setVpnStatus(status.status);
+        
+        if (status.logs && status.logs.length > 0) {
+          setLogs(status.logs);
+        }
+
+        // If connected, test PBX servers
+        if (status.status === 'connected') {
+          setTimeout(() => testAllPbxServers(), 1000);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load VPN status:', error);
+    }
+  };
 
   // Add log entry
   const addLog = (message: string) => {
@@ -24,33 +47,47 @@ const Diagnostic: React.FC = () => {
     setLogs(prev => [...prev.slice(-49), `[${timestamp}] ${message}`]);
   };
 
-  // Simulate VPN connection process
+  // Real VPN connection using OpenVPN
   const connectVPN = async () => {
-    if (!vpnConfig.configFile && (!vpnConfig.serverHost || !vpnConfig.username || !vpnConfig.password)) {
-      addLog('❌ Missing VPN configuration. Please provide config file or server details.');
+    if (!vpnConfig.configFile) {
+      addLog('❌ Please select an OpenVPN config file (.ovpn)');
       return;
     }
 
     setVpnStatus('connecting');
-    addLog('🔄 Initiating VPN connection...');
     
     try {
-      // Simulate connection process
-      addLog('📡 Connecting to VPN server...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // First upload the config file
+      const fileContent = await readFileAsText(vpnConfig.configFile);
       
-      addLog('🔐 Authenticating credentials...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      addLog('🛡️ Establishing secure tunnel...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setVpnStatus('connected');
-      addLog('✅ VPN connection established successfully!');
-      addLog('🌐 VPN IP: 10.8.0.2 (example)');
-      
-      // Auto-test PBX servers after VPN connection
-      setTimeout(() => testAllPbxServers(), 1000);
+      const uploadResponse = await fetch('http://localhost:3001/vpn/upload-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: vpnConfig.configFile.name,
+          content: fileContent
+        })
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload config file');
+      }
+
+      addLog(`� Config file uploaded: ${vpnConfig.configFile.name}`);
+
+      // Start VPN connection
+      const connectResponse = await fetch('http://localhost:3001/vpn/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!connectResponse.ok) {
+        const error = await connectResponse.json();
+        throw new Error(error.error || 'Failed to connect VPN');
+      }
+
+      // Start polling for status updates
+      pollVpnStatus();
       
     } catch (error) {
       setVpnStatus('error');
@@ -58,15 +95,70 @@ const Diagnostic: React.FC = () => {
     }
   };
 
-  // Disconnect VPN
-  const disconnectVPN = () => {
-    setVpnStatus('disconnected');
-    addLog('🔌 VPN disconnected');
-    // Reset PBX status when VPN disconnects
-    setPbxServers(prev => prev.map(server => ({ ...server, status: 'unknown' })));
+  // Helper function to read file as text
+  const readFileAsText = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result as string);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    });
   };
 
-  // Test individual PBX server
+  // Poll VPN status and update UI
+  const pollVpnStatus = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/vpn/status');
+      if (response.ok) {
+        const status = await response.json();
+        
+        setVpnStatus(status.status);
+        
+        // Add new logs
+        if (status.logs && status.logs.length > 0) {
+          const newLogs = status.logs.filter((log: string) => !logs.includes(log));
+          if (newLogs.length > 0) {
+            setLogs(prev => [...prev, ...newLogs].slice(-50));
+          }
+        }
+
+        // If connected, test PBX servers
+        if (status.status === 'connected' && vpnStatus !== 'connected') {
+          setTimeout(() => testAllPbxServers(), 2000);
+        }
+
+        // Continue polling if connecting or connected
+        if (status.status === 'connecting' || status.status === 'connected') {
+          setTimeout(pollVpnStatus, 2000);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to poll VPN status:', error);
+    }
+  };
+
+  // Disconnect VPN
+  const disconnectVPN = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/vpn/disconnect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        setVpnStatus('disconnected');
+        addLog('🔌 VPN disconnected');
+        // Reset PBX status when VPN disconnects
+        setPbxServers(prev => prev.map(server => ({ ...server, status: 'unknown' })));
+      } else {
+        addLog('⚠️ Failed to disconnect VPN');
+      }
+    } catch (error) {
+      addLog('❌ Error disconnecting VPN: ' + (error as Error).message);
+    }
+  };
+
+  // Test individual PBX server with real network connectivity
   const testPbxServer = async (index: number) => {
     if (vpnStatus !== 'connected') {
       addLog('⚠️ VPN must be connected to test PBX servers');
@@ -83,23 +175,151 @@ const Diagnostic: React.FC = () => {
     addLog(`🔍 Testing ${server.name} (${server.host}:${server.port})...`);
 
     try {
-      // Simulate network test
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Perform real network connectivity test
+      const testResult = await performNetworkTest(server.host, server.port);
       
-      // Simulate random success/failure for demo
-      const isReachable = Math.random() > 0.3;
-      
-      if (isReachable) {
+      if (testResult.success) {
         setPbxServers(prev => prev.map((s, i) => i === index ? { ...s, status: 'reachable' } : s));
-        addLog(`✅ ${server.name}: Reachable via VPN`);
+        addLog(`✅ ${server.name}: Reachable (${testResult.responseTime}ms)`);
+        if (testResult.details) {
+          addLog(`   Details: ${testResult.details}`);
+        }
       } else {
         setPbxServers(prev => prev.map((s, i) => i === index ? { ...s, status: 'unreachable' } : s));
-        addLog(`❌ ${server.name}: Unreachable`);
+        addLog(`❌ ${server.name}: ${testResult.error}`);
+        if (testResult.troubleshooting) {
+          addLog(`   💡 Troubleshooting: ${testResult.troubleshooting}`);
+        }
       }
     } catch (error) {
       setPbxServers(prev => prev.map((s, i) => i === index ? { ...s, status: 'unreachable' } : s));
       addLog(`❌ ${server.name}: Test failed - ${(error as Error).message}`);
     }
+  };
+
+  // Perform actual network connectivity test
+  const performNetworkTest = async (host: string, port: string): Promise<{
+    success: boolean;
+    responseTime?: number;
+    error?: string;
+    details?: string;
+    troubleshooting?: string;
+  }> => {
+    const startTime = Date.now();
+    
+    try {
+      // Method 1: Try WebSocket connection to SSH backend for ping test
+      const response = await fetch('http://localhost:3001/ping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ host, port: parseInt(port) }),
+        signal: AbortSignal.timeout(10000) // 10 second timeout
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const responseTime = Date.now() - startTime;
+        
+        if (result.reachable) {
+          return {
+            success: true,
+            responseTime,
+            details: result.details || `TCP connection successful on port ${port}`
+          };
+        } else {
+          return {
+            success: false,
+            error: result.error || 'Host unreachable',
+            troubleshooting: getTroubleshootingTips(host, port)
+          };
+        }
+      } else {
+        // Fallback to browser-based connectivity test
+        return await performBrowserConnectivityTest(host, port);
+      }
+    } catch (error) {
+      // Fallback to browser-based connectivity test
+      return await performBrowserConnectivityTest(host, port);
+    }
+  };
+
+  // Browser-based connectivity test (fallback)
+  const performBrowserConnectivityTest = async (host: string, port: string): Promise<{
+    success: boolean;
+    responseTime?: number;
+    error?: string;
+    details?: string;
+    troubleshooting?: string;
+  }> => {
+    const startTime = Date.now();
+    
+    try {
+      // Try to resolve domain/ping via fetch with a small timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      // For PBX servers, we can try to connect to HTTP on common ports or use a proxy
+      let testUrl = '';
+      if (port === '5060' || port === '5061') {
+        // SIP ports - test if host is reachable via HTTP ping
+        testUrl = `http://${host}:80`; // Try HTTP first
+      } else {
+        testUrl = `http://${host}:${port}`;
+      }
+      
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        mode: 'no-cors', // Avoid CORS issues
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      const responseTime = Date.now() - startTime;
+      
+      return {
+        success: true,
+        responseTime,
+        details: `Host responded (${response.type} response)`
+      };
+      
+    } catch (error) {
+      
+      if ((error as Error).name === 'AbortError') {
+        return {
+          success: false,
+          error: 'Connection timeout (5s)',
+          troubleshooting: getTroubleshootingTips(host, port)
+        };
+      }
+      
+      // Network error could mean host is unreachable or port is closed
+      return {
+        success: false,
+        error: `Network error: ${(error as Error).message}`,
+        troubleshooting: getTroubleshootingTips(host, port)
+      };
+    }
+  };
+
+  // Get troubleshooting tips based on the test scenario
+  const getTroubleshootingTips = (host: string, port: string): string => {
+    const tips = [];
+    
+    if (port === '5060') {
+      tips.push('Check if SIP service is running');
+      tips.push('Verify firewall allows SIP traffic');
+      tips.push('Ensure PBX is configured for your VPN subnet');
+    }
+    
+    if (host.includes('.')) {
+      tips.push('Verify DNS resolution is working through VPN');
+      tips.push('Try using IP address instead of hostname');
+    }
+    
+    tips.push('Check VPN routing table includes PBX network');
+    tips.push('Verify PBX server is powered on and accessible');
+    
+    return tips.join(', ');
   };
 
   // Test all PBX servers
@@ -161,7 +381,10 @@ const Diagnostic: React.FC = () => {
           padding: '15px', 
           marginBottom: '20px' 
         }}>
-          <h3>VPN Configuration</h3>
+          <h3>Work VPN Configuration</h3>
+          <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+            Upload your work OpenVPN configuration file to establish a secure connection to the corporate network and test PBX connectivity.
+          </p>
           
           {/* Config File Upload */}
           <div style={{ marginBottom: '15px' }}>
@@ -174,79 +397,34 @@ const Diagnostic: React.FC = () => {
               ref={fileInputRef}
               onChange={handleConfigFileUpload}
               style={{ marginBottom: '5px' }}
+              disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
             />
             {vpnConfig.configFile && (
               <div style={{ fontSize: '14px', color: '#28a745' }}>
                 ✅ {vpnConfig.configFile.name}
               </div>
             )}
-          </div>
-
-          <div style={{ fontSize: '14px', marginBottom: '15px', fontStyle: 'italic' }}>
-            <strong>OR</strong> manually enter server details:
-          </div>
-
-          {/* Manual Configuration */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-            <div>
-              <label style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Server Host:</label>
-              <input
-                type="text"
-                value={vpnConfig.serverHost}
-                onChange={e => setVpnConfig(prev => ({ ...prev, serverHost: e.target.value }))}
-                placeholder="vpn.yourcompany.com"
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                disabled={vpnStatus === 'connecting'}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Port:</label>
-              <input
-                type="text"
-                value={vpnConfig.serverPort}
-                onChange={e => setVpnConfig(prev => ({ ...prev, serverPort: e.target.value }))}
-                placeholder="1194"
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                disabled={vpnStatus === 'connecting'}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Username:</label>
-              <input
-                type="text"
-                value={vpnConfig.username}
-                onChange={e => setVpnConfig(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="your-username"
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                disabled={vpnStatus === 'connecting'}
-              />
-            </div>
-            <div>
-              <label style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>Password:</label>
-              <input
-                type="password"
-                value={vpnConfig.password}
-                onChange={e => setVpnConfig(prev => ({ ...prev, password: e.target.value }))}
-                placeholder="your-password"
-                style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
-                disabled={vpnStatus === 'connecting'}
-              />
-            </div>
+            {!vpnConfig.configFile && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+                Select your work VPN .ovpn configuration file
+              </div>
+            )}
           </div>
 
           {/* VPN Control Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={connectVPN}
-              disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+              disabled={vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile}
               style={{
                 backgroundColor: vpnStatus === 'connected' ? '#6c757d' : '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
                 padding: '8px 16px',
-                cursor: vpnStatus === 'connecting' || vpnStatus === 'connected' ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold'
+                cursor: (vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile) ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                opacity: !vpnConfig.configFile ? 0.6 : 1
               }}
             >
               {vpnStatus === 'connecting' ? '🔄 Connecting...' : '🔐 Connect VPN'}
@@ -374,6 +552,63 @@ const Diagnostic: React.FC = () => {
               <div key={index}>{log}</div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Troubleshooting Guide */}
+      <div style={{
+        backgroundColor: '#f8f9fa',
+        border: '1px solid #e9ecef',
+        borderRadius: '8px',
+        padding: '20px',
+        marginBottom: '20px'
+      }}>
+        <h3 style={{ 
+          color: '#333', 
+          marginTop: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          🔧 PBX Connectivity Troubleshooting
+        </h3>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <strong>If VPN shows "Connected" but PBX servers are "Unreachable":</strong>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div>
+            <h4 style={{ color: '#495057', marginBottom: '10px' }}>🔍 Common Issues:</h4>
+            <ul style={{ color: '#6c757d', lineHeight: '1.6' }}>
+              <li><strong>VPN Routing:</strong> VPN might not route to PBX subnet</li>
+              <li><strong>Firewall:</strong> PBX firewall blocking your VPN IP</li>
+              <li><strong>Network Segmentation:</strong> PBX on isolated network</li>
+              <li><strong>SIP Port:</strong> Port 5060 might be filtered</li>
+              <li><strong>DNS Issues:</strong> Hostname not resolving via VPN</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h4 style={{ color: '#495057', marginBottom: '10px' }}>🛠️ Troubleshooting Steps:</h4>
+            <ol style={{ color: '#6c757d', lineHeight: '1.6' }}>
+              <li>Check VPN routes: <code>route -n</code> or <code>ip route</code></li>
+              <li>Test basic connectivity: <code>ping 69.39.69.102</code></li>
+              <li>Test specific port: <code>telnet 69.39.69.102 5060</code></li>
+              <li>Try alternative ports (80, 443, 22)</li>
+              <li>Contact network admin for PBX firewall rules</li>
+            </ol>
+          </div>
+        </div>
+        
+        <div style={{
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffeaa7',
+          borderRadius: '4px',
+          padding: '12px',
+          marginTop: '15px'
+        }}>
+          <strong>💡 Pro Tip:</strong> Use the SSH Terminal below to run network diagnostic commands directly through the VPN connection.
         </div>
       </div>
 

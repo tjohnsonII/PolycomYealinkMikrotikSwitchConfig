@@ -6,7 +6,7 @@
  * - Toggle between login and registration modes
  * - Form validation and error handling
  * - Modern gradient design with animations
- * - Demo credentials display for easy testing
+ * - Account creation for new users
  * - Responsive design for all screen sizes
  * 
  * This component is shown to unauthenticated users and handles
@@ -248,21 +248,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           </button>
         </div>
 
-        {/* Demo credentials (only shown in login mode) */}
-        {!isRegister && (
-          <div style={{
-            marginTop: '20px',
-            padding: '15px',
-            background: '#f8f9fa',
-            borderRadius: '6px',
-            fontSize: '14px',
-            color: '#666'
-          }}>
-            <strong>Demo Credentials:</strong><br />
-            Username: admin<br />
-            Password: admin123
-          </div>
-        )}
+
       </div>
     </div>
   );
