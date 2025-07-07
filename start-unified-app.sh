@@ -96,7 +96,44 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 #################################################################################
-# STEP 1: System Requirements Check
+# STEP 1: Environment Configuration Check
+#################################################################################
+
+echo "🔧 Checking environment configuration..."
+
+# Check if .env file exists
+if [ ! -f ".env" ]; then
+    echo "⚠️  Warning: .env file not found!"
+    echo "   Creating .env from template..."
+    
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+        echo "✅ Created .env file from .env.example"
+        echo "🔑 Please edit .env file to set secure credentials:"
+        echo "   - JWT_SECRET: Use a strong random key"
+        echo "   - DEFAULT_ADMIN_PASSWORD: Change from default"
+        echo ""
+        echo "💡 Generate secure JWT secret with:"
+        echo "   node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+        echo ""
+    else
+        echo "❌ Error: .env.example template not found!"
+        echo "   Please create .env file manually with required variables."
+        echo "   See SECURITY.md for configuration details."
+        exit 1
+    fi
+else
+    echo "✅ Environment file (.env) found"
+fi
+
+# Validate critical environment variables
+if ! grep -q "^JWT_SECRET=" .env 2>/dev/null; then
+    echo "⚠️  Warning: JWT_SECRET not found in .env file"
+    echo "   Authentication will use an insecure fallback!"
+fi
+
+#################################################################################
+# STEP 2: System Requirements Check
 #################################################################################
 
 echo "🔍 Checking system requirements..."
@@ -115,7 +152,7 @@ echo "✅ Node.js version: $(node --version)"
 echo "✅ npm version: $(npm --version)"
 
 #################################################################################
-# STEP 2: Dependencies Installation
+# STEP 3: Dependencies Installation
 #################################################################################
 
 echo ""
@@ -126,7 +163,7 @@ if ! npm install; then
 fi
 
 #################################################################################
-# STEP 3: Port Management
+# STEP 4: Port Management
 #################################################################################
 
 echo ""
@@ -138,7 +175,7 @@ kill_port 3001 "SSH WebSocket backend"
 kill_port 3002 "Authentication server"
 
 #################################################################################
-# STEP 4: Build Check
+# STEP 5: Build Check
 #################################################################################
 
 echo ""
@@ -151,7 +188,7 @@ else
 fi
 
 #################################################################################
-# STEP 5: Start SSH WebSocket Backend
+# STEP 6: Start SSH WebSocket Backend
 #################################################################################
 
 echo ""
@@ -169,7 +206,7 @@ else
 fi
 
 #################################################################################
-# STEP 6: Start Authentication Server
+# STEP 7: Start Authentication Server
 #################################################################################
 
 echo ""
@@ -191,7 +228,7 @@ else
 fi
 
 #################################################################################
-# STEP 7: Start Vite Development Server
+# STEP 8: Start Vite Development Server
 #################################################################################
 
 echo ""
@@ -223,7 +260,7 @@ if ! kill -0 $VITE_PID 2>/dev/null; then
 fi
 
 #################################################################################
-# STEP 8: Display Status and Wait
+# STEP 9: Display Status and Wait
 #################################################################################
 
 echo ""
@@ -238,8 +275,18 @@ echo "🌍 Network Access:"
 echo "   📱 From other devices:   http://$(hostname -I | awk '{print $1}'):3000"
 echo ""
 echo "👤 Default Admin Credentials:"
-echo "   Username: admin"
-echo "   Password: admin123"
+# Load from .env file if it exists, otherwise show defaults
+if [ -f ".env" ]; then
+    ADMIN_USER=$(grep "^DEFAULT_ADMIN_USERNAME=" .env 2>/dev/null | cut -d '=' -f2 || echo "admin")
+    ADMIN_PASS=$(grep "^DEFAULT_ADMIN_PASSWORD=" .env 2>/dev/null | cut -d '=' -f2 || echo "admin123")
+    echo "   Username: $ADMIN_USER"
+    echo "   Password: $ADMIN_PASS"
+    echo "   (Loaded from .env file)"
+else
+    echo "   Username: admin"
+    echo "   Password: admin123"
+    echo "   ⚠️  Note: Using default values. Create .env file for custom credentials."
+fi
 echo ""
 echo "📁 Log Files:"
 echo "   🔧 SSH Backend: backend/ssh-ws-server.log"
