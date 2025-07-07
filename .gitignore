@@ -17,15 +17,49 @@ dist-ssr
 .env.local
 .env.production
 .env.development
+.env.*
 
 # User data and sensitive files
 backend/users.json
 backend/*.log
 
-# VPN configuration files (never commit these!)
+# VPN configuration files (NEVER commit these!)
 *.ovpn
+*.ovpn.*
 backend/*.ovpn
-/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/*.ovpn
+backend/*.ovpn.*
+**/*.ovpn
+**/*.ovpn.*
+
+# SSH keys and certificates (NEVER commit these!)
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+
+# Credential files (NEVER commit these!)
+*credential*
+*password*
+*secret*
+*auth*
+vpn-credentials.txt
+backend/vpn-credentials.txt
+
+# Database files with potentially sensitive data
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files that might contain sensitive data
+*.bak
+*.backup
+*.old
+*.orig
 
 # Editor directories and files
 .vscode/*
@@ -37,3 +71,13 @@ backend/*.ovpn
 *.njsproj
 *.sln
 *.sw?
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

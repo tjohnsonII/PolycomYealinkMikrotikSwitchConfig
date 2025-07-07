@@ -23,6 +23,10 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '10mb' })); // Increase limit for .ovpn files
 
+// --- VPN Status API ---
+import vpnStatusRouter from './vpn-status.js';
+app.use('/system', vpnStatusRouter);
+
 // Store active VPN processes and status
 const vpnState = {
   process: null,
@@ -135,42 +139,138 @@ const wss = new WebSocketServer({ server, path: '/ssh' });
 wss.on('connection', function connection(ws) {
   let sshClient = new Client();
   let shellStream = null;
+  let isConnectionEstablished = false;
+  let connectionTimeout = null;
+  let keepAliveInterval = null;
 
-  ws.send('Welcome to the PBX SSH Terminal!\r\n');
+  // Set connection timeout
+  connectionTimeout = setTimeout(() => {
+    if (!isConnectionEstablished) {
+      ws.send('Connection timeout. Please check host and credentials.\r\n');
+      ws.close();
+    }
+  }, 30000); // 30 second timeout
+
+  ws.send('🔗 PBX SSH Terminal Ready\r\n');
+  ws.send('💡 Enter SSH credentials to connect to FreePBX server\r\n');
 
   ws.on('message', function incoming(message) {
     // On first message, expect JSON with SSH credentials
     if (!sshClient._ready) {
       try {
         const { host, username, password } = JSON.parse(message);
+        
+        ws.send(`🔌 Connecting to ${host} as ${username}...\r\n`);
+        
         sshClient.on('ready', () => {
-          sshClient.shell((err, stream) => {
+          clearTimeout(connectionTimeout);
+          isConnectionEstablished = true;
+          
+          ws.send(`✅ SSH connection established to ${host}\r\n`);
+          ws.send('🖥️  Opening shell session...\r\n\r\n');
+          
+          sshClient.shell({ 
+            term: 'xterm-256color',
+            cols: 80,
+            rows: 24 
+          }, (err, stream) => {
             if (err) {
-              ws.send(`Shell error: ${err.message}\r\n`);
+              ws.send(`❌ Shell error: ${err.message}\r\n`);
               ws.close();
               return;
             }
+            
             shellStream = stream;
-            stream.on('data', (data) => ws.send(data.toString()));
-            stream.on('close', () => ws.close());
+            
+            // Handle shell data
+            stream.on('data', (data) => {
+              if (ws.readyState === ws.OPEN) {
+                ws.send(data.toString());
+              }
+            });
+            
+            // Handle shell close
+            stream.on('close', () => {
+              ws.send('\r\n💀 Shell session ended\r\n');
+              ws.close();
+            });
+            
+            // Handle shell errors
+            stream.on('error', (err) => {
+              ws.send(`\r\n❌ Shell error: ${err.message}\r\n`);
+              ws.close();
+            });
+            
+            // Set up keepalive
+            keepAliveInterval = setInterval(() => {
+              if (ws.readyState === ws.OPEN) {
+                ws.ping();
+              }
+            }, 30000); // Ping every 30 seconds
           });
-        }).on('error', err => {
-          ws.send(`SSH error: ${err.message}\r\n`);
+        })
+        .on('error', err => {
+          clearTimeout(connectionTimeout);
+          ws.send(`❌ SSH connection failed: ${err.message}\r\n`);
+          ws.send(`💡 Check host, username, password, and VPN connection\r\n`);
           ws.close();
-        }).connect({ host, username, password });
+        })
+        .on('close', () => {
+          ws.send('\r\n🔌 SSH connection closed\r\n');
+          ws.close();
+        })
+        .connect({ 
+          host, 
+          username, 
+          password,
+          readyTimeout: 20000, // 20 second ready timeout
+          keepaliveInterval: 30000, // Send keepalive every 30 seconds
+          keepaliveCountMax: 3 // Close after 3 failed keepalives
+        });
+        
         sshClient._ready = true;
       } catch (e) {
-        ws.send('Invalid credentials format.\r\n');
+        clearTimeout(connectionTimeout);
+        ws.send('❌ Invalid credentials format. Expected JSON with host, username, password\r\n');
         ws.close();
       }
       return;
     }
+    
     // Forward terminal input to SSH
-    if (shellStream) shellStream.write(message);
+    if (shellStream && shellStream.writable) {
+      shellStream.write(message);
+    }
   });
 
+  // Handle WebSocket close
   ws.on('close', () => {
-    if (sshClient) sshClient.end();
+    clearTimeout(connectionTimeout);
+    clearInterval(keepAliveInterval);
+    if (shellStream) {
+      shellStream.end();
+    }
+    if (sshClient) {
+      sshClient.end();
+    }
+  });
+
+  // Handle WebSocket errors
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+    clearTimeout(connectionTimeout);
+    clearInterval(keepAliveInterval);
+    if (shellStream) {
+      shellStream.end();
+    }
+    if (sshClient) {
+      sshClient.end();
+    }
+  });
+
+  // Handle WebSocket pong (keepalive response)
+  ws.on('pong', () => {
+    // Connection is alive
   });
 });
 
@@ -550,26 +650,73 @@ app.get('/vpn/saml-login-url', async (req, res) => {
   }
 });
 
-// Helper function to extract SAML login URL from VPN config
-const extractSamlLoginUrl = async (configPath) => {
+// Execute connect-vpn.sh script to connect to available VPN configs
+app.post('/vpn/connect-script', async (req, res) => {
   try {
-    const configContent = await fs.readFile(configPath, 'utf8');
+    addVpnLog('🚀 Starting VPN connection script...');
     
-    // Look for remote server directive to get the VPN server
-    const remoteMatch = configContent.match(/^remote\s+([^\s]+)/m);
-    if (remoteMatch) {
-      const server = remoteMatch[1];
-      // Construct SAML login URL based on server
-      return `https://${server}/login`;
+    // Check if connect-vpn.sh exists
+    const scriptPath = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'connect-vpn.sh');
+    
+    try {
+      await fs.access(scriptPath);
+    } catch (error) {
+      const errorMsg = 'connect-vpn.sh script not found';
+      addVpnLog(`❌ ${errorMsg}`);
+      return res.status(404).json({ error: errorMsg });
     }
     
-    // Fallback to default if no remote directive found
-    return 'https://terminal.123.net/login';
+    // Execute the script with proper permissions
+    addVpnLog('📋 Executing connect-vpn.sh...');
+    
+    const scriptProcess = spawn('bash', [scriptPath], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: path.dirname(scriptPath)
+    });
+    
+    let output = '';
+    let errorOutput = '';
+    
+    scriptProcess.stdout.on('data', (data) => {
+      const text = data.toString();
+      output += text;
+      // Log each line as it comes in
+      text.split('\n').filter(line => line.trim()).forEach(line => {
+        addVpnLog(`📋 ${line}`);
+      });
+    });
+    
+    scriptProcess.stderr.on('data', (data) => {
+      const text = data.toString();
+      errorOutput += text;
+      // Log error lines
+      text.split('\n').filter(line => line.trim()).forEach(line => {
+        addVpnLog(`⚠️ ${line}`);
+      });
+    });
+    
+    scriptProcess.on('close', (code) => {
+      if (code === 0) {
+        addVpnLog('✅ VPN connection script completed successfully');
+        addVpnLog('💡 Check VPN Status panel below for active connections');
+      } else {
+        addVpnLog(`❌ VPN connection script exited with code ${code}`);
+      }
+    });
+    
+    // Don't wait for the script to complete - return immediately
+    res.json({ 
+      success: true, 
+      message: 'VPN connection script started',
+      note: 'Check the logs below for progress and results'
+    });
+    
   } catch (error) {
-    console.error('Error extracting SAML login URL:', error);
-    return 'https://terminal.123.net/login';
+    const errorMsg = `Failed to execute VPN connection script: ${error.message}`;
+    addVpnLog(`❌ ${errorMsg}`);
+    res.status(500).json({ error: errorMsg });
   }
-};
+});
 
 // System information and utility endpoints
 

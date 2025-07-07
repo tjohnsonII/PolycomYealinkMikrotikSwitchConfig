@@ -30,12 +30,13 @@
 
 set -e
 
-# Multiple config file options
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Multiple config file options (relative to script directory)
 VPN_CONFIG_FILES=(
-    "/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/1751289493903.ovpn"  # Work SAML VPN
-    "/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/1733619796225.ovpn"  # Home Lab VPN
-    "backend/tjohnson-work.ovpn"
-    "backend/work-vpn.ovpn"
+    "${SCRIPT_DIR}/1751289493903.ovpn"  # Work SAML VPN
+    "${SCRIPT_DIR}/1733619796225.ovpn"  # Home Lab VPN
 )
 
 VPN_CONFIGS_FOUND=()
@@ -54,10 +55,6 @@ for config in "${VPN_CONFIG_FILES[@]}"; do
             VPN_CONFIG_NAMES+=("work-saml")
         elif [[ "$config" == *"1733619796225.ovpn" ]]; then
             VPN_CONFIG_NAMES+=("home-lab")
-        elif [[ "$config" == *"tjohnson-work.ovpn" ]]; then
-            VPN_CONFIG_NAMES+=("tjohnson-work")
-        else
-            VPN_CONFIG_NAMES+=("work-vpn")
         fi
     fi
 done
@@ -118,6 +115,27 @@ connect_vpn() {
             if openvpn3 sessions-list 2>/dev/null | grep -q "$config_name"; then
                 echo "   🔗 Session '$config_name' already running"
                 connected=1
+                # Offer force reconnect option
+                read -p "   Do you want to force re-authenticate (y/N)? " force_reauth
+                if [[ "$force_reauth" =~ ^[Yy]$ ]]; then
+                    echo "   🔄 Forcing re-authentication for $config_name..."
+                    openvpn3 session-manage --config "$config_name" --disconnect
+                    sleep 2
+                    openvpn3 session-start --config "$config_name"
+                    echo "   ⏳ Waiting for SAML authentication to complete..."
+                    for i in {1..30}; do
+                        sleep 2
+                        if openvpn3 sessions-list 2>/dev/null | grep -q "$config_name"; then
+                            connected=1
+                            break
+                        fi
+                    done
+                    if [[ $connected -eq 1 ]]; then
+                        echo "   ✅ VPN session re-established for $config_name!"
+                    else
+                        echo "   ❌ VPN session not established for $config_name. Please check browser and complete login."
+                    fi
+                fi
             else
                 echo "   🚀 Starting VPN session..."
                 echo "      ⚠️  A browser window may open for SAML authentication."
@@ -148,6 +166,26 @@ connect_vpn() {
             if ip addr show | grep -q "tun"; then
                 echo "   🔗 VPN already running for $config_name (tun interface present)"
                 connected=1
+                read -p "   Do you want to force reconnect (y/N)? " force_reconnect
+                if [[ "$force_reconnect" =~ ^[Yy]$ ]]; then
+                    echo "   🔄 Forcing reconnect for $config_name..."
+                    sudo pkill -f "$config_file"
+                    sleep 2
+                    sudo openvpn --config "$config_file" --daemon --log-append "$config_name.log"
+                    # Wait for tun interface
+                    for i in {1..10}; do
+                        sleep 2
+                        if ip addr show | grep -q "tun"; then
+                            connected=1
+                            break
+                        fi
+                    done
+                    if [[ $connected -eq 1 ]]; then
+                        echo "   ✅ VPN connection re-established for $config_name!"
+                    else
+                        echo "   ❌ VPN connection not established for $config_name. Check logs: $config_name.log"
+                    fi
+                fi
             else
                 echo "   🚀 Starting VPN with standard OpenVPN..."
                 if [[ "$auth_method" == "Username/Password" ]]; then
@@ -235,20 +273,39 @@ for i in "${!VPN_CONFIGS_FOUND[@]}"; do
     connect_vpn "${VPN_CONFIGS_FOUND[i]}" "${VPN_CONFIG_NAMES[i]}"
 done
 
-# Print summary
+# Print summary with VPN IP and routes
 echo "==============================="
-echo "� VPN Connection Summary:"
+echo "🔎 VPN Connection Summary:"
+any_connected=0
 for name in "${VPN_CONFIG_NAMES[@]}"; do
     if [[ "${VPN_STATUS[$name]}" -eq 1 ]]; then
+        any_connected=1
         echo "   ✅ $name: Connected"
+        # Show tun interface and IP
+        tun_iface=$(ip addr show | awk '/tun[0-9]+:/{print $2}' | cut -d: -f1 | head -n1)
+        if [[ -n "$tun_iface" ]]; then
+            vpn_ip=$(ip addr show "$tun_iface" | awk '/inet /{print $2}')
+            echo "      • Interface: $tun_iface"
+            echo "      • VPN IP: $vpn_ip"
+            echo "      • Routes:"
+            ip route | grep "$tun_iface" | sed 's/^/         /'
+        else
+            echo "      • No tun interface detected."
+        fi
     else
         echo "   ❌ $name: Not connected"
     fi
 done
 echo "==============================="
 
+if [[ $any_connected -eq 0 ]]; then
+    echo "❌ No VPN connections are active. Please connect using this script."
+else
+    echo "✅ At least one VPN is active."
+fi
+
 echo ""
-echo "🔍 Check connection status:"
+echo "🔍 Check connection status manually:"
 echo "   • Web app diagnostics: http://localhost:3000"
 echo "   • Backend status: curl http://localhost:3001/system/server-vpn-status"
 echo "   • Interface check: ip addr show | grep tun"

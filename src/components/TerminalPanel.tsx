@@ -13,22 +13,38 @@ const TerminalPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [credentials, setCredentials] = useState({ host: '', username: '', password: '' });
 
-  // Connect and initialize terminal
   const connectSSH = () => {
     setConnecting(true);
     setError(null);
     if (!xtermRef.current) return;
+    
+    // Clean up any existing terminal
+    if (termRef.current) {
+      termRef.current.dispose();
+    }
+    
     const term = new Terminal({
-      fontSize: 15,
+      fontSize: 14,
       cursorBlink: true,
-      theme: { background: '#1e1e1e' },
+      theme: { 
+        background: '#1e1e1e', 
+        foreground: '#ffffff',
+        cursor: '#ffffff'
+      },
       cols: 80,
       rows: 24,
+      scrollback: 1000,
     });
+    
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
     term.open(xtermRef.current);
-    fitAddon.fit();
+    
+    // Fit terminal to container
+    setTimeout(() => {
+      fitAddon.fit();
+    }, 100);
+    
     termRef.current = term;
     fitAddonRef.current = fitAddon;
 
@@ -38,34 +54,75 @@ const TerminalPanel: React.FC = () => {
     ws.onopen = () => {
       setConnected(true);
       setConnecting(false);
-      term.writeln('Connected to SSH backend.');
+      term.writeln('🔗 Connected to SSH backend');
+      term.writeln('📡 Sending credentials...');
       ws.send(JSON.stringify(credentials));
     };
+    
     ws.onmessage = (event) => {
-      term.write(event.data);
+      if (term) {
+        term.write(event.data);
+      }
     };
-    ws.onclose = () => {
+    
+    ws.onclose = (event) => {
       setConnected(false);
       setConnecting(false);
-      term.writeln('\r\n[Connection closed]');
+      if (term) {
+        if (event.code === 1000) {
+          term.writeln('\r\n✅ Connection closed normally');
+        } else {
+          term.writeln('\r\n❌ Connection lost (code: ' + event.code + ')');
+          term.writeln('💡 Click "Reconnect" to establish a new connection');
+        }
+      }
     };
+    
     ws.onerror = () => {
-      setError('WebSocket error');
+      setError('Connection failed - check VPN and server status');
       setConnected(false);
       setConnecting(false);
-      term.writeln('\r\n[WebSocket error]');
+      if (term) {
+        term.writeln('\r\n❌ Connection error');
+        term.writeln('💡 Ensure VPN is connected and FreePBX server is accessible');
+      }
     };
 
+    // Handle terminal input
     term.onData((data) => {
-      if (ws.readyState === WebSocket.OPEN) ws.send(data);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(data);
+      }
     });
 
-    window.addEventListener('resize', () => fitAddon.fit());
-    return () => {
-      ws.close();
-      term.dispose();
-      window.removeEventListener('resize', () => fitAddon.fit());
+    // Handle window resize
+    const handleResize = () => {
+      if (fitAddon && term) {
+        setTimeout(() => fitAddon.fit(), 10);
+      }
     };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+      if (term) {
+        term.dispose();
+      }
+    };
+  };
+
+  // Disconnect function
+  const disconnectSSH = () => {
+    if (wsRef.current) {
+      wsRef.current.close();
+    }
+    setConnected(false);
+    setConnecting(false);
+    setError(null);
   };
 
   // Only mount terminal after connect
@@ -88,19 +145,19 @@ const TerminalPanel: React.FC = () => {
         >
           <input
             type="text"
-            placeholder="Host/IP"
+            placeholder="Host/IP (e.g., 69.39.69.102)"
             value={credentials.host}
             onChange={e => setCredentials({ ...credentials, host: e.target.value })}
             required
-            style={{ padding: 6, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
+            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 160 }}
           />
           <input
             type="text"
-            placeholder="Username"
+            placeholder="Username (e.g., root)"
             value={credentials.username}
             onChange={e => setCredentials({ ...credentials, username: e.target.value })}
             required
-            style={{ padding: 6, borderRadius: 4, border: '1px solid #ccc', minWidth: 100 }}
+            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
           />
           <input
             type="password"
@@ -108,14 +165,61 @@ const TerminalPanel: React.FC = () => {
             value={credentials.password}
             onChange={e => setCredentials({ ...credentials, password: e.target.value })}
             required
-            style={{ padding: 6, borderRadius: 4, border: '1px solid #ccc', minWidth: 100 }}
+            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
           />
-          <button type="submit" disabled={connecting} style={{ padding: '6px 18px', borderRadius: 4, background: '#0078d4', color: '#fff', border: 'none', fontWeight: 600 }}>
-            {connecting ? 'Connecting...' : 'Connect'}
+          <button 
+            type="submit" 
+            disabled={connecting} 
+            style={{ 
+              padding: '8px 18px', 
+              borderRadius: 4, 
+              background: connecting ? '#6c757d' : '#28a745', 
+              color: '#fff', 
+              border: 'none', 
+              fontWeight: 600,
+              cursor: connecting ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {connecting ? '🔄 Connecting...' : '🔌 Connect SSH'}
           </button>
-          {error && <span style={{ color: 'red', marginLeft: 8 }}>{error}</span>}
         </form>
       )}
+      
+      {connected && (
+        <div style={{ marginBottom: 15, display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ color: '#28a745', fontWeight: 600 }}>
+            ✅ Connected to {credentials.host}
+          </span>
+          <button
+            onClick={disconnectSSH}
+            style={{
+              padding: '6px 12px',
+              borderRadius: 4,
+              background: '#dc3545',
+              color: '#fff',
+              border: 'none',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            🔌 Disconnect
+          </button>
+        </div>
+      )}
+      
+      {error && (
+        <div style={{ 
+          marginBottom: 15, 
+          padding: 10, 
+          backgroundColor: '#f8d7da', 
+          border: '1px solid #f5c6cb', 
+          borderRadius: 4, 
+          color: '#721c24' 
+        }}>
+          ❌ {error}
+        </div>
+      )}
+      
       <div style={{ background: '#1e1e1e', borderRadius: 8, overflow: 'hidden', width: '100%', height: 480 }}>
         <div ref={xtermRef} style={{ width: '100%', height: '100%' }} />
       </div>

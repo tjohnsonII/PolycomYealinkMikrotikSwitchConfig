@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import VpnStatusPanel from './VpnStatusPanel';
 import TerminalPanel from '../components/TerminalPanel';
 // @ts-ignore - QR code library
 import QRCode from 'qrcode';
@@ -21,6 +22,10 @@ const Diagnostic: React.FC = () => {
   const [pbxServers, setPbxServers] = useState([
     { name: 'Primary PBX', host: '69.39.69.102', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' },
     { name: 'Secondary PBX', host: 'pbx.example.com', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' }
+  ]);
+  const [sshServers, setSshServers] = useState([
+    { name: 'Primary FreePBX SSH', host: '69.39.69.102', port: '22', username: 'root', description: 'FreePBX server SSH access' },
+    { name: 'Secondary FreePBX SSH', host: 'pbx.example.com', port: '22', username: 'root', description: 'Secondary FreePBX server SSH access' }
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -434,6 +439,36 @@ const Diagnostic: React.FC = () => {
       }
     } catch (error) {
       addLog('❌ Error disconnecting VPN: ' + (error as Error).message);
+    }
+  };
+
+  // Run connect-vpn.sh script to connect to available VPN configs
+  const runVpnConnectScript = async () => {
+    try {
+      addLog('🚀 Starting VPN connection script...');
+      
+      const response = await fetch('http://localhost:3001/vpn/connect-script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        addLog('✅ ' + result.message);
+        if (result.note) {
+          addLog('💡 ' + result.note);
+        }
+        
+        // Start polling for updated logs and status
+        setTimeout(() => {
+          loadVpnStatus();
+        }, 2000);
+      } else {
+        const error = await response.json();
+        addLog('❌ Failed to run VPN script: ' + error.error);
+      }
+    } catch (error) {
+      addLog('❌ Error running VPN script: ' + (error as Error).message);
     }
   };
 
@@ -1339,7 +1374,7 @@ const Diagnostic: React.FC = () => {
           )}
 
           {/* VPN Control Buttons */}
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={connectVPN}
               disabled={vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile || authType === 'saml'}
@@ -1371,6 +1406,23 @@ const Diagnostic: React.FC = () => {
             >
               🔌 Disconnect
             </button>
+            <button
+              onClick={runVpnConnectScript}
+              style={{
+                backgroundColor: '#17a2b8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🚀 Run VPN Script
+            </button>
+          </div>
+          <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+            💡 The "Run VPN Script" button executes connect-vpn.sh to connect all available VPN configs using appropriate methods (OpenVPN 3 for SAML, classic OpenVPN for others)
           </div>
         </div>
 
@@ -1535,16 +1587,85 @@ const Diagnostic: React.FC = () => {
           padding: '12px',
           marginTop: '15px'
         }}>
-          <strong>💡 Pro Tip:</strong> Use the SSH Terminal below to run network diagnostic commands directly through the VPN connection.
+          <strong>💡 Pro Tip:</strong> The PBX connectivity tests above use TCP connections to verify that SIP services are reachable through the VPN.
         </div>
       </div>
 
-      {/* SSH Terminal Section */}
-      <div style={{ margin: '32px 0', maxWidth: 900 }}>
-        <h2>SSH Terminal (Beta)</h2>
+      {/* VPN Status Panel */}
+      <VpnStatusPanel />
+      
+      {/* SSH Terminal Access */}
+      <div style={{ 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #e9ecef', 
+        borderRadius: '6px', 
+        padding: '15px', 
+        margin: '20px 0' 
+      }}>
+        <h3>🖥️ FreePBX SSH Terminal Access</h3>
+        <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+          Connect to FreePBX servers via SSH for administration, troubleshooting, and configuration.
+          <br />
+          <strong>Note:</strong> VPN connection required for SSH access to remote FreePBX servers.
+        </p>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <h4>Available SSH Servers:</h4>
+          {sshServers.map((server, index) => (
+            <div key={index} style={{ 
+              backgroundColor: '#ffffff', 
+              border: '1px solid #dee2e6', 
+              borderRadius: '4px', 
+              padding: '10px', 
+              marginBottom: '10px' 
+            }}>
+              <div style={{ fontWeight: 'bold' }}>
+                {server.name} - {server.host}:{server.port}
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {server.description} | Default user: {server.username}
+              </div>
+            </div>
+          ))}
+        </div>
+        
         <TerminalPanel />
+        
+        <div style={{ 
+          fontSize: '12px', 
+          color: '#666', 
+          marginTop: '10px',
+          padding: '10px',
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffeaa7',
+          borderRadius: '4px'
+        }}>
+          <strong>🔐 SSH Connection Tips:</strong>
+          <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+            <li>Ensure VPN is connected before attempting SSH connections</li>
+            <li>Use the primary FreePBX server IP: 69.39.69.102</li>
+            <li>Default SSH port: 22 (may be configured differently)</li>
+            <li>Common FreePBX users: root, asterisk, admin</li>
+            <li>FreePBX web interface typically available on port 80/443</li>
+          </ul>
+        </div>
       </div>
-      {/* Add diagnostic widgets, logs, or tools here as needed */}
+      
+      {/* Additional Network Information */}
+      <div style={{ 
+        backgroundColor: '#f8f9fa', 
+        border: '1px solid #e9ecef', 
+        borderRadius: '6px', 
+        padding: '15px', 
+        margin: '20px 0' 
+      }}>
+        <h3>📊 Network Connectivity Information</h3>
+        <div style={{ fontSize: '14px', color: '#666' }}>
+          <p><strong>PBX Testing:</strong> TCP connectivity tests verify that SIP services (port 5060/5061) are reachable through the VPN tunnel.</p>
+          <p><strong>VPN Status:</strong> Live monitoring of OpenVPN sessions, network interfaces, and routing information.</p>
+          <p><strong>Troubleshooting:</strong> If PBX servers show as unreachable, check VPN connection, firewall rules, and PBX server status.</p>
+        </div>
+      </div>
     </div>
   );
 };
