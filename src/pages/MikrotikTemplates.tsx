@@ -14,9 +14,9 @@ const FIELD_TOOLTIPS: Record<string, string> = {
   customerAddress: "Updates the '# Address:' comment line in the template with the customer's street address",
   city: "Updates the '# City:' comment line - will be combined with MI and ZIP code",
   zipCode: "Updates the ZIP code portion of the '# City:' comment line (format: City MI ZIP)",
-  xip: "Updates the '# XIP:' comment line with the customer's XIP identifier",
+  xip: "Updates the '# XIP:' comment line with the customer's XIP identifier (for documentation purposes only - not functional)",
   handle: "Updates the '# Handle:' comment line with the customer's handle identifier (typically HANDLE-CUSTOMERADDRESS format)",
-  ipAddress: "Updates the 'add address=' line in the template - first IP is the actual WAN/TIK IP, second IP is the network IP (replaces XXX.XXX.XXX.XXX/29 interface=ether10 network=XXX.XXX.XXX.XXX)",
+  ipAddress: "DUAL-IP LINE: Enter the actual WAN/TIK IP with /29 subnet (e.g., 192.168.1.10/29). This replaces both the 'add address=' line AND the 'network=' parameter in the template. The first IP becomes the interface address, and the network portion becomes the network address.",
   gateway: "Updates the 'add distance=1 gateway=' line in the IP route section (generally provided by customer)"
 };
 
@@ -55,8 +55,8 @@ const MikrotikTemplates: React.FC = () => {
   };
 
   /**
-   * Downloads the configured OTT template as a .rsc file
-   * Creates a RouterOS script file with customer-specific configuration
+   * Downloads the configured OTT template as a .txt file
+   * Creates a text file with customer-specific configuration
    */
   const handleDownloadTemplate = () => {
     const template = getOttTemplate(ottFields);
@@ -65,8 +65,8 @@ const MikrotikTemplates: React.FC = () => {
     
     if (downloadRef.current) {
       const fileName = ottFields.customerName 
-        ? `${ottFields.customerName.replace(/[^a-zA-Z0-9]/g, '_')}_OTT_Config.rsc`
-        : 'OTT_Mikrotik_Config.rsc';
+        ? `${ottFields.customerName.replace(/[^a-zA-Z0-9]/g, '_')}_OTT_Config.txt`
+        : 'OTT_Mikrotik_Config.txt';
       
       downloadRef.current.href = url;
       downloadRef.current.download = fileName;
@@ -97,12 +97,21 @@ const MikrotikTemplates: React.FC = () => {
             <li><strong>Customer Address:</strong> Updates the "# Address:" comment line</li>
             <li><strong>City:</strong> Updates the "# City:" comment line (combined with MI + ZIP)</li>
             <li><strong>ZIP Code:</strong> Added to city line (format: "City MI ZIP")</li>
-            <li><strong>XIP:</strong> Updates the "# XIP:" comment line with identifier</li>
+            <li><strong>XIP:</strong> Updates the "# XIP:" comment line with identifier <em>(documentation only - not functional)</em></li>
             <li><strong>Handle:</strong> Updates the "# Handle:" comment line (format: HANDLE-CUSTOMERADDRESS)</li>
-            <li><strong>IP Address:</strong> Updates the "add address=" line - first IP is the actual WAN/TIK IP, second IP is the network IP</li>
+            <li><strong>🔗 IP Address (DUAL-IP LINE):</strong> Enter the actual WAN/TIK IP with /29 subnet (e.g., 192.168.1.10/29). This single input updates BOTH the interface address AND the network address in the RouterOS config.</li>
             <li><strong>Gateway IP:</strong> Updates the "add distance=1 gateway=" line (generally provided by customer)</li>
           </ul>
-          <em>💡 Hover over any field for detailed tooltips!</em>
+          <div style={{ 
+            backgroundColor: '#e7f3ff', 
+            border: '1px solid #b3d9ff', 
+            borderRadius: '4px', 
+            padding: '8px', 
+            marginTop: '10px' 
+          }}>
+            <strong>💡 Important:</strong> The IP Address field is a "dual-IP line" - when you enter an IP like <code>192.168.1.10/29</code>, it automatically calculates and updates both the interface address (<code>192.168.1.10/29</code>) and the network address (<code>192.168.1.8</code>) in the RouterOS configuration.
+          </div>
+          <em>🔍 Hover over any field for detailed tooltips!</em>
         </div>
         
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 8 }}>
@@ -241,9 +250,9 @@ const MikrotikTemplates: React.FC = () => {
               cursor: 'pointer',
               fontWeight: 'bold'
             }}
-            title="Download the configured OTT template as a .rsc file ready for RouterOS"
+            title="Download the configured OTT template as a .txt file ready for RouterOS"
           >
-            📥 Download Template (.rsc)
+            📥 Download Template (.txt)
           </button>
           <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
         </div>

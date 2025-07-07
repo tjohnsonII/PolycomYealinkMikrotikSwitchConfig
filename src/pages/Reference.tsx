@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import PBXReference from './reference/pbx/PBXReference';
+import VPNReference from './reference/VPNReference';
 
 const REFERENCE_SUBTABS = [
   { key: 'phones', label: 'Phones' },
   { key: 'mikrotik', label: 'Mikrotik' },
   { key: 'switches', label: 'Switches' },
   { key: 'pbx', label: "PBX's" },
+  { key: 'vpn', label: 'VPN Setup' },
 ];
 
 const PBX_SUBTABS = [
@@ -280,6 +282,7 @@ const Reference: React.FC = () => {
           </div>
         )}
         {referenceSubtab === 'pbx' && <PBXReferenceSubnav />}
+        {referenceSubtab === 'vpn' && <VPNReference />}
       </div>
     </div>
   );

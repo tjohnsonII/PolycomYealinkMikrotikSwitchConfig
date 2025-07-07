@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 const defaultSwitch24Config = `no service pad
 service timestamps debug datetime msec localtime
@@ -199,10 +199,27 @@ end
 const Switch24DynamicTemplate: React.FC = () => {
   const [hostname, setHostname] = useState('HANDLE-STREETADDRESS-SWITCHNUMBER');
   const [assetTag, setAssetTag] = useState('XXXXX');
+  const downloadRef = useRef<HTMLAnchorElement>(null);
 
   const filled = defaultSwitch24Config
     .replace(/\{HOSTNAME\}/g, hostname)
     .replace(/\{ASSET_TAG\}/g, assetTag);
+
+  const handleDownload = () => {
+    const blob = new Blob([filled], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    
+    if (downloadRef.current) {
+      const fileName = hostname 
+        ? `${hostname.replace(/[^a-zA-Z0-9]/g, '_')}_24Port_Config.txt`
+        : '24Port_Switch_Config.txt';
+      
+      downloadRef.current.href = url;
+      downloadRef.current.download = fileName;
+      downloadRef.current.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  };
 
   return (
     <div>
@@ -211,6 +228,28 @@ const Switch24DynamicTemplate: React.FC = () => {
         <div><label>Hostname<br /><input type="text" value={hostname} onChange={e => setHostname(e.target.value)} /></label></div>
         <div><label>Asset Tag<br /><input type="text" value={assetTag} onChange={e => setAssetTag(e.target.value)} /></label></div>
       </div>
+      
+      {/* Download button */}
+      <div style={{ marginBottom: 12 }}>
+        <button 
+          onClick={handleDownload}
+          style={{
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 16px',
+            fontSize: '14px',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+          title="Download the configured 24-port switch template as a .txt file"
+        >
+          📥 Download Template (.txt)
+        </button>
+        <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
+      </div>
+
       <textarea
         readOnly
         rows={38}

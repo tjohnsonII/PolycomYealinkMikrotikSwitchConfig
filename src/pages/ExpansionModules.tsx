@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const ExpansionModules: React.FC = () => {
   const [yealinkOutput, setYealinkOutput] = useState<string>('');
@@ -111,21 +111,21 @@ const ExpansionModules: React.FC = () => {
   // Generate Polycom expansion config line and preview all keys for the page
   // (This function is not used in the current UI, but if needed, you can implement it using polycomSlots)
   // Example: generate config for a specific slot index
-  const generatePolycomExpansion = (slotIndex: number) => {
-    let lines = [];
-    for (let i = 0; i < polycomSlots.length; i++) {
-      const slot = polycomSlots[i];
-      lines.push(
-        `attendant.resourcelist.${i + 1}.address=${slot.address}\n` +
-        `attendant.resourcelist.${i + 1}.label=${slot.label}\n` +
-        `attendant.resourcelist.${i + 1}.type=${slot.type}`
-      );
-    }
-    setPolycomOutput(lines.join('\n'));
-    try {
-      localStorage.setItem('expansionConfig', lines.join('\n'));
-    } catch {}
-  };
+  // const generatePolycomExpansion = (slotIndex: number) => {
+  //   let lines = [];
+  //   for (let i = 0; i < polycomSlots.length; i++) {
+  //     const slot = polycomSlots[i];
+  //     lines.push(
+  //       `attendant.resourcelist.${i + 1}.address=${slot.address}\n` +
+  //       `attendant.resourcelist.${i + 1}.label=${slot.label}\n` +
+  //       `attendant.resourcelist.${i + 1}.type=${slot.type}`
+  //     );
+  //   }
+  //   setPolycomOutput(lines.join('\n'));
+  //   try {
+  //     localStorage.setItem('expansionConfig', lines.join('\n'));
+  //   } catch {}
+  // };
 
   // Clear config handler
   const handleClearExpansionConfig = () => {

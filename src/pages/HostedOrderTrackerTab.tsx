@@ -96,14 +96,14 @@ const HostedOrderTrackerTab: React.FC = () => {
     setData(d => ({ ...d, [field]: { ...d[field], [customer]: checked ? 'TRUE' : 'FALSE' } }));
   }
   // ...existing code...
-  function handleDeleteField(idx: number) {
-    const field = fields[idx];
-    setFields(f => f.filter((_, i) => i !== idx));
-    setData(d => {
-      const { [field]: _removed, ...rest } = d;
-      return rest;
-    });
-  }
+  // function handleDeleteField(idx: number) {
+  //   const field = fields[idx];
+  //   setFields(f => f.filter((_, i) => i !== idx));
+  //   setData(d => {
+  //     const { [field]: _removed, ...rest } = d;
+  //     return rest;
+  //   });
+  // }
   // Add a new blank customer column (handle is editable in header)
   function handleAddCustomer() {
     setCustomers(custs => [...custs, '']);
@@ -186,7 +186,7 @@ const HostedOrderTrackerTab: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {fields.map((field, i) => (
+            {fields.map((field) => (
               <tr key={field} style={{ height: 44 }}>
                 <td style={{ border: '1px solid #ccc', padding: '8px 0', background: '#f4f4f4', textAlign: 'center' }}>
                   {field}
