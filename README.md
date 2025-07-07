@@ -23,6 +23,9 @@ A modular web app for generating configuration code for Polycom and Yealink phon
 - **CSV import/export** for FBPX, VPBX, and Streeto tabs (using papaparse)
 - **Editable static/dynamic templates** for Mikrotik and Switch devices
 - **Graphical preview** for Yealink and Polycom expansion modules (with tooltips and user guidance)
+- **Authentication & User Management** with JWT-based security and admin dashboard
+- **VPN Diagnostics** with real network connectivity testing to PBX servers
+- **Persistent VPN Connection** for dedicated troubleshooting server deployment
 - **Fully commented, modular code** for maintainability and easy contribution
 
 ---
@@ -154,43 +157,93 @@ src/
 
 ## Development
 
+### Quick Start
+
 1. **Install dependencies:**
    ```bash
    npm install
    ```
-2. **Start the development server:**
+
+2. **Start all services (recommended):**
+   ```bash
+   chmod +x start-app.sh
+   ./start-app.sh
+   ```
+
+3. **Manual development mode:**
    ```bash
    npm run dev
    ```
-3. **Build for production:**
+
+4. **Build for production:**
    ```bash
    npm run build
    ```
-4. **Preview production build:**
+
+### Dedicated PBX Troubleshooting Server Setup
+
+For a dedicated server that maintains persistent VPN connectivity for PBX diagnostics:
+
+1. **Check VPN client compatibility:**
    ```bash
-   npm run preview
+   ./check-vpn-clients.sh
    ```
+
+2. **Set up persistent VPN:**
+   ```bash
+   ./setup-persistent-vpn.sh
+   ```
+
+3. **Install a SAML-compatible VPN client:**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install network-manager-openvpn-gnome
+   
+   # Or install OpenVPN Connect
+   # Follow instructions from check-vpn-clients.sh
+   ```
+
+4. **Connect to VPN manually (for SAML configs):**
+   - Import `backend/tjohnson-work.ovpn` into your VPN client
+   - Complete SAML authentication
+   - Enable auto-reconnect if available
+
+5. **Start the application:**
+   ```bash
+   ./start-app.sh
+   ```
+
+The diagnostic page will now be able to reach PBX servers through the server's VPN connection!
 
 ---
 
 ## Automated Start Script
 
-You can use the provided `start-app.sh` script to automate starting the app with all common network options:
+The `start-app.sh` script provides a complete application stack with enhanced features:
 
 ```bash
 chmod +x start-app.sh
 ./start-app.sh
 ```
 
-This script will:
-- Install dependencies (if needed)
-- Start the Vite dev server with:
-  - `--host 0.0.0.0` (listen on all interfaces)
-  - `--port 3000` (custom port)
-  - `--open` (open browser)
-  - `--strictPort` (fail if port is taken)
+### Services Started:
+- **Frontend:** Vite development server (port 3000)
+- **Backend:** SSH WebSocket server (port 3001) 
+- **Auth:** Authentication server (port 3002)
+- **VPN:** Optional persistent VPN connection
 
-You can edit the script to change options as needed.
+### Enhanced Features:
+- Process cleanup and port management
+- Health checks and auto-recovery
+- Dependency validation
+- VPN connectivity support
+- User management and authentication
+- Real network diagnostics
+
+### Configuration:
+- Edit `.env` file for custom settings
+- Set `ENABLE_PERSISTENT_VPN=true` for dedicated server mode
+- Configure admin users and JWT secrets
 
 ---
 

@@ -1,12 +1,22 @@
 import React, { useState, useRef } from 'react';
 import TerminalPanel from '../components/TerminalPanel';
+// @ts-ignore - QR code library
+import QRCode from 'qrcode';
 
 const Diagnostic: React.FC = () => {
   // VPN connection state
+  const [serverVpnStatus, setServerVpnStatus] = useState<'unknown' | 'connected' | 'disconnected'>('unknown');
   const [vpnStatus, setVpnStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [vpnConfig, setVpnConfig] = useState({
     configFile: null as File | null
   });
+  const [vpnCredentials, setVpnCredentials] = useState({
+    username: 'tjohnson',
+    password: ''
+  });
+  const [requiresCredentials, setRequiresCredentials] = useState<boolean | null>(null); // null = unknown, true/false = known
+  const [authType, setAuthType] = useState<'unknown' | 'certificate' | 'credentials' | 'saml'>('unknown');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [logs, setLogs] = useState<string[]>([]);
   const [pbxServers, setPbxServers] = useState([
     { name: 'Primary PBX', host: '69.39.69.102', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' },
@@ -31,6 +41,11 @@ const Diagnostic: React.FC = () => {
           setLogs(status.logs);
         }
 
+        // If there's an existing config, check if it requires credentials
+        if (status.configPath) {
+          await checkCredentialsRequired();
+        }
+
         // If connected, test PBX servers
         if (status.status === 'connected') {
           setTimeout(() => testAllPbxServers(), 1000);
@@ -41,10 +56,50 @@ const Diagnostic: React.FC = () => {
     }
   };
 
+  // Load QR code for current VPN config
+  const loadQrCode = async () => {
+    if (!vpnConfig.configFile) return;
+
+    try {
+      const fileContent = await readFileAsText(vpnConfig.configFile);
+      const qrCodeDataUrl = await QRCode.toDataURL(fileContent);
+      const img = document.getElementById('vpn-qrcode') as HTMLImageElement;
+      img.src = qrCodeDataUrl;
+      img.style.display = 'block';
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+    }
+  };
+
   // Add log entry
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs(prev => [...prev.slice(-49), `[${timestamp}] ${message}`]);
+  };
+
+  // Check if uploaded VPN config requires credentials
+  const checkCredentialsRequired = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/vpn/requires-credentials');
+      if (response.ok) {
+        const result = await response.json();
+        setRequiresCredentials(result.requiresCredentials);
+        setAuthType(result.authType);
+        
+        if (result.authType === 'credentials') {
+          addLog('🔑 This VPN config requires username/password credentials');
+        } else if (result.authType === 'certificate') {
+          addLog('🔐 This VPN config uses certificate-based authentication');
+        } else if (result.authType === 'saml') {
+          addLog('🔍 This VPN config requires SAML web-based authentication');
+          addLog('⚠️ Standard OpenVPN clients cannot connect to SAML VPNs');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check credentials requirement:', error);
+      setRequiresCredentials(true); // Default to requiring credentials if we can't check
+      setAuthType('unknown');
+    }
   };
 
   // Real VPN connection using OpenVPN
@@ -73,12 +128,37 @@ const Diagnostic: React.FC = () => {
         throw new Error('Failed to upload config file');
       }
 
-      addLog(`� Config file uploaded: ${vpnConfig.configFile.name}`);
+      addLog(`📁 Config file uploaded: ${vpnConfig.configFile.name}`);
+
+      // Check if credentials are required
+      await checkCredentialsRequired();
+
+      // If credentials are required, validate them
+      if (requiresCredentials && (!vpnCredentials.username || !vpnCredentials.password)) {
+        setVpnStatus('disconnected');
+        addLog('❌ Please enter your VPN username and password');
+        return;
+      }
+
+      // If SAML authentication is required, block connection
+      if (authType === 'saml') {
+        setVpnStatus('disconnected');
+        addLog('❌ SAML authentication not supported by command-line OpenVPN');
+        addLog('💡 Please use OpenVPN Connect app or similar SAML-compatible client');
+        return;
+      }
 
       // Start VPN connection
+      const connectPayload: any = {};
+      if (requiresCredentials && authType === 'credentials') {
+        connectPayload.username = vpnCredentials.username;
+        connectPayload.password = vpnCredentials.password;
+      }
+
       const connectResponse = await fetch('http://localhost:3001/vpn/connect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(connectPayload)
       });
 
       if (!connectResponse.ok) {
@@ -92,6 +172,205 @@ const Diagnostic: React.FC = () => {
     } catch (error) {
       setVpnStatus('error');
       addLog('❌ VPN connection failed: ' + (error as Error).message);
+    }
+  };
+
+  // Download VPN config file
+  const downloadVpnConfig = async () => {
+    try {
+      addLog('📁 Preparing VPN config download...');
+      
+      // Try to get config from backend first (for pre-loaded configs)
+      try {
+        const response = await fetch('http://localhost:3001/vpn/config-content');
+        if (response.ok) {
+          const result = await response.json();
+          const blob = new Blob([result.content], { type: 'application/x-openvpn-profile' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = result.filename || 'vpn-config.ovpn';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          
+          addLog(`📁 Downloaded VPN config: ${result.filename || 'vpn-config.ovpn'}`);
+          addLog('💡 Import this file into OpenVPN Connect or compatible client');
+          return;
+        }
+      } catch (error) {
+        console.log('Backend config not available, trying uploaded file');
+      }
+
+      // Fallback to uploaded file
+      if (!vpnConfig.configFile) {
+        addLog('❌ No VPN config file available for download');
+        return;
+      }
+
+      // Create a download link for the uploaded config file
+      const url = URL.createObjectURL(vpnConfig.configFile);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = vpnConfig.configFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      addLog(`📁 Downloaded VPN config: ${vpnConfig.configFile.name}`);
+      addLog('💡 Import this file into OpenVPN Connect or compatible client');
+    } catch (error) {
+      addLog('❌ Failed to download config file: ' + (error as Error).message);
+    }
+  };
+
+  // Try to open VPN config in native client
+  const openInVpnClient = async () => {
+    if (!vpnConfig.configFile) {
+      addLog('❌ No VPN config file available');
+      return;
+    }
+
+    try {
+      const fileContent = await readFileAsText(vpnConfig.configFile);
+      
+      // Try different protocol handlers for VPN clients
+      const protocols = [
+        'openvpn-connect:', // OpenVPN Connect
+        'ovpn:', // Generic OpenVPN protocol
+        'vpn:' // Generic VPN protocol
+      ];
+
+      let opened = false;
+      
+      for (const protocol of protocols) {
+        try {
+          // Create a data URL with the config content
+          const configData = encodeURIComponent(fileContent);
+          const protocolUrl = `${protocol}//import-profile?profile-data=${configData}`;
+          
+          // Try to open with protocol handler
+          window.location.href = protocolUrl;
+          opened = true;
+          addLog(`🔗 Attempting to open with VPN client (${protocol})`);
+          addLog('💡 If nothing happens, please install OpenVPN Connect');
+          break;
+        } catch (error) {
+          console.log(`Failed to open with ${protocol}:`, error);
+        }
+      }
+
+      if (!opened) {
+        // Fallback: try to open a custom URL scheme
+        try {
+          const blob = new Blob([fileContent], { type: 'application/x-openvpn-profile' });
+          const url = URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          URL.revokeObjectURL(url);
+          addLog('🔗 Opened config in new tab - save and import to VPN client');
+        } catch (error) {
+          addLog('❌ Could not open in VPN client - please download and import manually');
+        }
+      }
+    } catch (error) {
+      addLog('❌ Failed to open in VPN client: ' + (error as Error).message);
+    }
+  };
+
+  // Copy VPN config content to clipboard
+  const copyConfigToClipboard = async () => {
+    try {
+      addLog('📋 Preparing to copy VPN config...');
+      let fileContent = '';
+
+      // Try to get config from backend first (for pre-loaded configs)
+      try {
+        const response = await fetch('http://localhost:3001/vpn/config-content');
+        if (response.ok) {
+          const result = await response.json();
+          fileContent = result.content;
+        }
+      } catch (error) {
+        console.log('Backend config not available, trying uploaded file');
+      }
+
+      // Fallback to uploaded file
+      if (!fileContent && vpnConfig.configFile) {
+        fileContent = await readFileAsText(vpnConfig.configFile);
+      }
+
+      if (!fileContent) {
+        addLog('❌ No VPN config file available');
+        return;
+      }
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        // Modern clipboard API
+        await navigator.clipboard.writeText(fileContent);
+        addLog('📋 VPN config copied to clipboard');
+        addLog('💡 Paste into OpenVPN Connect or save as .ovpn file');
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = fileContent;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        addLog('📋 VPN config copied to clipboard (fallback method)');
+        addLog('💡 Paste into OpenVPN Connect or save as .ovpn file');
+      }
+    } catch (error) {
+      addLog('❌ Failed to copy config: ' + (error as Error).message);
+    }
+  };
+
+  // Generate QR code for mobile VPN import
+  const generateQrCode = async () => {
+    try {
+      addLog('📱 Generating QR code for mobile import...');
+      
+      // Get config content
+      let fileContent = '';
+      try {
+        const response = await fetch('http://localhost:3001/vpn/config-content');
+        if (response.ok) {
+          const result = await response.json();
+          fileContent = result.content;
+        }
+      } catch (error) {
+        if (vpnConfig.configFile) {
+          fileContent = await readFileAsText(vpnConfig.configFile);
+        }
+      }
+
+      if (!fileContent) {
+        addLog('❌ No VPN config available for QR code');
+        return;
+      }
+
+      // Create a data URL that mobile apps can understand
+      const configData = `data:application/x-openvpn-profile;base64,${btoa(fileContent)}`;
+      
+      // Generate QR code
+      const qrCodeDataUrl = await QRCode.toDataURL(configData, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      
+      setQrCodeUrl(qrCodeDataUrl);
+      addLog('📱 QR code generated successfully');
+      addLog('💡 Scan with OpenVPN mobile app to import config');
+    } catch (error) {
+      addLog('❌ Failed to generate QR code: ' + (error as Error).message);
     }
   };
 
@@ -345,8 +624,235 @@ const Diagnostic: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       setVpnConfig(prev => ({ ...prev, configFile: file }));
-      addLog(`📁 Config file uploaded: ${file.name}`);
+      setRequiresCredentials(null); // Reset credential requirement when new file is selected
+      addLog(`📁 Config file selected: ${file.name}`);
     }
+  };
+
+  // Open SAML login page manually
+  const openSamlLogin = async () => {
+    try {
+      addLog('🌐 Opening SAML login page...');
+      
+      // Try to get SAML login URL from backend
+      let samlUrl = '';
+      try {
+        const response = await fetch('http://localhost:3001/vpn/saml-login-url');
+        if (response.ok) {
+          const result = await response.json();
+          samlUrl = result.loginUrl;
+        }
+      } catch (error) {
+        console.log('Could not get SAML URL from backend, using default');
+      }
+      
+      // Fallback to default SAML login URL based on VPN server
+      if (!samlUrl) {
+        samlUrl = 'https://terminal.123.net/login';
+      }
+      
+      // Open SAML login page in new tab
+      window.open(samlUrl, '_blank', 'noopener,noreferrer');
+      
+      addLog('🌐 SAML login page opened in new tab');
+      addLog('💡 Complete authentication in browser, then use OpenVPN Connect to connect');
+      addLog('📝 Steps: 1) Sign in with SAML → 2) Download/import config → 3) Connect with OpenVPN Connect');
+    } catch (error) {
+      addLog('❌ Failed to open SAML login: ' + (error as Error).message);
+    }
+  };
+
+  // Linux VPN Integration Functions
+  
+  // Install NetworkManager OpenVPN plugin
+  const installNetworkManagerOpenVPN = async () => {
+    try {
+      addLog('📦 Installing NetworkManager OpenVPN plugin...');
+      
+      // Detect Linux distribution and provide appropriate command
+      const response = await fetch('http://localhost:3001/system/os-info');
+      let installCommand = '';
+      
+      if (response.ok) {
+        const osInfo = await response.json();
+        const distro = osInfo.distro?.toLowerCase() || '';
+        
+        if (distro.includes('ubuntu') || distro.includes('debian')) {
+          installCommand = 'sudo apt-get update && sudo apt-get install network-manager-openvpn-gnome';
+        } else if (distro.includes('fedora') || distro.includes('rhel') || distro.includes('centos')) {
+          installCommand = 'sudo dnf install NetworkManager-openvpn-gnome';
+        } else if (distro.includes('arch')) {
+          installCommand = 'sudo pacman -S networkmanager-openvpn';
+        } else {
+          installCommand = 'sudo apt-get install network-manager-openvpn-gnome  # For Ubuntu/Debian\n# OR\nsudo dnf install NetworkManager-openvpn-gnome  # For Fedora/RHEL\n# OR\nsudo pacman -S networkmanager-openvpn  # For Arch';
+        }
+      } else {
+        installCommand = 'sudo apt-get install network-manager-openvpn-gnome';
+      }
+      
+      // Copy command to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(installCommand);
+        addLog('📋 Installation command copied to clipboard');
+      }
+      
+      addLog('💡 Run the copied command in terminal to install NetworkManager OpenVPN');
+      addLog('🔄 After installation, restart NetworkManager: sudo systemctl restart NetworkManager');
+      
+      // Display the command in the logs
+      addLog(`📝 Command: ${installCommand}`);
+    } catch (error) {
+      addLog('❌ Failed to prepare installation: ' + (error as Error).message);
+    }
+  };
+
+  // Import VPN config to NetworkManager
+  const importToNetworkManager = async () => {
+    try {
+      addLog('🔗 Importing VPN config to NetworkManager...');
+      
+      // Get config content
+      let configContent = '';
+      let filename = 'vpn-config.ovpn';
+      
+      try {
+        const response = await fetch('http://localhost:3001/vpn/config-content');
+        if (response.ok) {
+          const result = await response.json();
+          configContent = result.content;
+          filename = result.filename || filename;
+        }
+      } catch (error) {
+        if (vpnConfig.configFile) {
+          configContent = await readFileAsText(vpnConfig.configFile);
+          filename = vpnConfig.configFile.name;
+        }
+      }
+
+      if (!configContent) {
+        addLog('❌ No VPN config available for import');
+        return;
+      }
+
+      // Download the config file for manual import
+      const blob = new Blob([configContent], { type: 'application/x-openvpn-profile' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addLog('📁 Config file downloaded for NetworkManager import');
+      addLog('💡 Steps to import:');
+      addLog('   1) Open Network Settings (gnome-control-center network)');
+      addLog('   2) Click "+" next to VPN');
+      addLog('   3) Choose "Import from file..."');
+      addLog('   4) Select the downloaded .ovpn file');
+      addLog('   5) Configure credentials if needed');
+      addLog('   6) Click "Add" to save the connection');
+      
+      // Try to open NetworkManager settings
+      try {
+        await fetch('http://localhost:3001/system/open-network-settings', { method: 'POST' });
+        addLog('🔧 Attempted to open Network Settings');
+      } catch (error) {
+        addLog('💡 Manually open: Settings → Network → VPN → + → Import from file');
+      }
+    } catch (error) {
+      addLog('❌ Failed to import to NetworkManager: ' + (error as Error).message);
+    }
+  };
+
+  // Connect using command-line OpenVPN
+  const connectWithOpenVPN = async () => {
+    try {
+      addLog('⌨️ Initiating command-line OpenVPN connection...');
+      
+      if (authType === 'saml') {
+        addLog('❌ SAML authentication not supported with command-line OpenVPN');
+        addLog('💡 Use NetworkManager or OpenVPN Connect instead');
+        return;
+      }
+
+      // Use the existing VPN connection logic
+      await connectVPN();
+    } catch (error) {
+      addLog('❌ Command-line OpenVPN connection failed: ' + (error as Error).message);
+    }
+  };
+
+  // Generate OpenVPN command for manual execution
+  const generateOpenVPNCommand = async () => {
+    try {
+      addLog('📝 Generating OpenVPN command...');
+      
+      // Get config file path or name
+      let configName = 'vpn-config.ovpn';
+      if (vpnConfig.configFile) {
+        configName = vpnConfig.configFile.name;
+      }
+
+      let command = `sudo openvpn --config ${configName}`;
+      
+      if (authType === 'credentials' && requiresCredentials) {
+        command += ' --auth-user-pass';
+        addLog('💡 You will be prompted for username/password when running this command');
+      }
+
+      if (authType === 'saml') {
+        addLog('❌ SAML authentication cannot be used with command-line OpenVPN');
+        addLog('💡 Use NetworkManager or OpenVPN Connect for SAML authentication');
+        return;
+      }
+
+      // Copy command to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(command);
+        addLog('📋 OpenVPN command copied to clipboard');
+      }
+
+      addLog(`📝 Command: ${command}`);
+      addLog('💡 Run this command in terminal (requires sudo privileges)');
+      addLog('🔧 Make sure the .ovpn file is in the current directory');
+      addLog('⚠️  Press Ctrl+C to disconnect when done');
+    } catch (error) {
+      addLog('❌ Failed to generate command: ' + (error as Error).message);
+    }
+  };
+
+  // Try to use Tunnelblick (if available)
+  const tryTunnelblick = async () => {
+    addLog('🍎 Tunnelblick is primarily for macOS');
+    addLog('💡 For Linux, consider these alternatives:');
+    addLog('   • NetworkManager OpenVPN (recommended)');
+    addLog('   • OpenVPN Connect (official client)');
+    addLog('   • Command-line OpenVPN');
+    addLog('   • pritunl-client (modern GUI client)');
+  };
+
+  // Show additional Linux VPN clients
+  const showLinuxVpnClients = async () => {
+    addLog('📋 Linux VPN Client Options:');
+    addLog('');
+    addLog('🔵 GUI Clients:');
+    addLog('   • NetworkManager OpenVPN (GNOME/KDE integration)');
+    addLog('   • OpenVPN Connect (official, supports SAML)');
+    addLog('   • pritunl-client (modern, feature-rich)');
+    addLog('   • OpenVPN GUI (simple graphical interface)');
+    addLog('');
+    addLog('⌨️  Command Line:');
+    addLog('   • openvpn (standard command-line client)');
+    addLog('   • openvpn3 (newer implementation)');
+    addLog('');
+    addLog('🔧 Installation Commands:');
+    addLog('   Ubuntu/Debian: sudo apt install openvpn network-manager-openvpn-gnome');
+    addLog('   Fedora: sudo dnf install openvpn NetworkManager-openvpn-gnome');
+    addLog('   Arch: sudo pacman -S openvpn networkmanager-openvpn');
+    addLog('');
+    addLog('💡 For SAML authentication, use OpenVPN Connect or compatible GUI client');
   };
 
   return (
@@ -411,23 +917,444 @@ const Diagnostic: React.FC = () => {
             )}
           </div>
 
+          {/* VPN Credentials - only show if required */}
+          {requiresCredentials !== false && authType !== 'saml' && (
+            <div style={{ marginBottom: '15px' }}>
+              <h4 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
+                VPN Credentials
+                {requiresCredentials === null && (
+                  <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>
+                    {' '}(Upload config file to check if credentials are needed)
+                  </span>
+                )}
+              </h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>
+                    Username:
+                  </label>
+                  <input
+                    type="text"
+                    value={vpnCredentials.username}
+                    onChange={(e) => setVpnCredentials(prev => ({ ...prev, username: e.target.value }))}
+                    placeholder="tjohnson"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px'
+                    }}
+                    disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>
+                    Password:
+                  </label>
+                  <input
+                    type="password"
+                    value={vpnCredentials.password}
+                    onChange={(e) => setVpnCredentials(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Enter your VPN password"
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontSize: '14px'
+                    }}
+                    disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Linux Open-Source Client Integration */}
+          {authType !== 'saml' && (
+            <div style={{ 
+              marginBottom: '15px', 
+              padding: '15px', 
+              backgroundColor: '#f0f8ff', 
+              border: '1px solid #007bff', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#004085' }}>
+                🐧 Linux Open-Source VPN Options
+              </div>
+              <div style={{ marginBottom: '10px' }}>
+                For Linux systems, you can use several open-source VPN clients and NetworkManager integration:
+              </div>
+              
+              {/* NetworkManager Integration */}
+              <div style={{ 
+                marginBottom: '15px', 
+                padding: '10px', 
+                backgroundColor: '#ffffff', 
+                border: '1px solid #dee2e6', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🔧 NetworkManager Integration:</div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  <button
+                    onClick={() => installNetworkManagerOpenVPN()}
+                    style={{
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📦 Install NetworkManager OpenVPN
+                  </button>
+                  
+                  <button
+                    onClick={() => importToNetworkManager()}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    🔗 Import to NetworkManager
+                  </button>
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  NetworkManager provides GUI integration with your desktop environment
+                </div>
+              </div>
+
+              {/* Command Line Options */}
+              <div style={{ 
+                marginBottom: '15px', 
+                padding: '10px', 
+                backgroundColor: '#ffffff', 
+                border: '1px solid #dee2e6', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>⌨️ Command Line Options:</div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                  <button
+                    onClick={() => connectWithOpenVPN()}
+                    style={{
+                      backgroundColor: '#17a2b8',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    🔐 Connect with OpenVPN CLI
+                  </button>
+                  
+                  <button
+                    onClick={() => generateOpenVPNCommand()}
+                    style={{
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📝 Generate Command
+                  </button>
+                </div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  Direct command-line connection using the system OpenVPN client
+                </div>
+              </div>
+
+              {/* Third-Party Clients */}
+              <div style={{ 
+                marginBottom: '15px', 
+                padding: '10px', 
+                backgroundColor: '#ffffff', 
+                border: '1px solid #dee2e6', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🎛️ Third-Party Clients:</div>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', fontSize: '12px' }}>
+                  <a href="https://openvpn.net/community-downloads/" target="_blank" rel="noopener noreferrer" 
+                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                    🔽 OpenVPN Community
+                  </a>
+                  <button
+                    onClick={() => tryTunnelblick()}
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: '#007bff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    🍎 Tunnelblick (if available)
+                  </button>
+                  <button
+                    onClick={() => showLinuxVpnClients()}
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: '#007bff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    📋 More Linux Clients
+                  </button>
+                </div>
+              </div>
+
+              {/* Installation Instructions */}
+              <div style={{ 
+                marginTop: '15px', 
+                padding: '15px', 
+                backgroundColor: '#f1f3f4', 
+                border: '1px solid #dadce0', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>📖 Linux VPN Setup:</div>
+                <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+                  <li><strong>Ubuntu/Debian:</strong>
+                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                      sudo apt-get install network-manager-openvpn-gnome
+                    </div>
+                  </li>
+                  <li style={{ marginTop: '8px' }}><strong>Fedora/CentOS:</strong>
+                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                      sudo dnf install NetworkManager-openvpn-gnome
+                    </div>
+                  </li>
+                  <li style={{ marginTop: '8px' }}><strong>Arch Linux:</strong>
+                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                      sudo pacman -S networkmanager-openvpn
+                    </div>
+                  </li>
+                  <li style={{ marginTop: '8px' }}>After installation, use NetworkManager GUI or the buttons above for easy setup</li>
+                </ol>
+              </div>
+            </div>
+          )}
+
+          {/* Show message for SAML authentication */}
+          {authType === 'saml' && (
+            <div style={{ 
+              marginBottom: '15px', 
+              padding: '15px', 
+              backgroundColor: '#fff3cd', 
+              border: '1px solid #ffc107', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#856404' }}>
+                🔍 SAML Authentication Required
+              </div>
+              <div style={{ marginBottom: '10px' }}>
+                This VPN configuration requires <strong>SAML web-based authentication</strong> and cannot be used with standard command-line OpenVPN clients.
+              </div>
+              
+              {/* Quick Actions for SAML VPNs */}
+              <div style={{ 
+                marginBottom: '15px', 
+                padding: '10px', 
+                backgroundColor: '#f8f9fa', 
+                border: '1px solid #dee2e6', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🚀 Quick Actions:</div>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {/* Download Config Button */}
+                  <button
+                    onClick={() => downloadVpnConfig()}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📁 Download Config
+                  </button>
+                  
+                  {/* Try to Open in OpenVPN Connect */}
+                  <button
+                    onClick={() => openInVpnClient()}
+                    style={{
+                      backgroundColor: '#28a745',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    🔗 Open in VPN Client
+                  </button>
+                  
+                  {/* Copy Config Content */}
+                  <button
+                    onClick={() => copyConfigToClipboard()}
+                    style={{
+                      backgroundColor: '#6c757d',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📋 Copy Config
+                  </button>
+                  
+                  {/* Generate QR Code */}
+                  <button
+                    onClick={() => generateQrCode()}
+                    style={{
+                      backgroundColor: '#17a2b8',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    📱 QR Code
+                  </button>
+                  
+                  {/* Manual SAML Login */}
+                  <button
+                    onClick={() => openSamlLogin()}
+                    style={{
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    🌐 Manual SAML Login
+                  </button>
+                </div>
+              </div>
+
+              {/* Step-by-Step Instructions */}
+              <div style={{ 
+                marginTop: '15px', 
+                padding: '15px', 
+                backgroundColor: '#f1f3f4', 
+                border: '1px solid #dadce0', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>📖 How to Connect:</div>
+                
+                {/* Option 1: Using OpenVPN Connect */}
+                <div style={{ marginBottom: '15px' }}>
+                  <div style={{ fontWeight: 'bold', color: '#007bff', marginBottom: '5px' }}>Option 1: Using OpenVPN Connect (Recommended)</div>
+                  <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+                    <li>Download and install <strong>OpenVPN Connect</strong> on your device</li>
+                    <li>Use one of the options above to get the VPN config:
+                      <ul style={{ marginTop: '5px', marginBottom: '5px' }}>
+                        <li><strong>📁 Download Config:</strong> Save .ovpn file and import manually</li>
+                        <li><strong>🔗 Open in VPN Client:</strong> Try to launch OpenVPN Connect directly</li>
+                        <li><strong>📋 Copy Config:</strong> Copy text and paste into client</li>
+                        <li><strong>📱 QR Code:</strong> Scan with mobile app for quick import</li>
+                      </ul>
+                    </li>
+                    <li>When connecting, OpenVPN Connect will open a web browser automatically</li>
+                    <li>Log in with your company credentials in the browser</li>
+                    <li>Return to OpenVPN Connect - you should now be connected!</li>
+                  </ol>
+                </div>
+
+                {/* Option 2: Manual Browser Login */}
+                <div style={{ marginBottom: '0' }}>
+                  <div style={{ fontWeight: 'bold', color: '#ff6b35', marginBottom: '5px' }}>Option 2: Manual Browser Login (For Testing/Troubleshooting)</div>
+                  <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+                    <li>Click <strong>🌐 Login in Browser</strong> above to open the SAML login page</li>
+                    <li>Complete your company authentication in the browser</li>
+                    <li>Note: This won't establish a VPN connection, but confirms SAML auth works</li>
+                    <li>Use this to verify your credentials before trying OpenVPN Connect</li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* Download Links */}
+              <div style={{ 
+                marginTop: '15px', 
+                padding: '10px', 
+                backgroundColor: '#e8f4fd', 
+                border: '1px solid #007bff', 
+                borderRadius: '4px' 
+              }}>
+                <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#004085' }}>📱 Download VPN Clients:</div>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', fontSize: '12px' }}>
+                  <a href="https://openvpn.net/connect-app/" target="_blank" rel="noopener noreferrer" 
+                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                    🖥️ OpenVPN Connect (Desktop)
+                  </a>
+                  <a href="https://play.google.com/store/apps/details?id=net.openvpn.openvpn" target="_blank" rel="noopener noreferrer"
+                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                    🤖 Android App
+                  </a>
+                  <a href="https://apps.apple.com/app/openvpn-connect/id590379981" target="_blank" rel="noopener noreferrer"
+                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                    🍎 iOS App
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* VPN Control Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={connectVPN}
-              disabled={vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile}
+              disabled={vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile || authType === 'saml'}
               style={{
-                backgroundColor: vpnStatus === 'connected' ? '#6c757d' : '#28a745',
+                backgroundColor: vpnStatus === 'connected' ? '#6c757d' : authType === 'saml' ? '#6c757d' : '#28a745',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
                 padding: '8px 16px',
-                cursor: (vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile) ? 'not-allowed' : 'pointer',
+                cursor: (vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile || authType === 'saml') ? 'not-allowed' : 'pointer',
                 fontWeight: 'bold',
-                opacity: !vpnConfig.configFile ? 0.6 : 1
+                opacity: (!vpnConfig.configFile || authType === 'saml') ? 0.6 : 1
               }}
             >
-              {vpnStatus === 'connecting' ? '🔄 Connecting...' : '🔐 Connect VPN'}
+              {authType === 'saml' ? '🚫 SAML Not Supported' : vpnStatus === 'connecting' ? '🔄 Connecting...' : '🔐 Connect VPN'}
             </button>
             <button
               onClick={disconnectVPN}
