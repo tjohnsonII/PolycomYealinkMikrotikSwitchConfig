@@ -1,20 +1,48 @@
+/**
+ * Login Component
+ * 
+ * Provides a modern, responsive login and registration interface.
+ * Features:
+ * - Toggle between login and registration modes
+ * - Form validation and error handling
+ * - Modern gradient design with animations
+ * - Demo credentials display for easy testing
+ * - Responsive design for all screen sizes
+ * 
+ * This component is shown to unauthenticated users and handles
+ * both login and account creation workflows.
+ */
+
 import React, { useState } from 'react';
 import { useAuth } from '../components/AuthContext';
 
+// Props interface for Login component
 interface LoginProps {
-  onToggleMode: () => void;
-  isRegister: boolean;
+  onToggleMode: () => void;    // Function to toggle between login/register modes
+  isRegister: boolean;         // Whether component is in registration mode
 }
 
+/**
+ * Login Component
+ * 
+ * @param onToggleMode - Function to switch between login and registration
+ * @param isRegister - If true, shows registration form; if false, shows login form
+ */
 const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
+  // Form state
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
+  // Get authentication functions from context
   const { login, register } = useAuth();
 
+  /**
+   * Handle form submission for both login and registration
+   * @param e - Form submit event
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -22,11 +50,14 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
 
     try {
       if (isRegister) {
+        // Call registration function
         await register(username, email, password);
       } else {
+        // Call login function
         await login(username, password);
       }
     } catch (err) {
+      // Display error message
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -39,9 +70,10 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Purple gradient background
       padding: '20px'
     }}>
+      {/* Main login/register card */}
       <div style={{
         background: '#fff',
         borderRadius: '12px',
@@ -50,6 +82,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
         width: '100%',
         maxWidth: '400px'
       }}>
+        {/* Header */}
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
@@ -60,6 +93,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           {isRegister ? 'Create Account' : 'Welcome Back'}
         </h2>
 
+        {/* Error message display */}
         {error && (
           <div style={{
             background: '#fee',
@@ -74,7 +108,9 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           </div>
         )}
 
+        {/* Login/Registration form */}
         <form onSubmit={handleSubmit}>
+          {/* Username field */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{
               display: 'block',
@@ -103,6 +139,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             />
           </div>
 
+          {/* Email field (only shown in registration mode) */}
           {isRegister && (
             <div style={{ marginBottom: '20px' }}>
               <label style={{
@@ -133,6 +170,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             </div>
           )}
 
+          {/* Password field */}
           <div style={{ marginBottom: '25px' }}>
             <label style={{
               display: 'block',
@@ -161,6 +199,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             />
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
@@ -188,6 +227,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           </button>
         </form>
 
+        {/* Toggle between login and registration */}
         <div style={{ textAlign: 'center' }}>
           <span style={{ color: '#666' }}>
             {isRegister ? 'Already have an account?' : "Don't have an account?"}
@@ -208,6 +248,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           </button>
         </div>
 
+        {/* Demo credentials (only shown in login mode) */}
         {!isRegister && (
           <div style={{
             marginTop: '20px',

@@ -1,14 +1,38 @@
+/**
+ * UserMenu Component
+ * 
+ * Displays a user profile dropdown menu in the application header.
+ * Features:
+ * - User avatar with first letter of username
+ * - Username display with admin badge
+ * - Dropdown menu with user info
+ * - Admin dashboard link (for admin users only)
+ * - Logout functionality
+ * - Click outside to close menu
+ * 
+ * This component is typically placed in the top-right corner of the app.
+ */
+
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 
+/**
+ * UserMenu Component
+ * Renders a user profile dropdown menu
+ */
 const UserMenu: React.FC = () => {
+  // Get authentication state and functions
   const { user, logout, isAdmin } = useAuth();
+  
+  // State for controlling dropdown visibility
   const [isOpen, setIsOpen] = useState(false);
 
+  // Don't render anything if user is not logged in
   if (!user) return null;
 
   return (
     <div style={{ position: 'relative' }}>
+      {/* Main menu button with user avatar and info */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
@@ -34,6 +58,7 @@ const UserMenu: React.FC = () => {
           e.currentTarget.style.boxShadow = 'none';
         }}
       >
+        {/* User avatar circle with first letter of username */}
         <div style={{
           width: '32px',
           height: '32px',
@@ -48,7 +73,11 @@ const UserMenu: React.FC = () => {
         }}>
           {user.username.charAt(0).toUpperCase()}
         </div>
+        
+        {/* Username */}
         <span>{user.username}</span>
+        
+        {/* Admin badge (only shown for admin users) */}
         {isAdmin && (
           <span style={{
             background: '#28a745',
@@ -62,6 +91,8 @@ const UserMenu: React.FC = () => {
             Admin
           </span>
         )}
+        
+        {/* Dropdown arrow */}
         <span style={{
           fontSize: '12px',
           transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -71,8 +102,10 @@ const UserMenu: React.FC = () => {
         </span>
       </button>
 
+      {/* Dropdown menu (only visible when isOpen is true) */}
       {isOpen && (
         <>
+          {/* Invisible overlay to close menu when clicking outside */}
           <div
             style={{
               position: 'fixed',
@@ -84,6 +117,8 @@ const UserMenu: React.FC = () => {
             }}
             onClick={() => setIsOpen(false)}
           />
+          
+          {/* Dropdown menu content */}
           <div style={{
             position: 'absolute',
             top: '100%',
@@ -97,6 +132,7 @@ const UserMenu: React.FC = () => {
             minWidth: '200px',
             overflow: 'hidden'
           }}>
+            {/* User info header */}
             <div style={{
               padding: '16px',
               borderBottom: '1px solid #f0f0f0',
@@ -110,7 +146,9 @@ const UserMenu: React.FC = () => {
               </div>
             </div>
 
+            {/* Menu items */}
             <div style={{ padding: '8px 0' }}>
+              {/* Admin dashboard link (only visible to admin users) */}
               {isAdmin && (
                 <a
                   href="/admin"
@@ -130,6 +168,7 @@ const UserMenu: React.FC = () => {
                 </a>
               )}
               
+              {/* Logout button */}
               <button
                 onClick={() => {
                   logout();

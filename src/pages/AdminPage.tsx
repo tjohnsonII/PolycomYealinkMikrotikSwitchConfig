@@ -1,6 +1,23 @@
+/**
+ * AdminPage Component
+ * 
+ * Comprehensive admin dashboard for user management.
+ * Features:
+ * - View all registered users in a clean table format
+ * - Update user roles with dropdown selectors
+ * - Delete user accounts with confirmation dialogs
+ * - Real-time updates when making changes
+ * - Responsive design for all screen sizes
+ * - Admin-only access (protected by ProtectedRoute)
+ * 
+ * This component provides full CRUD operations for user management
+ * and is only accessible to users with admin role.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
 
+// Interface for user data structure
 interface User {
   id: number;
   username: string;
@@ -9,18 +26,31 @@ interface User {
   createdAt: string;
 }
 
+/**
+ * AdminPage Component
+ * Main admin dashboard for user management
+ */
 const AdminPage: React.FC = () => {
+  // Component state
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // Get authentication token from context
   const { token } = useAuth();
 
+  // API base URL for admin endpoints
   const API_BASE_URL = 'http://localhost:3001/api';
 
+  // Fetch users when component mounts
   useEffect(() => {
     fetchUsers();
   }, []);
 
+  /**
+   * Fetch all users from the API
+   * Called on component mount and after user operations
+   */
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/users`, {
@@ -42,6 +72,11 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  /**
+   * Update a user's role (admin/user)
+   * @param userId - ID of the user to update
+   * @param newRole - New role to assign ('admin' or 'user')
+   */
   const updateUserRole = async (userId: number, newRole: 'admin' | 'user') => {
     try {
       const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
@@ -54,6 +89,7 @@ const AdminPage: React.FC = () => {
       });
 
       if (response.ok) {
+        // Update local state to reflect the change
         setUsers(users.map(user => 
           user.id === userId ? { ...user, role: newRole } : user
         ));
@@ -65,7 +101,13 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  /**
+   * Delete a user account
+   * Shows confirmation dialog before deletion
+   * @param userId - ID of the user to delete
+   */
   const deleteUser = async (userId: number) => {
+    // Show confirmation dialog
     if (!window.confirm('Are you sure you want to delete this user?')) {
       return;
     }
@@ -79,6 +121,7 @@ const AdminPage: React.FC = () => {
       });
 
       if (response.ok) {
+        // Remove user from local state
         setUsers(users.filter(user => user.id !== userId));
       } else {
         setError('Failed to delete user');
@@ -88,6 +131,7 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  // Show loading spinner while fetching data
   if (loading) {
     return (
       <div style={{
@@ -112,6 +156,7 @@ const AdminPage: React.FC = () => {
       borderRadius: '12px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
     }}>
+      {/* Page header with title and user count */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -140,6 +185,7 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Error message display */}
       {error && (
         <div style={{
           background: '#fee',
@@ -153,6 +199,7 @@ const AdminPage: React.FC = () => {
         </div>
       )}
 
+      {/* User management section */}
       <div style={{ marginBottom: '30px' }}>
         <h2 style={{
           color: '#333',
@@ -163,13 +210,14 @@ const AdminPage: React.FC = () => {
           User Management
         </h2>
 
+        {/* Users table */}
         <div style={{
           background: '#f8f9fa',
           borderRadius: '8px',
           overflow: 'hidden',
           border: '1px solid #e9ecef'
         }}>
-          {/* Header */}
+          {/* Table header */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 2fr 1fr 1fr 2fr',
@@ -203,10 +251,12 @@ const AdminPage: React.FC = () => {
                 alignItems: 'center'
               }}
             >
+              {/* User ID */}
               <div style={{ fontWeight: '500', color: '#6c757d' }}>
                 #{user.id}
               </div>
               
+              {/* Username and email */}
               <div>
                 <div style={{ fontWeight: '500', color: '#333', marginBottom: '4px' }}>
                   {user.username}
@@ -216,6 +266,7 @@ const AdminPage: React.FC = () => {
                 </div>
               </div>
               
+              {/* Role selector dropdown */}
               <div>
                 <select
                   value={user.role}
@@ -235,6 +286,7 @@ const AdminPage: React.FC = () => {
                 </select>
               </div>
               
+              {/* Creation date */}
               <div style={{
                 fontSize: '14px',
                 color: '#6c757d'
@@ -242,6 +294,7 @@ const AdminPage: React.FC = () => {
                 {new Date(user.createdAt).toLocaleDateString()}
               </div>
               
+              {/* Action buttons */}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button
                   onClick={() => deleteUser(user.id)}
@@ -267,6 +320,7 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Instructions section */}
       <div style={{
         background: '#f8f9fa',
         padding: '20px',
