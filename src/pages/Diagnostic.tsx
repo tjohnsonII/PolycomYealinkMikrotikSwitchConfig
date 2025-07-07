@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import VpnStatusPanel from './VpnStatusPanel';
 import TerminalPanel from '../components/TerminalPanel';
+import '../styles/123net-theme.css';
 // @ts-ignore - QR code library
 import QRCode from 'qrcode';
 

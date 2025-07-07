@@ -8,6 +8,7 @@ import { ConfigProvider } from '../components/ConfigContext';
 import { AuthProvider, useAuth } from '../components/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import UserMenu from '../components/UserMenu';
+import BrandHeader from '../components/BrandHeader';
 import Footer from '../components/Footer';
 import PhoneConfig from './PhoneConfig';
 import ExpansionModules from './ExpansionModules'; // Only default import, no named import
@@ -21,6 +22,7 @@ import OrderTracker from './OrderTracker';
 import StrettoImport from './StrettoImport';
 import Diagnostic from './Diagnostic';
 import AdminPage from './AdminPage';
+import '../styles/123net-theme.css';
 import '../styles/App.css'; // eslint-disable-line
 
 
@@ -45,7 +47,8 @@ function AppContent() {
 
   return (
     <MainLayout>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'flex-start', background: '#f8f9fa' }}>
+      <BrandHeader />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'flex-start' }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -66,20 +69,22 @@ function AppContent() {
             alignItems: 'center',
             gap: 16,
             margin: '32px 0 32px 0',
-            background: '#fff',
+            background: 'var(--bg-white)',
             borderRadius: 12,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+            boxShadow: 'var(--shadow)',
             padding: '24px 32px',
             justifyContent: 'center',
             width: 'fit-content',
             flexWrap: 'wrap',
             maxWidth: '95vw',
+            border: '1px solid var(--border-light)',
           }}
         >
           {navigationItems.map(({ to, label, adminOnly }) => (
             <Link
               key={to}
               to={to}
+              className={adminOnly ? 'nav-link admin-nav-link' : 'nav-link'}
               style={{
                 textDecoration: 'none',
                 fontWeight: 500,
@@ -87,8 +92,8 @@ function AppContent() {
                 padding: '12px 32px',
                 borderRadius: 6,
                 transition: 'background 0.2s, color 0.2s',
-                background: adminOnly ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f0f0f0',
-                color: adminOnly ? '#fff' : '#222',
+                background: adminOnly ? 'var(--brand-secondary)' : 'var(--brand-primary)',
+                color: 'var(--text-white)',
                 margin: 0,
                 display: 'block',
                 width: 220,
@@ -96,18 +101,18 @@ function AppContent() {
               }}
               onMouseOver={e => {
                 if (!adminOnly) {
-                  e.currentTarget.style.background = '#0078d4';
-                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.background = '#106ebe';
+                  e.currentTarget.style.color = 'var(--text-white)';
                 } else {
-                  e.currentTarget.style.opacity = '0.9';
+                  e.currentTarget.style.background = '#218838';
                 }
               }}
               onMouseOut={e => {
                 if (!adminOnly) {
-                  e.currentTarget.style.background = '#f0f0f0';
-                  e.currentTarget.style.color = '#222';
+                  e.currentTarget.style.background = 'var(--brand-primary)';
+                  e.currentTarget.style.color = 'var(--text-white)';
                 } else {
-                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.background = 'var(--brand-secondary)';
                 }
               }}
             >

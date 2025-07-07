@@ -15,6 +15,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../components/AuthContext';
+import '../styles/123net-theme.css';
 
 // Props interface for Login component
 interface LoginProps {
@@ -70,23 +71,60 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
       justifyContent: 'center',
       alignItems: 'center',
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Purple gradient background
+      background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%)', // 123.net blue gradient
       padding: '20px'
     }}>
+      {/* 123.net branding header */}
+      <div style={{
+        position: 'absolute',
+        top: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        textAlign: 'center',
+        color: 'white'
+      }}>
+        <div style={{
+          background: 'white',
+          color: 'var(--brand-primary)',
+          padding: '8px 16px',
+          borderRadius: '8px',
+          fontWeight: 'bold',
+          fontSize: '24px',
+          display: 'inline-block',
+          marginBottom: '8px'
+        }}>
+          123
+        </div>
+        <div style={{
+          color: 'white',
+          fontSize: '18px',
+          fontWeight: '600'
+        }}>
+          Polycom/Yealink Configuration Manager
+        </div>
+        <div style={{
+          color: 'rgba(255,255,255,0.9)',
+          fontSize: '14px'
+        }}>
+          THE INTERNET YOU CAN COUNT ON
+        </div>
+      </div>
+
       {/* Main login/register card */}
       <div style={{
-        background: '#fff',
+        background: 'var(--bg-white)',
         borderRadius: '12px',
         padding: '40px',
-        boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+        boxShadow: 'var(--shadow-lg)',
         width: '100%',
-        maxWidth: '400px'
+        maxWidth: '400px',
+        border: '1px solid var(--border-light)'
       }}>
         {/* Header */}
         <h2 style={{
           textAlign: 'center',
           marginBottom: '30px',
-          color: '#333',
+          color: 'var(--text-primary)',
           fontSize: '28px',
           fontWeight: '600'
         }}>
@@ -95,12 +133,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
 
         {/* Error message display */}
         {error && (
-          <div style={{
-            background: '#fee',
-            border: '1px solid #fcc',
-            color: '#c66',
-            padding: '12px',
-            borderRadius: '6px',
+          <div className="alert alert-danger" style={{
             marginBottom: '20px',
             textAlign: 'center'
           }}>
@@ -115,7 +148,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             <label style={{
               display: 'block',
               marginBottom: '8px',
-              color: '#555',
+              color: 'var(--text-primary)',
               fontWeight: '500'
             }}>
               Username
@@ -127,14 +160,16 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
               style={{
                 width: '100%',
                 padding: '12px',
-                border: '2px solid #e1e5e9',
+                border: '2px solid var(--border-medium)',
                 borderRadius: '6px',
                 fontSize: '16px',
                 transition: 'border-color 0.2s',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                background: 'var(--bg-white)',
+                color: 'var(--text-primary)'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#667eea'}
-              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+              onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
               required
             />
           </div>
@@ -145,7 +180,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
               <label style={{
                 display: 'block',
                 marginBottom: '8px',
-                color: '#555',
+                color: 'var(--text-primary)',
                 fontWeight: '500'
               }}>
                 Email
@@ -157,14 +192,16 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
                 style={{
                   width: '100%',
                   padding: '12px',
-                  border: '2px solid #e1e5e9',
+                  border: '2px solid var(--border-medium)',
                   borderRadius: '6px',
                   fontSize: '16px',
                   transition: 'border-color 0.2s',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  background: 'var(--bg-white)',
+                  color: 'var(--text-primary)'
                 }}
-                onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+                onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
                 required
               />
             </div>
@@ -175,7 +212,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             <label style={{
               display: 'block',
               marginBottom: '8px',
-              color: '#555',
+              color: 'var(--text-primary)',
               fontWeight: '500'
             }}>
               Password
@@ -187,14 +224,16 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
               style={{
                 width: '100%',
                 padding: '12px',
-                border: '2px solid #e1e5e9',
+                border: '2px solid var(--border-medium)',
                 borderRadius: '6px',
                 fontSize: '16px',
                 transition: 'border-color 0.2s',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                background: 'var(--bg-white)',
+                color: 'var(--text-primary)'
               }}
-              onFocus={(e) => e.target.style.borderColor = '#667eea'}
-              onBlur={(e) => e.target.style.borderColor = '#e1e5e9'}
+              onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
               required
             />
           </div>
@@ -203,24 +242,25 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
           <button
             type="submit"
             disabled={loading}
+            className="btn-primary"
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: '#fff',
+              background: loading ? 'var(--brand-gray-400)' : 'var(--brand-primary)',
+              color: 'var(--text-white)',
               border: 'none',
               borderRadius: '6px',
               fontSize: '16px',
               fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'opacity 0.2s',
+              transition: 'background-color 0.2s',
               marginBottom: '20px'
             }}
             onMouseOver={(e) => {
-              if (!loading) e.currentTarget.style.opacity = '0.9';
+              if (!loading) e.currentTarget.style.backgroundColor = '#106ebe';
             }}
             onMouseOut={(e) => {
-              if (!loading) e.currentTarget.style.opacity = '1';
+              if (!loading) e.currentTarget.style.backgroundColor = 'var(--brand-primary)';
             }}
           >
             {loading ? 'Please wait...' : (isRegister ? 'Create Account' : 'Sign In')}
@@ -229,7 +269,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
 
         {/* Toggle between login and registration */}
         <div style={{ textAlign: 'center' }}>
-          <span style={{ color: '#666' }}>
+          <span style={{ color: 'var(--text-secondary)' }}>
             {isRegister ? 'Already have an account?' : "Don't have an account?"}
           </span>
           <button
@@ -237,11 +277,12 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             style={{
               background: 'none',
               border: 'none',
-              color: '#667eea',
+              color: 'var(--brand-primary)',
               cursor: 'pointer',
               textDecoration: 'underline',
               marginLeft: '8px',
-              fontSize: '14px'
+              fontSize: '14px',
+              fontWeight: '500'
             }}
           >
             {isRegister ? 'Sign In' : 'Create Account'}

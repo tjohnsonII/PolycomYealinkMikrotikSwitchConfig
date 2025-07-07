@@ -16,6 +16,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
+import '../styles/123net-theme.css';
 
 // Interface for user data structure
 interface User {
