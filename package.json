@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "auth": "node backend/auth-server.js",
-    "start-full": "./start-auth-app.sh"
+    "start-full": "./start-unified-app.sh",
+    "start": "./start-unified-app.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",

@@ -35,12 +35,19 @@ const AdminPage: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'user' as 'admin' | 'user'
+  });
   
   // Get authentication token from context
   const { token } = useAuth();
 
   // API base URL for admin endpoints
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = 'http://localhost:3002/api';
 
   // Fetch users when component mounts
   useEffect(() => {
@@ -131,6 +138,77 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  /**
+   * Create a new user account
+   * @param userData - User data for creation
+   */
+  const createUser = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    role: 'admin' | 'user';
+  }) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (response.ok) {
+        const newUser = await response.json();
+        // Add new user to local state
+        setUsers([...users, newUser]);
+        // Reset form and hide it
+        setCreateFormData({
+          username: '',
+          email: '',
+          password: '',
+          role: 'user'
+        });
+        setShowCreateForm(false);
+        setError(''); // Clear any previous errors
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to create user');
+      }
+    } catch (err) {
+      setError('Error creating user');
+    }
+  };
+
+  /**
+   * Handle form submission for creating a new user
+   * @param e - Form submission event
+   */
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!createFormData.username || !createFormData.email || !createFormData.password) {
+      setError('All fields are required');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(createFormData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    // Password validation
+    if (createFormData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    await createUser(createFormData);
+  };
+
   // Show loading spinner while fetching data
   if (loading) {
     return (
@@ -201,14 +279,48 @@ const AdminPage: React.FC = () => {
 
       {/* User management section */}
       <div style={{ marginBottom: '30px' }}>
-        <h2 style={{
-          color: '#333',
-          fontSize: '24px',
-          marginBottom: '20px',
-          fontWeight: '500'
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px'
         }}>
-          User Management
-        </h2>
+          <h2 style={{
+            color: '#333',
+            fontSize: '24px',
+            margin: 0,
+            fontWeight: '500'
+          }}>
+            User Management
+          </h2>
+          
+          {/* Create User Button */}
+          <button
+            onClick={() => setShowCreateForm(true)}
+            style={{
+              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              color: '#fff',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
+            }}
+          >
+            + Create New User
+          </button>
+        </div>
 
         {/* Users table */}
         <div style={{
@@ -320,6 +432,266 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Create User Form Modal */}
+      {showCreateForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#fff',
+            padding: '30px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
+            width: '90%',
+            maxWidth: '500px',
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '25px',
+              borderBottom: '2px solid #f0f0f0',
+              paddingBottom: '15px'
+            }}>
+              <h3 style={{
+                margin: 0,
+                color: '#333',
+                fontSize: '22px',
+                fontWeight: '600'
+              }}>
+                Create New User
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setError('');
+                  setCreateFormData({
+                    username: '',
+                    email: '',
+                    password: '',
+                    role: 'user'
+                  });
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#666',
+                  padding: '0',
+                  width: '30px',
+                  height: '30px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateUser}>
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Username *
+                </label>
+                <input
+                  type="text"
+                  value={createFormData.username}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    username: e.target.value
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e9ecef',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  placeholder="Enter username"
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={createFormData.email}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    email: e.target.value
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e9ecef',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Password *
+                </label>
+                <input
+                  type="password"
+                  value={createFormData.password}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    password: e.target.value
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e9ecef',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  placeholder="Enter password (min 6 characters)"
+                />
+              </div>
+
+              <div style={{ marginBottom: '25px' }}>
+                <label style={{
+                  display: 'block',
+                  marginBottom: '8px',
+                  fontWeight: '500',
+                  color: '#333'
+                }}>
+                  Role
+                </label>
+                <select
+                  value={createFormData.role}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    role: e.target.value as 'admin' | 'user'
+                  })}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '2px solid #e9ecef',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    transition: 'border-color 0.2s',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
+                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                >
+                  <option value="user">User</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                justifyContent: 'flex-end'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setError('');
+                    setCreateFormData({
+                      username: '',
+                      email: '',
+                      password: '',
+                      role: 'user'
+                    });
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    background: '#6c757d',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#5a6268'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#6c757d'}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '12px 24px',
+                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
+                  }}
+                >
+                  Create User
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Instructions section */}
       <div style={{
         background: '#f8f9fa',
@@ -340,10 +712,12 @@ const AdminPage: React.FC = () => {
           color: '#6c757d',
           lineHeight: '1.6'
         }}>
+          <li>Click "Create New User" to add new user accounts directly from the admin dashboard</li>
           <li>Use the role dropdown to promote users to admin or demote them to regular users</li>
           <li>Click "Delete" to permanently remove a user account</li>
           <li>Admin users have access to this dashboard and can manage other users</li>
           <li>Regular users can only access the main application features</li>
+          <li>All users can also register themselves using the registration form</li>
         </ul>
       </div>
     </div>

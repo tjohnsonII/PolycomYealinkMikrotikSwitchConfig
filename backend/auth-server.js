@@ -24,7 +24,7 @@ const __dirname = path.dirname(__filename);
 
 // Initialize Express application
 const app = express();
-const PORT = 3001;  // Authentication server port (main app runs on 3000/5173)
+const PORT = 3002;  // Authentication server port (SSH WebSocket server uses 3001, main app runs on 3000)
 
 // JWT Secret - IMPORTANT: Change this in production!
 const JWT_SECRET = 'your-secret-key-change-in-production';
@@ -357,6 +357,75 @@ app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, async (req, 
   }
 });
 
+/**
+ * POST /api/admin/users
+ * Create a new user account (admin only)
+ * Requires: Authorization header with valid admin JWT token
+ * 
+ * Request body: { username: string, email: string, password: string, role: 'admin' | 'user' }
+ * Response: { id, username, email, role, createdAt }
+ */
+app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { username, email, password, role = 'user' } = req.body;
+    
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    // Validate role
+    if (!['admin', 'user'].includes(role)) {
+      return res.status(400).json({ error: 'Role must be either "admin" or "user"' });
+    }
+
+    const users = await getUsers();
+    
+    // Check if username already exists
+    if (users.some(u => u.username === username)) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Check if email already exists
+    if (users.some(u => u.email === email)) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+
+    // Generate unique user ID
+    const newId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const newUser = {
+      id: newId,
+      username,
+      email,
+      password: hashedPassword,
+      role,
+      createdAt: new Date().toISOString()
+    };
+
+    // Add user to array and save
+    users.push(newUser);
+    await saveUsers(users);
+
+    // Return safe user data (excluding password)
+    res.status(201).json({
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      createdAt: newUser.createdAt
+    });
+  } catch (error) {
+    console.error('Create user error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // ============================================================================
 // SERVER INITIALIZATION
 // ============================================================================
@@ -375,6 +444,7 @@ initUsersFile().then(() => {
     console.log('  POST /api/register - User registration');
     console.log('  GET /api/me - Get current user');
     console.log('  GET /api/admin/users - Get all users (admin only)');
+    console.log('  POST /api/admin/users - Create new user (admin only)');
     console.log('  PATCH /api/admin/users/:id/role - Update user role (admin only)');
     console.log('  DELETE /api/admin/users/:id - Delete user (admin only)');
   });
