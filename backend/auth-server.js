@@ -7,6 +7,7 @@
  * - Admin dashboard for user management
  * - Secure password hashing with bcrypt
  * - File-based user storage (easily replaceable with database)
+ * - Environment-based configuration for security
  */
 
 // Import required dependencies
@@ -17,17 +18,33 @@ import cors from 'cors';                // Cross-Origin Resource Sharing middlew
 import fs from 'fs/promises';           // File system operations (async/await)
 import path from 'path';                // Path utilities
 import { fileURLToPath } from 'url';    // URL utilities for ES modules
+import dotenv from 'dotenv';            // Environment variable loader
 
 // ES modules compatibility: get __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load environment variables from parent directory's .env file
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
 // Initialize Express application
 const app = express();
-const PORT = 3002;  // Authentication server port (SSH WebSocket server uses 3001, main app runs on 3000)
 
-// JWT Secret - IMPORTANT: Change this in production!
-const JWT_SECRET = 'your-secret-key-change-in-production';
+// Configuration from environment variables with fallbacks
+const PORT = process.env.AUTH_SERVER_PORT || 3002;
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.error('⚠️  WARNING: JWT_SECRET not set in environment variables!');
+  console.error('   Using fallback secret - this is insecure for production!');
+  console.error('   Please set JWT_SECRET in your .env file');
+  return 'fallback-insecure-secret-change-immediately';
+})();
+
+// Default admin credentials from environment
+const DEFAULT_ADMIN = {
+  username: process.env.DEFAULT_ADMIN_USERNAME || 'admin',
+  email: process.env.DEFAULT_ADMIN_EMAIL || 'admin@company.com',
+  password: process.env.DEFAULT_ADMIN_PASSWORD || 'admin123'
+};
 
 // Path to store users (in production, replace with proper database)
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -48,14 +65,14 @@ async function initUsersFile() {
     // File doesn't exist, create it with default admin user
     const defaultAdmin = {
       id: 1,
-      username: 'admin',
-      email: 'admin@company.com',
-      password: await bcrypt.hash('admin123', 10),  // Hash password with 10 salt rounds
+      username: DEFAULT_ADMIN.username,
+      email: DEFAULT_ADMIN.email,
+      password: await bcrypt.hash(DEFAULT_ADMIN.password, 10),  // Hash password with 10 salt rounds
       role: 'admin',
       createdAt: new Date().toISOString()
     };
     await fs.writeFile(USERS_FILE, JSON.stringify([defaultAdmin], null, 2));
-    console.log('Created default admin user: admin/admin123');
+    console.log(`Created default admin user: ${DEFAULT_ADMIN.username}/${DEFAULT_ADMIN.password}`);
   }
 }
 
@@ -438,7 +455,7 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
 initUsersFile().then(() => {
   app.listen(PORT, () => {
     console.log(`Auth server running on port ${PORT}`);
-    console.log('Default admin credentials: admin/admin123');
+    console.log(`Default admin credentials: ${DEFAULT_ADMIN.username}/${DEFAULT_ADMIN.password}`);
     console.log('API endpoints:');
     console.log('  POST /api/login - User login');
     console.log('  POST /api/register - User registration');
