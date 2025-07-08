@@ -24,6 +24,7 @@ import OrderTracker from './OrderTracker';
 import StrettoImport from './StrettoImport';
 import Diagnostic from './Diagnostic';
 import AdminPage from './AdminPage';
+import ATA from './ATA';
 import '../styles/123net-theme.css';
 import '../styles/App.css'; // eslint-disable-line
 
@@ -35,6 +36,7 @@ function AppContent() {
   const navigationItems = [
     { to: '/phone', label: 'Phone Configs' },
     { to: '/expansion', label: 'Expansion Modules' },
+    { to: '/ata', label: 'ATA (Fax)' },
     { to: '/reference', label: 'Reference' },
     { to: '/fullconfig', label: 'Full Config' },
     { to: '/fbpx', label: 'FBPX Import' },
@@ -137,6 +139,7 @@ function AppContent() {
               <Route path="/" element={<Navigate to="/phone" replace />} />
               <Route path="/phone" element={<PhoneConfig />} />
               <Route path="/expansion" element={<ExpansionModules />} />
+              <Route path="/ata" element={<ATA />} />
               <Route path="/reference" element={<Reference />} />
               <Route path="/fullconfig" element={<FullConfig />} />
               <Route path="/fbpx" element={<FBPXImport />} />
