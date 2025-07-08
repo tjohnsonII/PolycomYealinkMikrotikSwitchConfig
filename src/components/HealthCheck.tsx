@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getApiUrl } from '../utils/api-config';
+import { getApiUrl, getWsUrl } from '../utils/api-config';
 import API_CONFIG from '../utils/api-config';
 
 const HealthCheck: React.FC = () => {
@@ -52,7 +52,7 @@ const HealthCheck: React.FC = () => {
 
     // Check WebSocket (basic test)
     try {
-      const ws = new WebSocket(`${API_CONFIG.wsBaseUrl}/ssh`);
+      const ws = new WebSocket(getWsUrl('ssh'));
       ws.onopen = () => {
         setHealthStatus(prev => ({ ...prev, ws: 'healthy' }));
         ws.close();
