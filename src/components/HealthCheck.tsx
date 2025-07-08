@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getApiUrl, getWsUrl } from '../utils/api-config';
+import { getApiUrl } from '../utils/api-config';
 import API_CONFIG from '../utils/api-config';
 
 const HealthCheck: React.FC = () => {
@@ -19,7 +19,7 @@ const HealthCheck: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const authResponse = await fetch(`${API_CONFIG.authBaseUrl}/health`, { 
+      const authResponse = await fetch(`${API_CONFIG.baseUrl}/api/auth/health`, { 
         method: 'GET',
         signal: controller.signal
       });
@@ -37,7 +37,7 @@ const HealthCheck: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const apiResponse = await fetch(getApiUrl('ping'), { 
+      const apiResponse = await fetch(getApiUrl('health'), { 
         method: 'GET',
         signal: controller.signal
       });
@@ -52,7 +52,7 @@ const HealthCheck: React.FC = () => {
 
     // Check WebSocket (basic test)
     try {
-      const ws = new WebSocket(getWsUrl('ssh'));
+      const ws = new WebSocket(`${API_CONFIG.wsBaseUrl}/ssh`);
       ws.onopen = () => {
         setHealthStatus(prev => ({ ...prev, ws: 'healthy' }));
         ws.close();

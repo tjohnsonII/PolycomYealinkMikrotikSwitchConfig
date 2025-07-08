@@ -11,6 +11,7 @@ import UserMenu from '../components/UserMenu';
 import BrandHeader from '../components/BrandHeader';
 import Logo123Net from '../components/Logo123Net';
 import Footer from '../components/Footer';
+import PendingUserNotification from '../components/PendingUserNotification';
 import PhoneConfig from './PhoneConfig';
 import ExpansionModules from './ExpansionModules'; // Only default import, no named import
 import Reference from './Reference';
@@ -49,6 +50,7 @@ function AppContent() {
   return (
     <MainLayout>
       <BrandHeader />
+      {isAdmin && <PendingUserNotification />}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'flex-start' }}>
         <div style={{
           display: 'flex',

@@ -123,7 +123,7 @@ const server = http.createServer((req, res) => {
   // Proxy API calls
   if (url.startsWith('/api/auth/')) {
     // Proxy to auth server, rewriting path
-    const targetUrl = url.replace('/api/auth', '/api');
+    const targetUrl = url.replace('/api/auth', '');
     req.url = targetUrl;
     console.log(`🔄 Proxying ${method} ${url} → localhost:3002${targetUrl}`);
     proxy.web(req, res, { target: 'http://localhost:3002' });
@@ -155,6 +155,22 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  // Special handling for ping endpoint
+  if (url === '/api/ping') {
+    req.url = '/ping';
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/ping`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
+    return;
+  }
+  
+  // Special handling for health endpoint
+  if (url === '/api/health') {
+    req.url = '/health';
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/health`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
+    return;
+  }
+
   if (url.startsWith('/api/')) {
     // Proxy other API calls to SSH WebSocket server
     console.log(`🔄 Proxying ${method} ${url} → localhost:3001${url}`);
@@ -199,7 +215,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Reverse proxy server running on http://0.0.0.0:${PORT}`);
   console.log(`📁 Serving static files from: ${distPath}`);
   console.log(`🔄 Proxying API calls:`);
-  console.log(`   • /api/auth/* → localhost:3002/api/*`);
+  console.log(`   • /api/auth/* → localhost:3002/*`);
   console.log(`   • /api/admin/* → localhost:3002/api/admin/*`);
   console.log(`   • /api/vpn/* → localhost:3001/vpn/*`);
   console.log(`   • /api/system/* → localhost:3001/system/*`);

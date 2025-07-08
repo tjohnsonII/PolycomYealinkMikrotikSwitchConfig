@@ -379,6 +379,34 @@ const AdminPage: React.FC = () => {
         </div>
       )}
 
+      {/* Recent Registrations Alert */}
+      {!pendingLoading && pendingUsers.length > 0 && (
+        <div style={{ 
+          marginBottom: '30px',
+          background: 'linear-gradient(135deg, #e67e22 0%, #f39c12 100%)',
+          color: 'white',
+          padding: '20px',
+          borderRadius: '12px',
+          boxShadow: '0 4px 12px rgba(230, 126, 34, 0.3)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
+            <span style={{ fontSize: '24px', marginRight: '10px' }}>🔔</span>
+            <h3 style={{ margin: 0, fontSize: '20px' }}>
+              New User Registrations Waiting for Approval!
+            </h3>
+          </div>
+          <p style={{ margin: '5px 0', opacity: 0.9 }}>
+            {pendingUsers.length} user{pendingUsers.length > 1 ? 's' : ''} 
+            {pendingUsers.length === 1 ? ' has' : ' have'} registered and 
+            {pendingUsers.length === 1 ? ' is' : ' are'} waiting for your approval.
+          </p>
+          <div style={{ fontSize: '14px', opacity: 0.8 }}>
+            <strong>Latest:</strong> {pendingUsers[pendingUsers.length - 1]?.username} 
+            ({pendingUsers[pendingUsers.length - 1]?.email})
+          </div>
+        </div>
+      )}
+
       {/* Pending Users Section */}
       {!pendingLoading && pendingUsers.length > 0 && (
         <div style={{ marginBottom: '40px' }}>
