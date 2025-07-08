@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '../components/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import UserMenu from '../components/UserMenu';
 import BrandHeader from '../components/BrandHeader';
+import Logo123Net from '../components/Logo123Net';
 import Footer from '../components/Footer';
 import PhoneConfig from './PhoneConfig';
 import ExpansionModules from './ExpansionModules'; // Only default import, no named import
@@ -57,7 +58,9 @@ function AppContent() {
           maxWidth: '1200px',
           padding: '20px 20px 0 20px'
         }}>
-          <div></div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <Logo123Net size="compact" showText={false} />
+          </div>
           <UserMenu />
         </div>
         

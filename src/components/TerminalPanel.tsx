@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import { getWsUrl } from '../utils/api-config';
 import 'xterm/css/xterm.css';
 
 const TerminalPanel: React.FC = () => {
@@ -48,7 +49,7 @@ const TerminalPanel: React.FC = () => {
     termRef.current = term;
     fitAddonRef.current = fitAddon;
 
-    const ws = new WebSocket('ws://localhost:3001/ssh');
+    const ws = new WebSocket(getWsUrl('ssh'));
     wsRef.current = ws;
 
     ws.onopen = () => {

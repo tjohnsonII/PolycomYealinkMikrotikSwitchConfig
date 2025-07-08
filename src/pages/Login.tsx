@@ -15,6 +15,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../components/AuthContext';
+import Logo123Net from '../components/Logo123Net';
 import '../styles/123net-theme.css';
 
 // Props interface for Login component
@@ -83,22 +84,12 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
         textAlign: 'center',
         color: 'white'
       }}>
-        <div style={{
-          background: 'white',
-          color: 'var(--brand-primary)',
-          padding: '8px 16px',
-          borderRadius: '8px',
-          fontWeight: 'bold',
-          fontSize: '24px',
-          display: 'inline-block',
-          marginBottom: '8px'
-        }}>
-          123
-        </div>
+        <Logo123Net size="large" showText={true} variant="white" />
         <div style={{
           color: 'white',
           fontSize: '18px',
-          fontWeight: '600'
+          fontWeight: '600',
+          marginTop: '8px'
         }}>
           Polycom/Yealink Configuration Manager
         </div>

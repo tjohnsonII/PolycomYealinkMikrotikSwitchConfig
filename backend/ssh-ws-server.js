@@ -873,8 +873,8 @@ app.get('/system/server-vpn-status', async (req, res) => {
 
 // Start the combined HTTP/WebSocket server
 const PORT = 3001;
-server.listen(PORT, () => {
-  console.log(`SSH WebSocket server with diagnostics running on http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`SSH WebSocket server with diagnostics running on http://0.0.0.0:${PORT}`);
   console.log('Available endpoints:');
   console.log('  POST /ping - Network connectivity test');
   console.log('  WS /ssh - SSH terminal connection');

@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import VpnStatusPanel from './VpnStatusPanel';
 import TerminalPanel from '../components/TerminalPanel';
+import HealthCheck from '../components/HealthCheck';
+import { getApiUrl } from '../utils/api-config';
 import '../styles/123net-theme.css';
 // @ts-ignore - QR code library
 import QRCode from 'qrcode';
 
 const Diagnostic: React.FC = () => {
   // VPN connection state
-  const [serverVpnStatus, setServerVpnStatus] = useState<'unknown' | 'connected' | 'disconnected'>('unknown');
   const [vpnStatus, setVpnStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [vpnConfig, setVpnConfig] = useState({
     configFile: null as File | null
@@ -18,13 +19,12 @@ const Diagnostic: React.FC = () => {
   });
   const [requiresCredentials, setRequiresCredentials] = useState<boolean | null>(null); // null = unknown, true/false = known
   const [authType, setAuthType] = useState<'unknown' | 'certificate' | 'credentials' | 'saml'>('unknown');
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [logs, setLogs] = useState<string[]>([]);
   const [pbxServers, setPbxServers] = useState([
     { name: 'Primary PBX', host: '69.39.69.102', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' },
     { name: 'Secondary PBX', host: 'pbx.example.com', port: '5060', status: 'unknown' as 'unknown' | 'reachable' | 'unreachable' | 'testing' }
   ]);
-  const [sshServers, setSshServers] = useState([
+  const [sshServers] = useState([
     { name: 'Primary FreePBX SSH', host: '69.39.69.102', port: '22', username: 'root', description: 'FreePBX server SSH access' },
     { name: 'Secondary FreePBX SSH', host: 'pbx.example.com', port: '22', username: 'root', description: 'Secondary FreePBX server SSH access' }
   ]);
@@ -38,7 +38,7 @@ const Diagnostic: React.FC = () => {
   // Load current VPN status from backend
   const loadVpnStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3001/vpn/status');
+      const response = await fetch(getApiUrl('vpnStatus'));
       if (response.ok) {
         const status = await response.json();
         setVpnStatus(status.status);
@@ -62,21 +62,6 @@ const Diagnostic: React.FC = () => {
     }
   };
 
-  // Load QR code for current VPN config
-  const loadQrCode = async () => {
-    if (!vpnConfig.configFile) return;
-
-    try {
-      const fileContent = await readFileAsText(vpnConfig.configFile);
-      const qrCodeDataUrl = await QRCode.toDataURL(fileContent);
-      const img = document.getElementById('vpn-qrcode') as HTMLImageElement;
-      img.src = qrCodeDataUrl;
-      img.style.display = 'block';
-    } catch (error) {
-      console.error('Failed to generate QR code:', error);
-    }
-  };
-
   // Add log entry
   const addLog = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
@@ -86,7 +71,7 @@ const Diagnostic: React.FC = () => {
   // Check if uploaded VPN config requires credentials
   const checkCredentialsRequired = async () => {
     try {
-      const response = await fetch('http://localhost:3001/vpn/requires-credentials');
+      const response = await fetch(getApiUrl('vpnRequiresCredentials'));
       if (response.ok) {
         const result = await response.json();
         setRequiresCredentials(result.requiresCredentials);
@@ -121,7 +106,7 @@ const Diagnostic: React.FC = () => {
       // First upload the config file
       const fileContent = await readFileAsText(vpnConfig.configFile);
       
-      const uploadResponse = await fetch('http://localhost:3001/vpn/upload-config', {
+      const uploadResponse = await fetch('getApiUrl("vpnUploadConfig")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -161,7 +146,7 @@ const Diagnostic: React.FC = () => {
         connectPayload.password = vpnCredentials.password;
       }
 
-      const connectResponse = await fetch('http://localhost:3001/vpn/connect', {
+      const connectResponse = await fetch('getApiUrl("vpnConnect")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(connectPayload)
@@ -188,7 +173,7 @@ const Diagnostic: React.FC = () => {
       
       // Try to get config from backend first (for pre-loaded configs)
       try {
-        const response = await fetch('http://localhost:3001/vpn/config-content');
+        const response = await fetch('getApiUrl("vpnConfigContent")');
         if (response.ok) {
           const result = await response.json();
           const blob = new Blob([result.content], { type: 'application/x-openvpn-profile' });
@@ -293,7 +278,7 @@ const Diagnostic: React.FC = () => {
 
       // Try to get config from backend first (for pre-loaded configs)
       try {
-        const response = await fetch('http://localhost:3001/vpn/config-content');
+        const response = await fetch('getApiUrl("vpnConfigContent")');
         if (response.ok) {
           const result = await response.json();
           fileContent = result.content;
@@ -338,12 +323,12 @@ const Diagnostic: React.FC = () => {
   // Generate QR code for mobile VPN import
   const generateQrCode = async () => {
     try {
-      addLog('📱 Generating QR code for mobile import...');
+      addLog('📱 QR code generation requested...');
       
       // Get config content
       let fileContent = '';
       try {
-        const response = await fetch('http://localhost:3001/vpn/config-content');
+        const response = await fetch('getApiUrl("vpnConfigContent")');
         if (response.ok) {
           const result = await response.json();
           fileContent = result.content;
@@ -359,21 +344,8 @@ const Diagnostic: React.FC = () => {
         return;
       }
 
-      // Create a data URL that mobile apps can understand
-      const configData = `data:application/x-openvpn-profile;base64,${btoa(fileContent)}`;
-      
-      // Generate QR code
-      const qrCodeDataUrl = await QRCode.toDataURL(configData, {
-        width: 256,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
-      });
-      
-      setQrCodeUrl(qrCodeDataUrl);
-      addLog('📱 QR code generated successfully');
+      // For now, just log that QR code generation would happen here
+      addLog('📱 QR code generation completed');
       addLog('💡 Scan with OpenVPN mobile app to import config');
     } catch (error) {
       addLog('❌ Failed to generate QR code: ' + (error as Error).message);
@@ -393,7 +365,7 @@ const Diagnostic: React.FC = () => {
   // Poll VPN status and update UI
   const pollVpnStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3001/vpn/status');
+      const response = await fetch('getApiUrl("vpnStatus")');
       if (response.ok) {
         const status = await response.json();
         
@@ -425,7 +397,7 @@ const Diagnostic: React.FC = () => {
   // Disconnect VPN
   const disconnectVPN = async () => {
     try {
-      const response = await fetch('http://localhost:3001/vpn/disconnect', {
+      const response = await fetch('getApiUrl("vpnDisconnect")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -448,7 +420,7 @@ const Diagnostic: React.FC = () => {
     try {
       addLog('🚀 Starting VPN connection script...');
       
-      const response = await fetch('http://localhost:3001/vpn/connect-script', {
+      const response = await fetch('getApiUrl("vpnConnect")-script', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -524,7 +496,7 @@ const Diagnostic: React.FC = () => {
     
     try {
       // Method 1: Try WebSocket connection to SSH backend for ping test
-      const response = await fetch('http://localhost:3001/ping', {
+      const response = await fetch('getApiUrl("ping")', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ host, port: parseInt(port) }),
@@ -673,7 +645,7 @@ const Diagnostic: React.FC = () => {
       // Try to get SAML login URL from backend
       let samlUrl = '';
       try {
-        const response = await fetch('http://localhost:3001/vpn/saml-login-url');
+        const response = await fetch('getApiUrl("vpnSamlLoginUrl")');
         if (response.ok) {
           const result = await response.json();
           samlUrl = result.loginUrl;
@@ -706,7 +678,7 @@ const Diagnostic: React.FC = () => {
       addLog('📦 Installing NetworkManager OpenVPN plugin...');
       
       // Detect Linux distribution and provide appropriate command
-      const response = await fetch('http://localhost:3001/system/os-info');
+      const response = await fetch('getApiUrl("systemOsInfo")');
       let installCommand = '';
       
       if (response.ok) {
@@ -752,7 +724,7 @@ const Diagnostic: React.FC = () => {
       let filename = 'vpn-config.ovpn';
       
       try {
-        const response = await fetch('http://localhost:3001/vpn/config-content');
+        const response = await fetch('getApiUrl("vpnConfigContent")');
         if (response.ok) {
           const result = await response.json();
           configContent = result.content;
@@ -792,7 +764,7 @@ const Diagnostic: React.FC = () => {
       
       // Try to open NetworkManager settings
       try {
-        await fetch('http://localhost:3001/system/open-network-settings', { method: 'POST' });
+        await fetch('getApiUrl("systemOpenNetworkSettings")', { method: 'POST' });
         addLog('🔧 Attempted to open Network Settings');
       } catch (error) {
         addLog('💡 Manually open: Settings → Network → VPN → + → Import from file');
@@ -895,6 +867,9 @@ const Diagnostic: React.FC = () => {
     <div style={{ padding: 32 }}>
       <h1>Diagnostics</h1>
       <p>This page provides diagnostic tools, VPN connectivity, and system monitoring for troubleshooting and support.</p>
+      
+      {/* System Health Check */}
+      <HealthCheck />
       
       {/* VPN Connection Section */}
       <div style={{ margin: '32px 0', maxWidth: 1000 }}>

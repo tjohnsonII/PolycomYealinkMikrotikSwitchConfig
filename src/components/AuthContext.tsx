@@ -12,6 +12,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { getApiUrl } from '../utils/api-config';
 
 // Type definitions for user data and context
 interface User {
@@ -36,7 +37,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // API base URL for authentication endpoints
-const API_BASE_URL = 'http://localhost:3002/api';
+// Remove hardcoded API URL - now using dynamic configuration
+// const API_BASE_URL = 'http://localhost:3002/api';
 
 /**
  * AuthProvider Component
@@ -65,7 +67,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const fetchCurrentUser = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/me`, {
+      const response = await fetch(getApiUrl('me'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -98,7 +100,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @throws Error if login fails
    */
   const login = async (username: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/login`, {
+    const response = await fetch(getApiUrl('login'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -128,7 +130,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    * @throws Error if registration fails
    */
   const register = async (username: string, email: string, password: string) => {
-    const response = await fetch(`${API_BASE_URL}/register`, {
+    const response = await fetch(getApiUrl('register'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

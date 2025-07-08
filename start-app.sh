@@ -37,6 +37,12 @@ VPN_CONFIG_FILE="backend/tjohnson-work.ovpn"  # Path to VPN config file (your ac
 VPN_CREDENTIALS_FILE="backend/vpn-credentials.txt"  # Path to credentials file (optional)
 VPN_CHECK_INTERVAL=30  # Seconds between VPN connection checks
 
+# Production mode detection
+PRODUCTION_MODE=${PRODUCTION_MODE:-false}
+if [ "$PRODUCTION_MODE" = "true" ]; then
+    echo "🏭 Production mode enabled - building and serving static files"
+fi
+
 # Global variables for process tracking
 SSH_WS_PID=""
 AUTH_PID=""
@@ -147,6 +153,7 @@ cleanup() {
     # Additional cleanup - forcefully kill any remaining processes
     kill_by_name "ssh-ws-server.js" "SSH WebSocket"
     kill_by_name "auth-server.js" "Authentication"
+    kill_by_name "static-server.js" "Static Server"
     kill_by_name "vite.*3000" "Vite"
     
     # Clean up VPN processes and interfaces
@@ -666,47 +673,120 @@ else
 fi
 
 #################################################################################
-# STEP 7: Start Vite Development Server with Enhanced Configuration
+# STEP 7: Start Frontend Application (Development or Production)
 #################################################################################
 
 echo ""
-echo "🌐 Starting Vite development server..."
-echo "   Configuration:"
-echo "   • Host: 0.0.0.0 (accessible from network)"
-echo "   • Port: 3000"
-echo "   • Auto-open browser: Yes"
-echo "   • HTTPS: Auto-configured if available"
-echo "   • Strict port: Yes (fail if port unavailable)"
-
-log "INFO" "Starting Vite development server..."
-
-# Start Vite in background with enhanced configuration
-npm run dev -- \
-    --host 0.0.0.0 \
-    --port 3000 \
-    --open \
-    --strictPort > vite.log 2>&1 &
-VITE_PID=$!
-
-# Wait for Vite to start
-if wait_for_service 3000 "Vite development server"; then
-    log "SUCCESS" "Vite development server started (PID: $VITE_PID)"
-    echo "✅ Vite development server started (PID: $VITE_PID)"
+if [ "$PRODUCTION_MODE" = "true" ]; then
+    echo "🔨 Building React application for production..."
+    log "INFO" "Building React application for production..."
     
-    # Perform health check
-    if check_service_health "http://localhost:3000" "Vite development server"; then
-        log "SUCCESS" "Vite development server is healthy and ready"
+    # Clean previous build
+    if [ -d "dist" ]; then
+        rm -rf dist
+        log "INFO" "Cleaned previous build directory"
+    fi
+    
+    # Build the application
+    if npm run build > build.log 2>&1; then
+        log "SUCCESS" "Production build completed successfully"
+        echo "✅ Production build completed successfully"
+        
+        # Verify build directory exists
+        if [ ! -d "dist" ] || [ ! -f "dist/index.html" ]; then
+            log "ERROR" "Build verification failed"
+            echo "❌ Error: Build verification failed. Check build.log for details."
+            cleanup
+            exit 1
+        fi
+        
+        log "SUCCESS" "Build verification passed"
+        echo "✅ Build verification passed"
     else
-        log "WARN" "Vite health check failed but service is running"
+        log "ERROR" "Production build failed"
+        echo "❌ Error: Production build failed. Check build.log for details."
+        cleanup
+        exit 1
+    fi
+    
+    echo ""
+    echo "🌐 Starting production static file server..."
+    echo "   Configuration:"
+    echo "   • Serving: Production build from 'dist' directory"
+    echo "   • Host: 0.0.0.0 (accessible from network)"
+    echo "   • Port: 3000"
+    echo "   • Router support: Yes (SPA routing)"
+    echo "   • External access: Yes"
+    
+    log "INFO" "Starting static file server..."
+    
+    if [ -f "backend/static-server.js" ]; then
+        cd backend
+        nohup node static-server.js > static-server.log 2>&1 &
+        VITE_PID=$!  # Reuse VITE_PID variable for consistency
+        cd ..
+        
+        log "SUCCESS" "Static file server started (PID: $VITE_PID)"
+        echo "✅ Static file server started (PID: $VITE_PID) on port 3000"
+        
+        # Wait for service to be ready
+        if wait_for_service 3000 "Static file server"; then
+            if check_service_health "http://localhost:3000" "Static file server"; then
+                log "SUCCESS" "Static file server is healthy and ready"
+            else
+                log "WARN" "Static file server health check failed but service is running"
+            fi
+        else
+            log "ERROR" "Static file server failed to start"
+            echo "❌ Failed to start static file server"
+            cleanup
+            exit 1
+        fi
+    else
+        log "ERROR" "Static file server not found"
+        echo "❌ Error: backend/static-server.js not found"
+        cleanup
+        exit 1
     fi
 else
-    log "ERROR" "Vite development server failed to start"
-    echo "❌ Failed to start Vite development server"
-    echo "💡 Troubleshooting tips:"
-    echo "   • Check for TypeScript errors: npm run build"
-    echo "   • Check port availability: lsof -i :3000"
-    echo "   • Check vite.log for detailed errors"
-    cleanup
+    echo "🌐 Starting Vite development server..."
+    echo "   Configuration:"
+    echo "   • Host: 0.0.0.0 (accessible from network)"
+    echo "   • Port: 3000"
+    echo "   • Auto-open browser: Yes"
+    echo "   • HTTPS: Auto-configured if available"
+    echo "   • Strict port: Yes (fail if port unavailable)"
+    echo "   ⚠️  Note: Development mode - external access may have limitations"
+    
+    log "INFO" "Starting Vite development server..."
+    
+    # Start Vite in background with enhanced configuration
+    npm run dev -- \
+        --host 0.0.0.0 \
+        --port 3000 \
+        --open \
+        --strictPort > vite.log 2>&1 &
+    VITE_PID=$!
+    
+    # Wait for Vite to start
+    if wait_for_service 3000 "Vite development server"; then
+        log "SUCCESS" "Vite development server started (PID: $VITE_PID)"
+        echo "✅ Vite development server started (PID: $VITE_PID)"
+        
+        # Perform health check
+        if check_service_health "http://localhost:3000" "Vite development server"; then
+            log "SUCCESS" "Vite development server is healthy and ready"
+        else
+            log "WARN" "Vite health check failed but service is running"
+        fi
+    else
+        log "ERROR" "Vite development server failed to start"
+        echo "❌ Failed to start Vite development server"
+        echo "💡 Troubleshooting tips:"
+        echo "   • Check for TypeScript errors: npm run build"
+        echo "   • Check port availability: lsof -i :3000"
+        echo "   • Check vite.log for detailed errors"
+        cleanup
     exit 1
 fi
 
@@ -799,15 +879,48 @@ fi
 echo ""
 echo "🎉 All services started successfully!"
 echo ""
-echo "📍 Service URLs:"
-echo "   🌐 Main Application:     http://localhost:3000"
-echo "   🔧 SSH WebSocket API:    http://localhost:3001"
-echo "   🔐 Authentication API:   http://localhost:3002"
+
+if [ "$PRODUCTION_MODE" = "true" ]; then
+    echo "🏭 Running in PRODUCTION mode"
+    echo ""
+    echo "📍 Service URLs:"
+    echo "   🌐 Main Application:     http://localhost:3000 (Production Build)"
+    echo "   🔧 SSH WebSocket API:    http://localhost:3001"
+    echo "   🔐 Authentication API:   http://localhost:3002"
+    echo ""
+    echo "🌍 External Access (Ready for Internet):"
+    local_ip=$(hostname -I | awk '{print $1}')
+    echo "   📱 From LAN:             http://$local_ip:3000"
+    echo "   🌐 From Internet:        http://your-external-ip:3000"
+    echo "   ✅ Production build supports full external access"
+    echo ""
+    echo "📁 Log Files:"
+    echo "   🔧 SSH Backend: backend/ssh-ws-server.log"
+    echo "   🔐 Auth Server: backend/auth-server.log"
+    echo "   🌐 Static Server: backend/static-server.log"
+    echo "   📝 Startup Log: $LOG_FILE"
+    echo "   🔨 Build Log: build.log"
+else
+    echo "🛠️  Running in DEVELOPMENT mode"
+    echo ""
+    echo "📍 Service URLs:"
+    echo "   🌐 Main Application:     http://localhost:3000 (Vite Dev Server)"
+    echo "   🔧 SSH WebSocket API:    http://localhost:3001"
+    echo "   🔐 Authentication API:   http://localhost:3002"
+    echo ""
+    echo "🌍 Network Access:"
+    echo "   📱 From other devices:   http://$(hostname -I | awk '{print $1}'):3000"
+    echo "   ⚠️  Note: External access may have limitations in dev mode"
+    echo "   💡 For external users, run: PRODUCTION_MODE=true ./start-app.sh"
+    echo ""
+    echo "📁 Log Files:"
+    echo "   🔧 SSH Backend: backend/ssh-ws-server.log"
+    echo "   🔐 Auth Server: backend/auth-server.log"
+    echo "   🌐 Vite Server: vite.log"
+    echo "   📝 Startup Log: $LOG_FILE"
+fi
 echo ""
-echo "🌍 Network Access:"
-echo "   📱 From other devices:   http://$(hostname -I | awk '{print $1}'):3000"
-echo ""
-echo "👤 Default Admin Credentials:"
+echo "� Default Admin Credentials:"
 # Load from .env file if it exists, otherwise show defaults
 if [ -f ".env" ]; then
     ADMIN_USER=$(grep "^DEFAULT_ADMIN_USERNAME=" .env 2>/dev/null | cut -d '=' -f2 || echo "admin")
@@ -821,13 +934,7 @@ else
     echo "   ⚠️  Note: Using default values. Create .env file for custom credentials."
 fi
 echo ""
-echo "📁 Log Files:"
-echo "   🔧 SSH Backend: backend/ssh-ws-server.log"
-echo "   🔐 Auth Server: backend/auth-server.log"
-echo "   🌐 Vite Server: vite.log"
-echo "   📝 Startup Log: $LOG_FILE"
-echo ""
-echo "🔍 Process IDs:"
+echo "�🔍 Process IDs:"
 if [ ! -z "$SSH_WS_PID" ]; then
     echo "   🔧 SSH WebSocket: $SSH_WS_PID"
 fi

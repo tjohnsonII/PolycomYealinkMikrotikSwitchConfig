@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { getApiUrl } from '../utils/api-config';
 
 interface VpnStatus {
   openvpn3Sessions: string;
@@ -14,7 +15,7 @@ const VpnStatusPanel: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    fetch('http://localhost:3001/system/vpn-status')
+    fetch(getApiUrl('systemVpnStatus'))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch VPN status');
         return res.json();

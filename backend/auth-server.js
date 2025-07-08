@@ -247,6 +247,27 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// ============================================================================
+// HEALTH CHECK ROUTE (No authentication required)
+// ============================================================================
+
+/**
+ * GET /health
+ * Simple health check endpoint for monitoring
+ */
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'healthy', 
+    service: 'auth-server',
+    timestamp: new Date().toISOString(),
+    port: PORT
+  });
+});
+
+// ============================================================================
+// AUTHENTICATED ROUTES (All routes below require valid JWT token)
+// ============================================================================
+
 /**
  * GET /api/me
  * Get current authenticated user's information
@@ -450,11 +471,11 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
 /**
  * Initialize the authentication server
  * 1. Create users file with default admin if it doesn't exist
- * 2. Start Express server on specified port
+ * 2. Start Express server on specified port and listen on all interfaces (0.0.0.0)
  */
 initUsersFile().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Auth server running on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Auth server running on http://0.0.0.0:${PORT}`);
     console.log(`Default admin credentials: ${DEFAULT_ADMIN.username}/${DEFAULT_ADMIN.password}`);
     console.log('API endpoints:');
     console.log('  POST /api/login - User login');

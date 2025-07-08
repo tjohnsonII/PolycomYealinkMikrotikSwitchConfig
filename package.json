@@ -8,9 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "serve": "node backend/static-server.js",
     "auth": "node backend/auth-server.js",
-    "start-full": "./start-unified-app.sh",
-    "start": "./start-unified-app.sh"
+    "start-full": "./start-app.sh",
+    "start-dev": "./start-app.sh",
+    "start": "./start-app.sh",
+    "start-production": "PRODUCTION_MODE=true ./start-app.sh"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -18,7 +21,10 @@
     "dotenv": "^17.0.1",
     "express": "^5.1.0",
     "express-session": "^1.18.1",
+    "http-proxy": "^1.18.1",
+    "http-proxy-middleware": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
+    "mime-types": "^3.0.1",
     "mongoose": "^8.16.1",
     "papaparse": "^5.5.3",
     "qrcode": "^1.5.4",

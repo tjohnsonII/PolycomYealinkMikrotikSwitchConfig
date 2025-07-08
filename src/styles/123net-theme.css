@@ -1,11 +1,19 @@
-/* 123.net Brand Color Scheme - Updated to match actual website */
+/* 123.net Brand Color Scheme - Official Logo Colors */
 :root {
-  /* Primary Brand Colors - Based on 123.net website */
-  --brand-primary: #0088cc;         /* 123.net Blue (primary action color) */
-  --brand-secondary: #28a745;       /* Success Green (secondary actions) */
-  --brand-accent: #17a2b8;          /* Info Blue (accents) */
+  /* Primary Brand Colors - Based on actual 123.net logo */
+  --brand-red: #e53e3e;             /* Red "1" block */
+  --brand-green: #38a169;           /* Green "2" block */
+  --brand-blue: #3182ce;            /* Blue "3" block */
+  --brand-primary: #3182ce;         /* Primary blue from logo */
+  --brand-primary-hover: #2c5aa0;   /* Darker blue for hover states */
+  --brand-secondary: #38a169;       /* Success Green from logo */
+  --brand-accent: #17a2b8;          /* Info Blue/Teal */
   --brand-warning: #ffc107;         /* Warning Yellow */
-  --brand-danger: #dc3545;          /* Error Red */
+  --brand-danger: #e53e3e;          /* Error Red from logo */
+  
+  /* 123.net specific gradients */
+  --brand-gradient: linear-gradient(135deg, #3182ce 0%, #17a2b8 100%);
+  --brand-gradient-light: linear-gradient(135deg, rgba(49,130,206,0.1) 0%, rgba(23,162,184,0.1) 100%);
   
   /* Neutral Colors */
   --brand-white: #ffffff;

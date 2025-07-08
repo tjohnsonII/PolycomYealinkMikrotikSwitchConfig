@@ -1,10 +1,11 @@
 /**
  * Brand Header Component
  * 
- * Displays the company logo and branding inspired by 123.net
+ * Displays the official 123.net logo and branding
  */
 
 import React from 'react';
+import Logo123Net from './Logo123Net';
 import '../styles/123net-theme.css';
 
 const BrandHeader: React.FC = () => {
@@ -19,19 +20,7 @@ const BrandHeader: React.FC = () => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
-        <div 
-          className="brand-logo"
-          style={{
-            background: 'var(--text-white)',
-            color: 'var(--brand-primary)',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.375rem',
-            fontWeight: 'bold',
-            fontSize: '1.5rem',
-          }}
-        >
-          123
-        </div>
+        <Logo123Net size="medium" showText={true} />
         <div style={{ textAlign: 'left' }}>
           <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text-white)' }}>
             Polycom/Yealink Configuration Manager
