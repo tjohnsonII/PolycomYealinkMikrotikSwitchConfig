@@ -1,0 +1,85 @@
+# Cron Configuration for Phone Config Generator
+# 
+# This file contains recommended cron jobs for automated monitoring and maintenance.
+# To install these cron jobs, run:
+#   crontab -e
+# Then add the relevant lines from this file.
+# 
+# Make sure to update the paths to match your installation directory.
+
+# Variables (update these paths)
+INSTALL_DIR="/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig"
+USER="tim2"
+
+# ============================================================================
+# MONITORING JOBS
+# ============================================================================
+
+# Check service health every 5 minutes
+*/5 * * * * cd $INSTALL_DIR && ./watchdog.sh >> /dev/null 2>&1
+
+# Check service health with restart capability every 15 minutes
+*/15 * * * * cd $INSTALL_DIR && ./watchdog.sh --restart-on-failure >> /dev/null 2>&1
+
+# System monitoring every 10 minutes
+*/10 * * * * cd $INSTALL_DIR && ./system-monitor.sh >> /dev/null 2>&1
+
+# System monitoring with email alerts (uncomment and update email)
+# */10 * * * * cd $INSTALL_DIR && ./system-monitor.sh --email admin@yourcompany.com >> /dev/null 2>&1
+
+# ============================================================================
+# MAINTENANCE JOBS
+# ============================================================================
+
+# Daily backup at 2:00 AM
+0 2 * * * cd $INSTALL_DIR && ./maintenance.sh --backup-only >> /dev/null 2>&1
+
+# Weekly full maintenance on Sundays at 3:00 AM
+0 3 * * 0 cd $INSTALL_DIR && ./maintenance.sh >> /dev/null 2>&1
+
+# Monthly cleanup on the 1st of each month at 4:00 AM
+0 4 1 * * cd $INSTALL_DIR && ./maintenance.sh --cleanup-only >> /dev/null 2>&1
+
+# ============================================================================
+# LOG ROTATION
+# ============================================================================
+
+# Rotate logs weekly on Sundays at 1:00 AM
+0 1 * * 0 cd $INSTALL_DIR && ./maintenance.sh --backup-only >> /dev/null 2>&1
+
+# ============================================================================
+# OPTIONAL: RESTART SERVICES DAILY
+# ============================================================================
+
+# Restart services daily at 5:00 AM (uncomment if needed)
+# 0 5 * * * cd $INSTALL_DIR && pkill -f "ssh-ws-server.js|auth-server.js|simple-proxy.js" && sleep 10 && ./start-robust.sh --production >> /dev/null 2>&1
+
+# ============================================================================
+# INSTALLATION COMMANDS
+# ============================================================================
+
+# To install these cron jobs, run the following commands:
+# 
+# 1. Make scripts executable:
+#    chmod +x /home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/watchdog.sh
+#    chmod +x /home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/system-monitor.sh
+#    chmod +x /home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/maintenance.sh
+# 
+# 2. Add to crontab:
+#    crontab -e
+# 
+# 3. Add the desired lines from above (update paths if needed)
+# 
+# 4. Verify cron jobs are installed:
+#    crontab -l
+
+# ============================================================================
+# SYSTEMD TIMER ALTERNATIVE
+# ============================================================================
+
+# If you prefer systemd timers instead of cron, you can create timer units:
+# 
+# /etc/systemd/system/phone-config-watchdog.timer
+# /etc/systemd/system/phone-config-maintenance.timer
+# 
+# See the systemd documentation for more information.

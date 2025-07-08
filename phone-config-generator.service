@@ -1,0 +1,56 @@
+[Unit]
+Description=Polycom/Yealink Phone Configuration Generator
+Documentation=https://github.com/your-username/PolycomYealinkMikrotikSwitchConfig
+After=network.target network-online.target
+Wants=network-online.target
+RequiresMountsFor=/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig
+
+[Service]
+Type=exec
+User=tim2
+Group=tim2
+WorkingDirectory=/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig
+ExecStart=/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig/start-robust.sh --production
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -TERM $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStartSec=120
+TimeoutStopSec=30
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryHigh=1G
+MemoryMax=2G
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/tim2/v3_PYMS/PolycomYealinkMikrotikSwitchConfig
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+PrivateDevices=true
+SystemCallFilter=@system-service
+SystemCallFilter=~@debug @mount @cpu-emulation @obsolete @privileged @reboot @swap @raw-io
+
+# Environment
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=NODE_OPTIONS="--max-old-space-size=1024"
+
+[Install]
+WantedBy=multi-user.target

@@ -4,8 +4,6 @@ import TerminalPanel from '../components/TerminalPanel';
 import HealthCheck from '../components/HealthCheck';
 import { getApiUrl } from '../utils/api-config';
 import '../styles/123net-theme.css';
-// @ts-ignore - QR code library
-import QRCode from 'qrcode';
 
 const Diagnostic: React.FC = () => {
   // VPN connection state
@@ -106,7 +104,7 @@ const Diagnostic: React.FC = () => {
       // First upload the config file
       const fileContent = await readFileAsText(vpnConfig.configFile);
       
-      const uploadResponse = await fetch('getApiUrl("vpnUploadConfig")', {
+      const uploadResponse = await fetch(getApiUrl('vpnUploadConfig'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -146,7 +144,7 @@ const Diagnostic: React.FC = () => {
         connectPayload.password = vpnCredentials.password;
       }
 
-      const connectResponse = await fetch('getApiUrl("vpnConnect")', {
+      const connectResponse = await fetch(getApiUrl('vpnConnect'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(connectPayload)
@@ -173,7 +171,7 @@ const Diagnostic: React.FC = () => {
       
       // Try to get config from backend first (for pre-loaded configs)
       try {
-        const response = await fetch('getApiUrl("vpnConfigContent")');
+        const response = await fetch(getApiUrl('vpnConfigContent'));
         if (response.ok) {
           const result = await response.json();
           const blob = new Blob([result.content], { type: 'application/x-openvpn-profile' });
@@ -278,7 +276,7 @@ const Diagnostic: React.FC = () => {
 
       // Try to get config from backend first (for pre-loaded configs)
       try {
-        const response = await fetch('getApiUrl("vpnConfigContent")');
+        const response = await fetch(getApiUrl('vpnConfigContent'));
         if (response.ok) {
           const result = await response.json();
           fileContent = result.content;
@@ -328,7 +326,7 @@ const Diagnostic: React.FC = () => {
       // Get config content
       let fileContent = '';
       try {
-        const response = await fetch('getApiUrl("vpnConfigContent")');
+        const response = await fetch(getApiUrl('vpnConfigContent'));
         if (response.ok) {
           const result = await response.json();
           fileContent = result.content;
@@ -365,7 +363,7 @@ const Diagnostic: React.FC = () => {
   // Poll VPN status and update UI
   const pollVpnStatus = async () => {
     try {
-      const response = await fetch('getApiUrl("vpnStatus")');
+      const response = await fetch(getApiUrl('vpnStatus'));
       if (response.ok) {
         const status = await response.json();
         
@@ -397,7 +395,7 @@ const Diagnostic: React.FC = () => {
   // Disconnect VPN
   const disconnectVPN = async () => {
     try {
-      const response = await fetch('getApiUrl("vpnDisconnect")', {
+      const response = await fetch(getApiUrl('vpnDisconnect'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -420,7 +418,7 @@ const Diagnostic: React.FC = () => {
     try {
       addLog('🚀 Starting VPN connection script...');
       
-      const response = await fetch('getApiUrl("vpnConnect")-script', {
+      const response = await fetch(getApiUrl('vpnConnectScript'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -496,7 +494,7 @@ const Diagnostic: React.FC = () => {
     
     try {
       // Method 1: Try WebSocket connection to SSH backend for ping test
-      const response = await fetch('getApiUrl("ping")', {
+      const response = await fetch(getApiUrl('ping'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ host, port: parseInt(port) }),
@@ -645,7 +643,7 @@ const Diagnostic: React.FC = () => {
       // Try to get SAML login URL from backend
       let samlUrl = '';
       try {
-        const response = await fetch('getApiUrl("vpnSamlLoginUrl")');
+        const response = await fetch(getApiUrl('vpnSamlLoginUrl'));
         if (response.ok) {
           const result = await response.json();
           samlUrl = result.loginUrl;
@@ -678,7 +676,7 @@ const Diagnostic: React.FC = () => {
       addLog('📦 Installing NetworkManager OpenVPN plugin...');
       
       // Detect Linux distribution and provide appropriate command
-      const response = await fetch('getApiUrl("systemOsInfo")');
+      const response = await fetch(getApiUrl('systemOsInfo'));
       let installCommand = '';
       
       if (response.ok) {
@@ -724,7 +722,7 @@ const Diagnostic: React.FC = () => {
       let filename = 'vpn-config.ovpn';
       
       try {
-        const response = await fetch('getApiUrl("vpnConfigContent")');
+        const response = await fetch(getApiUrl('vpnConfigContent'));
         if (response.ok) {
           const result = await response.json();
           configContent = result.content;
@@ -764,7 +762,7 @@ const Diagnostic: React.FC = () => {
       
       // Try to open NetworkManager settings
       try {
-        await fetch('getApiUrl("systemOpenNetworkSettings")', { method: 'POST' });
+        await fetch(getApiUrl('systemOpenNetworkSettings'), { method: 'POST' });
         addLog('🔧 Attempted to open Network Settings');
       } catch (error) {
         addLog('💡 Manually open: Settings → Network → VPN → + → Import from file');

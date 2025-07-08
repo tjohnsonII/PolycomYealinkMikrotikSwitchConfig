@@ -9,13 +9,16 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "serve": "node backend/static-server.js",
+    "proxy": "node backend/simple-proxy.js",
     "auth": "node backend/auth-server.js",
     "start-full": "./start-app.sh",
     "start-dev": "./start-app.sh",
-    "start": "./start-app.sh",
-    "start-production": "PRODUCTION_MODE=true ./start-app.sh"
+    "start": "./start-robust.sh",
+    "start-production": "./start-robust.sh --production",
+    "start-robust": "./start-robust.sh"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.0.1",
@@ -44,6 +47,7 @@
     "@types/express": "^5.0.3",
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.0.10",
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",

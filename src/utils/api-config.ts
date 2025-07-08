@@ -57,6 +57,11 @@ export const API_CONFIG = {
     me: '/api/auth/me',
     logout: '/api/auth/logout',
     
+    // Admin endpoints (use /api/auth/ prefix)
+    'admin/users': '/api/auth/admin/users',
+    'admin/users/{id}': '/api/auth/admin/users/{id}',
+    'admin/users/{id}/role': '/api/auth/admin/users/{id}/role',
+    
     // VPN endpoints (use /api/ prefix)
     vpnStatus: '/api/vpn/status',
     vpnRequiresCredentials: '/api/vpn/requires-credentials',
@@ -65,6 +70,7 @@ export const API_CONFIG = {
     vpnDisconnect: '/api/vpn/disconnect',
     vpnConfigContent: '/api/vpn/config-content',
     vpnConnectScript: '/api/vpn/connect-script',
+    'vpnConnect-script': '/api/vpn/connect-script',
     vpnSamlLoginUrl: '/api/vpn/saml-login-url',
     
     // System endpoints (use /api/ prefix)

@@ -16,6 +16,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
+import { getApiUrl } from '../utils/api-config';
 import '../styles/123net-theme.css';
 
 // Interface for user data structure
@@ -47,9 +48,6 @@ const AdminPage: React.FC = () => {
   // Get authentication token from context
   const { token } = useAuth();
 
-  // API base URL for admin endpoints
-  const API_BASE_URL = 'http://localhost:3002/api';
-
   // Fetch users when component mounts
   useEffect(() => {
     fetchUsers();
@@ -61,7 +59,7 @@ const AdminPage: React.FC = () => {
    */
   const fetchUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+      const response = await fetch(getApiUrl('admin/users'), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -87,7 +85,7 @@ const AdminPage: React.FC = () => {
    */
   const updateUserRole = async (userId: number, newRole: 'admin' | 'user') => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      const response = await fetch(getApiUrl('admin/users') + `/${userId}/role`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -121,7 +119,7 @@ const AdminPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+      const response = await fetch(getApiUrl('admin/users') + `/${userId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -150,7 +148,7 @@ const AdminPage: React.FC = () => {
     role: 'admin' | 'user';
   }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/users`, {
+      const response = await fetch(getApiUrl('admin/users'), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

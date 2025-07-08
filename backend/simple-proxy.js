@@ -137,8 +137,26 @@ const server = http.createServer((req, res) => {
     return;
   }
   
+  if (url.startsWith('/api/vpn/')) {
+    // Proxy VPN API calls to SSH WebSocket server, rewriting path
+    const targetUrl = url.replace('/api/vpn', '/vpn');
+    req.url = targetUrl;
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl}`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
+    return;
+  }
+  
+  if (url.startsWith('/api/system/')) {
+    // Proxy system API calls to SSH WebSocket server, rewriting path
+    const targetUrl = url.replace('/api/system', '/system');
+    req.url = targetUrl;
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl}`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
+    return;
+  }
+  
   if (url.startsWith('/api/')) {
-    // Proxy to SSH WebSocket server
+    // Proxy other API calls to SSH WebSocket server
     console.log(`🔄 Proxying ${method} ${url} → localhost:3001${url}`);
     proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
@@ -183,6 +201,8 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🔄 Proxying API calls:`);
   console.log(`   • /api/auth/* → localhost:3002/api/*`);
   console.log(`   • /api/admin/* → localhost:3002/api/admin/*`);
+  console.log(`   • /api/vpn/* → localhost:3001/vpn/*`);
+  console.log(`   • /api/system/* → localhost:3001/system/*`);
   console.log(`   • /api/* → localhost:3001/api/*`);
   console.log(`   • /ws/* → localhost:3001/*`);
 });
