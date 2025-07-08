@@ -25,7 +25,23 @@ interface User {
   username: string;
   email: string;
   role: 'admin' | 'user';
+  status?: 'pending' | 'approved' | 'denied';
   createdAt: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  deniedAt?: string;
+  deniedBy?: string;
+  denialReason?: string;
+  ipAddress?: string;
+}
+
+// Interface for pending user data
+interface PendingUser {
+  id: number;
+  username: string;
+  email: string;
+  createdAt: string;
+  ipAddress?: string;
 }
 
 /**
@@ -35,7 +51,9 @@ interface User {
 const AdminPage: React.FC = () => {
   // Component state
   const [users, setUsers] = useState<User[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingLoading, setPendingLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [createFormData, setCreateFormData] = useState({
@@ -51,6 +69,7 @@ const AdminPage: React.FC = () => {
   // Fetch users when component mounts
   useEffect(() => {
     fetchUsers();
+    fetchPendingUsers();
   }, []);
 
   /**
@@ -75,6 +94,30 @@ const AdminPage: React.FC = () => {
       setError('Error fetching users');
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * Fetch pending users from the API
+   */
+  const fetchPendingUsers = async () => {
+    try {
+      const response = await fetch(getApiUrl('admin/pending-users'), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const pendingData = await response.json();
+        setPendingUsers(pendingData);
+      } else {
+        console.error('Failed to fetch pending users');
+      }
+    } catch (err) {
+      console.error('Error fetching pending users:', err);
+    } finally {
+      setPendingLoading(false);
     }
   };
 
@@ -208,6 +251,66 @@ const AdminPage: React.FC = () => {
     await createUser(createFormData);
   };
 
+  /**
+   * Approve a pending user
+   * @param userId - ID of the user to approve
+   */
+  const approveUser = async (userId: number) => {
+    try {
+      const endpoint = getApiUrl('admin/approve-user/{id}').replace('{id}', userId.toString());
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ adminAction: true })
+      });
+
+      if (response.ok) {
+        // Remove from pending users and refresh data
+        setPendingUsers(pendingUsers.filter((user: PendingUser) => user.id !== userId));
+        fetchUsers(); // Refresh the main users list
+        setError(''); // Clear any previous errors
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to approve user');
+      }
+    } catch (err) {
+      setError('Error approving user');
+    }
+  };
+
+  /**
+   * Deny a pending user
+   * @param userId - ID of the user to deny
+   * @param reason - Optional reason for denial
+   */
+  const denyUser = async (userId: number, reason?: string) => {
+    try {
+      const endpoint = getApiUrl('admin/deny-user/{id}').replace('{id}', userId.toString());
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ adminAction: true, reason })
+      });
+
+      if (response.ok) {
+        // Remove from pending users
+        setPendingUsers(pendingUsers.filter((user: PendingUser) => user.id !== userId));
+        setError(''); // Clear any previous errors
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to deny user');
+      }
+    } catch (err) {
+      setError('Error denying user');
+    }
+  };
+
   // Show loading spinner while fetching data
   if (loading) {
     return (
@@ -276,7 +379,112 @@ const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* User management section */}
+      {/* Pending Users Section */}
+      {!pendingLoading && pendingUsers.length > 0 && (
+        <div style={{ marginBottom: '40px' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: '20px'
+          }}>
+            <h2 style={{
+              color: '#e67e22',
+              fontSize: '24px',
+              margin: 0,
+              fontWeight: '500'
+            }}>
+              🕐 Pending Approvals
+            </h2>
+            <span style={{
+              background: '#e67e22',
+              color: 'white',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              marginLeft: '10px'
+            }}>
+              {pendingUsers.length}
+            </span>
+          </div>
+
+          <div style={{
+            background: '#fff3cd',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            border: '1px solid #ffeaa7'
+          }}>
+            <table style={{
+              width: '100%',
+              borderCollapse: 'collapse',
+              fontSize: '14px'
+            }}>
+              <thead>
+                <tr style={{ background: '#f8f9fa' }}>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Username</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Email</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Requested</th>
+                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>IP Address</th>
+                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#555' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingUsers.map(user => (
+                  <tr key={user.id} style={{ borderTop: '1px solid #e9ecef' }}>
+                    <td style={{ padding: '12px', fontWeight: '500' }}>{user.username}</td>
+                    <td style={{ padding: '12px' }}>{user.email}</td>
+                    <td style={{ padding: '12px', color: '#666' }}>
+                      {new Date(user.createdAt).toLocaleDateString()} {new Date(user.createdAt).toLocaleTimeString()}
+                    </td>
+                    <td style={{ padding: '12px', color: '#666' }}>{user.ipAddress || 'Unknown'}</td>
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => approveUser(user.id)}
+                          style={{
+                            background: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}
+                          title="Approve user"
+                        >
+                          ✅ Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            const reason = prompt('Reason for denial (optional):');
+                            denyUser(user.id, reason || undefined);
+                          }}
+                          style={{
+                            background: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            padding: '6px 12px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}
+                          title="Deny user"
+                        >
+                          ❌ Deny
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Main User Management Section */}
       <div style={{ marginBottom: '30px' }}>
         <div style={{
           display: 'flex',

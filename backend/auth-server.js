@@ -19,6 +19,7 @@ import fs from 'fs/promises';           // File system operations (async/await)
 import path from 'path';                // Path utilities
 import { fileURLToPath } from 'url';    // URL utilities for ES modules
 import dotenv from 'dotenv';            // Environment variable loader
+import nodemailer from 'nodemailer';    // Email sending functionality
 
 // ES modules compatibility: get __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,31 @@ const DEFAULT_ADMIN = {
 
 // Path to store users (in production, replace with proper database)
 const USERS_FILE = path.join(__dirname, 'users.json');
+
+// Email configuration
+const EMAIL_CONFIG = {
+  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT) || 587,
+  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER || 'your-email@gmail.com',
+    pass: process.env.EMAIL_PASSWORD || 'your-app-password'
+  }
+};
+
+// Admin notification email
+const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'tjohnson@123.net';
+
+// Create email transporter
+let emailTransporter = null;
+try {
+  emailTransporter = nodemailer.createTransport(EMAIL_CONFIG);
+  console.log('📧 Email transporter configured');
+} catch (error) {
+  console.warn('⚠️  Email configuration failed:', error.message);
+  console.warn('   User approval emails will not be sent');
+}
 
 // Middleware setup
 app.use(cors());                // Enable CORS for frontend communication
@@ -167,6 +193,23 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
+    // Check if user is approved (existing users without status are considered approved)
+    if (user.status && user.status === 'pending') {
+      return res.status(403).json({ 
+        error: 'Account pending approval',
+        message: 'Your account is waiting for administrator approval. You will receive an email notification once approved.',
+        status: 'pending'
+      });
+    }
+
+    if (user.status && user.status === 'denied') {
+      return res.status(403).json({ 
+        error: 'Account access denied',
+        message: 'Your account access has been denied. Please contact an administrator.',
+        status: 'denied'
+      });
+    }
+
     // Generate JWT token with user info
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
@@ -181,9 +224,12 @@ app.post('/api/login', async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        status: user.status || 'approved'
       }
     });
+
+    console.log(`✅ User logged in: ${username} (${user.role})`);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -210,42 +256,115 @@ app.post('/api/register', async (req, res) => {
     // Hash password with bcrypt (10 salt rounds)
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Create new user object
+    // Get client IP address for security logging
+    const ipAddress = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
+                     (req.connection.socket ? req.connection.socket.remoteAddress : null);
+    
+    // Create new user object with pending approval status
     const newUser = {
       id: Math.max(...users.map(u => u.id), 0) + 1,  // Generate next available ID
       username,
       email,
       password: hashedPassword,
       role: 'user',  // Default role for new users
-      createdAt: new Date().toISOString()
+      status: 'pending',  // Require approval before login
+      ipAddress,
+      createdAt: new Date().toISOString(),
+      approvedAt: null,
+      approvedBy: null
     };
 
     // Add user to array and save to file
     users.push(newUser);
     await saveUsers(users);
 
-    // Generate JWT token for immediate login
-    const token = jwt.sign(
-      { id: newUser.id, username: newUser.username, role: newUser.role },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // Send approval request email to admin
+    const emailSent = await sendApprovalRequestEmail(newUser);
 
-    // Return token and safe user data (excluding password)
+    // Return registration success message (no immediate login)
     res.status(201).json({
-      token,
-      user: {
-        id: newUser.id,
+      message: 'Registration successful! Your account is pending approval.',
+      details: {
         username: newUser.username,
         email: newUser.email,
-        role: newUser.role
+        status: 'pending',
+        emailSent,
+        nextSteps: 'You will receive an email notification once your account is approved.'
       }
     });
+
+    console.log(`👤 New user registered: ${username} (${email}) - Status: pending approval`);
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+/**
+ * Send user approval request email to admin
+ * @param {Object} user - User object with registration details
+ */
+async function sendApprovalRequestEmail(user) {
+  if (!emailTransporter) {
+    console.warn('⚠️  Email not configured, skipping approval email');
+    return false;
+  }
+
+  try {
+    const approvalUrl = `${process.env.APP_URL || 'http://localhost:3000'}/admin/approve-user/${user.id}?token=${jwt.sign({userId: user.id, action: 'approve'}, JWT_SECRET, {expiresIn: '7d'})}`;
+    const denyUrl = `${process.env.APP_URL || 'http://localhost:3000'}/admin/deny-user/${user.id}?token=${jwt.sign({userId: user.id, action: 'deny'}, JWT_SECRET, {expiresIn: '7d'})}`;
+
+    const mailOptions = {
+      from: EMAIL_CONFIG.auth.user,
+      to: ADMIN_EMAIL,
+      subject: '🔐 New User Registration Approval Required',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">🔐 User Registration Request</h1>
+            <p style="margin: 5px 0 0 0; opacity: 0.9;">123.net Phone Configuration System</p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px;">
+            <h2 style="color: #333; margin-top: 0;">New User Requesting Access</h2>
+            
+            <div style="background: white; padding: 20px; border-radius: 6px; margin: 20px 0;">
+              <p><strong>👤 Username:</strong> ${user.username}</p>
+              <p><strong>📧 Email:</strong> ${user.email}</p>
+              <p><strong>🕒 Requested:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
+              <p><strong>🌐 IP Address:</strong> ${user.ipAddress || 'Unknown'}</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${approvalUrl}" 
+                 style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 0 10px; display: inline-block; font-weight: bold;">
+                ✅ APPROVE USER
+              </a>
+              <a href="${denyUrl}" 
+                 style="background: #dc3545; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 0 10px; display: inline-block; font-weight: bold;">
+                ❌ DENY REQUEST
+              </a>
+            </div>
+            
+            <div style="background: #e9ecef; padding: 15px; border-radius: 6px; margin-top: 20px;">
+              <p style="margin: 0; font-size: 14px; color: #666;">
+                <strong>Note:</strong> You can also approve/deny this user from the admin dashboard at 
+                <a href="${process.env.APP_URL || 'http://localhost:3000'}/admin" style="color: #007bff;">Admin Panel</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    };
+
+    await emailTransporter.sendMail(mailOptions);
+    console.log(`📧 Approval email sent to ${ADMIN_EMAIL} for user: ${user.username}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to send approval email:', error.message);
+    return false;
+  }
+}
 
 // ============================================================================
 // HEALTH CHECK ROUTE (No authentication required)
@@ -318,7 +437,14 @@ app.get('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =>
       username: user.username,
       email: user.email,
       role: user.role,
-      createdAt: user.createdAt
+      status: user.status || 'approved', // Legacy users without status are considered approved
+      createdAt: user.createdAt,
+      approvedAt: user.approvedAt,
+      approvedBy: user.approvedBy,
+      deniedAt: user.deniedAt,
+      deniedBy: user.deniedBy,
+      denialReason: user.denialReason,
+      ipAddress: user.ipAddress
     }));
     res.json(safeUsers);
   } catch (error) {
@@ -460,6 +586,273 @@ app.post('/api/admin/users', authenticateToken, requireAdmin, async (req, res) =
     });
   } catch (error) {
     console.error('Create user error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ============================================================================
+// USER APPROVAL ENDPOINTS
+// ============================================================================
+
+/**
+ * GET /api/admin/pending-users
+ * Get all users pending approval (admin only)
+ */
+app.get('/api/admin/pending-users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const users = await getUsers();
+    const pendingUsers = users
+      .filter(user => user.status === 'pending')
+      .map(user => ({
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt,
+        ipAddress: user.ipAddress
+      }));
+
+    res.json(pendingUsers);
+  } catch (error) {
+    console.error('Error fetching pending users:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * POST /api/admin/approve-user/:id
+ * Approve a user (admin only or via email token)
+ */
+app.post('/api/admin/approve-user/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { token, adminAction } = req.body;
+
+    // Handle email token approval
+    if (token && !adminAction) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.userId !== userId || decoded.action !== 'approve') {
+          return res.status(400).json({ error: 'Invalid approval token' });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid or expired approval token' });
+      }
+    } else {
+      // Handle admin dashboard approval - require authentication
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Access token required' });
+      }
+
+      const tokenValue = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(tokenValue, JWT_SECRET);
+        const users = await getUsers();
+        const adminUser = users.find(u => u.id === decoded.id);
+        if (!adminUser || adminUser.role !== 'admin') {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
+      } catch (error) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+    }
+
+    // Update user status
+    const users = await getUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = users[userIndex];
+    if (user.status !== 'pending') {
+      return res.status(400).json({ error: 'User is not pending approval' });
+    }
+
+    // Approve the user
+    users[userIndex] = {
+      ...user,
+      status: 'approved',
+      approvedAt: new Date().toISOString(),
+      approvedBy: adminAction ? 'admin_dashboard' : 'email_approval'
+    };
+
+    await saveUsers(users);
+
+    // Send approval notification email to user
+    if (emailTransporter) {
+      try {
+        const mailOptions = {
+          from: EMAIL_CONFIG.auth.user,
+          to: user.email,
+          subject: '🎉 Account Approved - 123.net Phone Configuration System',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0; font-size: 24px;">🎉 Account Approved!</h1>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">123.net Phone Configuration System</p>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px;">
+                <h2 style="color: #333; margin-top: 0;">Welcome, ${user.username}!</h2>
+                
+                <p>Your account has been approved and you can now log in to the system.</p>
+                
+                <div style="background: white; padding: 20px; border-radius: 6px; margin: 20px 0; text-align: center;">
+                  <a href="${process.env.APP_URL || 'http://localhost:3000'}/login" 
+                     style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                    🚀 LOGIN NOW
+                  </a>
+                </div>
+                
+                <p style="color: #666; font-size: 14px;">
+                  If you have any questions, please contact your administrator.
+                </p>
+              </div>
+            </div>
+          `
+        };
+
+        await emailTransporter.sendMail(mailOptions);
+        console.log(`📧 Approval notification sent to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send approval notification:', emailError.message);
+      }
+    }
+
+    res.json({ 
+      message: 'User approved successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        status: 'approved'
+      }
+    });
+
+    console.log(`✅ User approved: ${user.username} (${user.email})`);
+  } catch (error) {
+    console.error('Error approving user:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/**
+ * POST /api/admin/deny-user/:id
+ * Deny a user (admin only or via email token)
+ */
+app.post('/api/admin/deny-user/:id', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { token, adminAction, reason } = req.body;
+
+    // Handle email token denial
+    if (token && !adminAction) {
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded.userId !== userId || decoded.action !== 'deny') {
+          return res.status(400).json({ error: 'Invalid denial token' });
+        }
+      } catch (error) {
+        return res.status(400).json({ error: 'Invalid or expired denial token' });
+      }
+    } else {
+      // Handle admin dashboard denial - require authentication
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Access token required' });
+      }
+
+      const tokenValue = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(tokenValue, JWT_SECRET);
+        const users = await getUsers();
+        const adminUser = users.find(u => u.id === decoded.id);
+        if (!adminUser || adminUser.role !== 'admin') {
+          return res.status(403).json({ error: 'Admin access required' });
+        }
+      } catch (error) {
+        return res.status(401).json({ error: 'Invalid token' });
+      }
+    }
+
+    // Update user status
+    const users = await getUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const user = users[userIndex];
+    if (user.status !== 'pending') {
+      return res.status(400).json({ error: 'User is not pending approval' });
+    }
+
+    // Deny the user
+    users[userIndex] = {
+      ...user,
+      status: 'denied',
+      deniedAt: new Date().toISOString(),
+      deniedBy: adminAction ? 'admin_dashboard' : 'email_denial',
+      denialReason: reason || 'No reason provided'
+    };
+
+    await saveUsers(users);
+
+    // Send denial notification email to user
+    if (emailTransporter) {
+      try {
+        const mailOptions = {
+          from: EMAIL_CONFIG.auth.user,
+          to: user.email,
+          subject: '❌ Account Access Denied - 123.net Phone Configuration System',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+                <h1 style="margin: 0; font-size: 24px;">❌ Account Access Denied</h1>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">123.net Phone Configuration System</p>
+              </div>
+              
+              <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 8px 8px;">
+                <h2 style="color: #333; margin-top: 0;">Access Request Denied</h2>
+                
+                <p>Unfortunately, your account access request has been denied.</p>
+                
+                ${reason ? `<div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                  <strong>Reason:</strong> ${reason}
+                </div>` : ''}
+                
+                <p style="color: #666; font-size: 14px;">
+                  If you believe this is an error or have questions, please contact your administrator at 
+                  <a href="mailto:${ADMIN_EMAIL}" style="color: #007bff;">${ADMIN_EMAIL}</a>.
+                </p>
+              </div>
+            </div>
+          `
+        };
+
+        await emailTransporter.sendMail(mailOptions);
+        console.log(`📧 Denial notification sent to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send denial notification:', emailError.message);
+      }
+    }
+
+    res.json({ 
+      message: 'User denied successfully',
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        status: 'denied'
+      }
+    });
+
+    console.log(`❌ User denied: ${user.username} (${user.email}) - Reason: ${reason || 'No reason provided'}`);
+  } catch (error) {
+    console.error('Error denying user:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

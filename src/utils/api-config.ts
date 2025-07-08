@@ -57,10 +57,13 @@ export const API_CONFIG = {
     me: '/api/auth/me',
     logout: '/api/auth/logout',
     
-    // Admin endpoints (use /api/auth/ prefix)
-    'admin/users': '/api/auth/admin/users',
-    'admin/users/{id}': '/api/auth/admin/users/{id}',
-    'admin/users/{id}/role': '/api/auth/admin/users/{id}/role',
+    // Admin endpoints (use /api/admin/ prefix)
+    'admin/users': '/api/admin/users',
+    'admin/users/{id}': '/api/admin/users/{id}',
+    'admin/users/{id}/role': '/api/admin/users/{id}/role',
+    'admin/pending-users': '/api/admin/pending-users',
+    'admin/approve-user/{id}': '/api/admin/approve-user/{id}',
+    'admin/deny-user/{id}': '/api/admin/deny-user/{id}',
     
     // VPN endpoints (use /api/ prefix)
     vpnStatus: '/api/vpn/status',

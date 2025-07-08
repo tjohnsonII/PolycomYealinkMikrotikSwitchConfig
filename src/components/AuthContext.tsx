@@ -26,7 +26,7 @@ interface AuthContextType {
   user: User | null;                    // Current authenticated user
   token: string | null;                 // JWT token
   login: (username: string, password: string) => Promise<void>;     // Login function
-  register: (username: string, email: string, password: string) => Promise<void>;  // Register function
+  register: (username: string, email: string, password: string) => Promise<{success: boolean, message: string}>;  // Register function
   logout: () => void;                   // Logout function
   isAuthenticated: boolean;             // Whether user is logged in
   isAdmin: boolean;                     // Whether user has admin role
@@ -122,14 +122,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   /**
    * Registration function
-   * Creates new user account and logs them in
+   * Creates new user account - now requires approval before login
    * 
    * @param username - Desired username
    * @param email - User's email address
    * @param password - User's password
-   * @throws Error if registration fails
+   * @returns Promise with success status and message
    */
-  const register = async (username: string, email: string, password: string) => {
+  const register = async (username: string, email: string, password: string): Promise<{success: boolean, message: string}> => {
     const response = await fetch(getApiUrl('register'), {
       method: 'POST',
       headers: {
@@ -140,14 +140,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Registration failed');
+      return { success: false, message: errorData.error || 'Registration failed' };
     }
 
     const data = await response.json();
-    // Update state and store token in localStorage
-    setToken(data.token);
-    setUser(data.user);
-    localStorage.setItem('token', data.token);
+    
+    // Registration successful but requires approval
+    return { 
+      success: true, 
+      message: data.message || 'Registration successful! Your account is pending approval.'
+    };
   };
 
   /**

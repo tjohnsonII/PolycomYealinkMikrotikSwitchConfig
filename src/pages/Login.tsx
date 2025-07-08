@@ -36,6 +36,7 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   
   // Get authentication functions from context
@@ -49,11 +50,21 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       if (isRegister) {
         // Call registration function
-        await register(username, email, password);
+        const result = await register(username, email, password);
+        if (result.success) {
+          setSuccess(result.message);
+          // Clear form
+          setUsername('');
+          setEmail('');
+          setPassword('');
+        } else {
+          setError(result.message);
+        }
       } else {
         // Call login function
         await login(username, password);
@@ -129,6 +140,21 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
             textAlign: 'center'
           }}>
             {error}
+          </div>
+        )}
+
+        {/* Success message display */}
+        {success && (
+          <div className="alert alert-success" style={{
+            marginBottom: '20px',
+            textAlign: 'center',
+            background: '#d4edda',
+            border: '1px solid #c3e6cb',
+            borderRadius: '8px',
+            padding: '12px',
+            color: '#155724'
+          }}>
+            {success}
           </div>
         )}
 
