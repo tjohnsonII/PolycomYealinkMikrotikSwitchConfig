@@ -46,7 +46,11 @@ id_ecdsa*
 *credential*
 *password*
 *secret*
-*auth*
+*auth.txt
+*auth.json
+*auth.key
+*auth.pem
+*auth.crt
 vpn-credentials.txt
 backend/vpn-credentials.txt
 
