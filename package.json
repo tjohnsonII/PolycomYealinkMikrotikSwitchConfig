@@ -15,7 +15,11 @@
     "start-dev": "./start-app.sh",
     "start": "./start-robust.sh",
     "start-production": "./start-robust.sh --production",
-    "start-robust": "./start-robust.sh"
+    "start-robust": "./start-robust.sh",
+    "start-https": "./start-https.sh",
+    "stop-https": "./stop-https.sh",
+    "auth-https": "node backend/auth-server-https.js",
+    "ssh-https": "node backend/ssh-ws-server-https.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
