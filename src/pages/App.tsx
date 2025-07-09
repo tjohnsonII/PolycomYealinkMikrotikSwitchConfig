@@ -25,6 +25,7 @@ import StrettoImport from './StrettoImport';
 import Diagnostic from './Diagnostic';
 import AdminPage from './AdminPage';
 import ATA from './ATA';
+import AsternicStats from './AsternicStats';
 import '../styles/123net-theme.css';
 import '../styles/App.css'; // eslint-disable-line
 
@@ -37,6 +38,7 @@ function AppContent() {
     { to: '/phone', label: 'Phone Configs' },
     { to: '/expansion', label: 'Expansion Modules' },
     { to: '/ata', label: 'ATA (Fax)' },
+    { to: '/asternic', label: 'Asternic Stats' },
     { to: '/reference', label: 'Reference' },
     { to: '/fullconfig', label: 'Full Config' },
     { to: '/fbpx', label: 'FBPX Import' },
@@ -140,6 +142,7 @@ function AppContent() {
               <Route path="/phone" element={<PhoneConfig />} />
               <Route path="/expansion" element={<ExpansionModules />} />
               <Route path="/ata" element={<ATA />} />
+              <Route path="/asternic" element={<AsternicStats />} />
               <Route path="/reference" element={<Reference />} />
               <Route path="/fullconfig" element={<FullConfig />} />
               <Route path="/fbpx" element={<FBPXImport />} />
