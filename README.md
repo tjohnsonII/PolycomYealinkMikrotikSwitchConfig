@@ -5,14 +5,50 @@ A modular web app for generating configuration code for Polycom and Yealink phon
 ---
 
 ## Table of Contents
+- [Quick Start](#quick-start)
 - [Features](#features)
 - [How It Works](#how-it-works)
 - [Modular Project Structure](#modular-project-structure)
 - [How to Contribute](#how-to-contribute)
 - [File-by-File Technical Overview](#file-by-file-technical-overview)
 - [Development](#development)
-- [Automated Start Script](#automated-start-script)
+- [Start Scripts Guide](#start-scripts-guide)
 - [License](#license)
+
+---
+
+## Quick Start
+
+### 🚀 Getting Started (Recommended)
+
+1. **Clone the repository**
+   ```bash
+   git clone [your-repo-url]
+   cd PolycomYealinkMikrotikSwitchConfig
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the application**
+   ```bash
+   npm run start
+   ```
+   This runs the production-ready `start-robust.sh` script with comprehensive health checks and process monitoring.
+
+4. **Access the application**
+   - Open http://localhost:3000 in your browser
+   - The app includes authentication, VPN diagnostics, and all configuration generators
+
+### 🔧 Alternative Start Options
+
+- **HTTPS Development**: `npm run start-https` (includes SSL certificates)
+- **Full Development**: `npm run start-full` (includes VPN features)
+- **timsablab.ddns.net**: `./start-timsablab.sh` (domain-specific production)
+
+For detailed information about all available start scripts, see [START_SCRIPTS_GUIDE.md](START_SCRIPTS_GUIDE.md).
 
 ---
 
@@ -217,33 +253,44 @@ The diagnostic page will now be able to reach PBX servers through the server's V
 
 ---
 
-## Automated Start Script
+## Start Scripts Guide
 
-The `start-app.sh` script provides a complete application stack with enhanced features:
+This project includes multiple startup scripts for different use cases. Here's a quick overview:
 
-```bash
-chmod +x start-app.sh
-./start-app.sh
-```
+### 🎯 Recommended Scripts
 
-### Services Started:
-- **Frontend:** Vite development server (port 3000)
-- **Backend:** SSH WebSocket server (port 3001) 
+- **`npm run start`** (Production Ready) - Uses `start-robust.sh`
+  - Comprehensive health checks and process monitoring
+  - Automatic service recovery
+  - External access support
+  - **Best for production deployments**
+
+- **`npm run start-https`** (HTTPS Development) - Uses `start-https.sh`
+  - SSL/TLS encryption for all services
+  - Self-signed certificate generation
+  - **Best for development with SSL**
+
+- **`npm run start-full`** (Full Development) - Uses `start-app.sh`
+  - Complete VPN integration support
+  - Enhanced diagnostics and monitoring
+  - **Best for development with VPN features**
+
+### 🔧 Specialized Scripts
+
+- **`./start-timsablab.sh`** - Domain-specific production for timsablab.ddns.net
+- **`./start-production.sh`** - Static build production deployment
+- **`./start-auth-app.sh`** - Minimal auth-only development
+
+### 📋 Services Started (All Scripts)
+
+- **Frontend:** React application (port 3000)
+- **Backend:** SSH WebSocket server (port 3001)
 - **Auth:** Authentication server (port 3002)
-- **VPN:** Optional persistent VPN connection
+- **Features:** VPN diagnostics, user management, config generators
 
-### Enhanced Features:
-- Process cleanup and port management
-- Health checks and auto-recovery
-- Dependency validation
-- VPN connectivity support
-- User management and authentication
-- Real network diagnostics
+### 📖 Detailed Documentation
 
-### Configuration:
-- Edit `.env` file for custom settings
-- Set `ENABLE_PERSISTENT_VPN=true` for dedicated server mode
-- Configure admin users and JWT secrets
+For complete information about all available start scripts, their purposes, and when to use them, see **[START_SCRIPTS_GUIDE.md](START_SCRIPTS_GUIDE.md)**.
 
 ---
 

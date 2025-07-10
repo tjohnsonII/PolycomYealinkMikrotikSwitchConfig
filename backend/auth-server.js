@@ -76,7 +76,17 @@ try {
 }
 
 // Middleware setup
-app.use(cors());                // Enable CORS for frontend communication
+app.use(cors({
+  origin: [
+    'https://timsablab.ddns.net:3000',
+    'https://timsablab.ddns.net',
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://67.149.139.23:3000',
+    'https://67.149.139.23'
+  ],
+  credentials: true
+}));                            // Enable CORS for frontend communication
 app.use(express.json());        // Parse JSON request bodies
 
 /**

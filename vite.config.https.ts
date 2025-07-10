@@ -8,7 +8,7 @@ import path from 'path'
 
 const httpsOptions = () => {
   // Try Let's Encrypt certificates first
-  const letsEncryptPath = '/etc/letsencrypt/live/timsablab.com/';
+  const letsEncryptPath = '/etc/letsencrypt/live/timsablab.ddns.net/';
   const selfSignedPath = './ssl/';
   
   try {
@@ -47,7 +47,7 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     open: false, // Don't auto-open browser with HTTPS warnings
-    allowedHosts: ['timsablab.com', 'timsablab.ddn.net', 'localhost']
+    allowedHosts: ['timsablab.ddns.net', 'timsablab.com', 'localhost', '67.149.139.23']
   },
   plugins: [react()],
   // Environment variables for HTTPS API calls

@@ -98,8 +98,8 @@ check_ssl_certificates() {
             -keyout ssl/private-key.pem \
             -out ssl/certificate.pem \
             -days 365 -nodes \
-            -subj "/C=US/ST=Virginia/L=Richmond/O=TimsAbLab/CN=timsablab.com" \
-            -addext "subjectAltName=DNS:timsablab.com,DNS:timsablab.ddn.net,DNS:localhost,IP:127.0.0.1"
+            -subj "/C=US/ST=Michigan/L=Detroit/O=TimsAbLab/CN=timsablab.ddns.net" \
+            -addext "subjectAltName=DNS:timsablab.ddns.net,DNS:timsablab.com,DNS:localhost,IP:127.0.0.1,IP:67.149.139.23"
         
         if [[ $? -eq 0 ]]; then
             log "SSL certificates generated successfully"
