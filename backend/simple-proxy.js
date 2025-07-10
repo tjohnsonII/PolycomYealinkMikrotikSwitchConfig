@@ -123,7 +123,7 @@ const server = http.createServer((req, res) => {
   // Proxy API calls
   if (url.startsWith('/api/auth/')) {
     // Proxy to auth server, rewriting path
-    const targetUrl = url.replace('/api/auth', '');
+    const targetUrl = url.replace('/api/auth', '/api');
     req.url = targetUrl;
     console.log(`🔄 Proxying ${method} ${url} → localhost:3002${targetUrl}`);
     proxy.web(req, res, { target: 'http://localhost:3002' });
