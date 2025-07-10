@@ -85,3 +85,14 @@ backend/vpn-credentials.txt
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# SSL certificates and private keys (NEVER commit these!)
+ssl/
+ssl/**
+!ssl/README.md
+ssl/PrivateKey.key
+ssl/private-key.pem
+ssl/*.key
+ssl/*.pem
+ssl/*.p12
+ssl/*.pfx
