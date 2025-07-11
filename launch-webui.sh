@@ -35,10 +35,32 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ALLOW_LAN=false
 
 # Parse arguments
+OPEN_BROWSER=true
+ACTION=""
+
 for arg in "$@"; do
     case $arg in
         --allow-lan)
             ALLOW_LAN=true
+            ;;
+        --no-open)
+            OPEN_BROWSER=false
+            ;;
+        --status)
+            ACTION="status"
+            ;;
+        --stop)
+            ACTION="stop"
+            ;;
+        --help)
+            ACTION="help"
+            ;;
+        *)
+            if [[ "$arg" != "${0##*/}" ]]; then
+                log "ERROR" "Unknown option: $arg"
+                show_help
+                exit 1
+            fi
             ;;
     esac
 done
@@ -180,24 +202,23 @@ show_help() {
 }
 
 # Main logic
-case "${1:-}" in
-    "--status")
+case "${ACTION:-}" in
+    "status")
         check_webui_status
         ;;
-    "--stop")
+    "stop")
         stop_webui
         ;;
-    "--no-open")
-        start_webui
-        ;;
-    "--help")
+    "help")
         show_help
         ;;
     "")
-        # Default: Start and open browser
+        # Default: Start and possibly open browser
         if start_webui; then
-            log "INFO" "Opening web console in browser..."
-            open_browser "$WEBUI_URL"
+            if [ "$OPEN_BROWSER" = true ]; then
+                log "INFO" "Opening web console in browser..."
+                open_browser "$WEBUI_URL"
+            fi
             
             echo ""
             echo "🖥️ Web Management Console is now running!"
@@ -229,7 +250,7 @@ case "${1:-}" in
         fi
         ;;
     *)
-        log "ERROR" "Unknown option: $1"
+        log "ERROR" "Unknown action: $ACTION"
         show_help
         exit 1
         ;;
