@@ -57,19 +57,29 @@ const SERVICES = {
         script: 'backend/ssh-ws-server.js',
         port: 3001,
         health: 'http://localhost:3001/health',
-        name: 'SSH WebSocket Server'
+        name: 'SSH WebSocket Server',
+        type: 'backend'
     },
     'auth': {
         script: 'backend/auth-server.js',
         port: 3002,
         health: 'http://localhost:3002/health',
-        name: 'Authentication Server'
+        name: 'Authentication Server',
+        type: 'backend'
     },
     'proxy': {
         script: 'backend/simple-proxy-https.js',
         port: 8443,
         health: 'https://localhost:8443/proxy-health',
-        name: 'HTTPS Proxy Server'
+        name: 'HTTPS Proxy Server',
+        type: 'frontend'
+    },
+    'webapp': {
+        script: null, // Special handling for webapp
+        port: 8443,
+        health: 'https://localhost:8443/',
+        name: 'Main Web Application',
+        type: 'webapp'
     }
 };
 
@@ -216,26 +226,55 @@ app.post('/api/services/:service/start', async (req, res) => {
     }
     
     try {
-        // Kill existing process if running
-        const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
-        
-        // Start the service
-        const startCommand = service === 'proxy' 
-            ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`
-            : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
-        
-        const result = await execCommand(startCommand);
-        
-        // Wait a moment for service to start
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        const status = await getServiceStatus(service);
-        
-        res.json({ 
-            success: true, 
-            message: `${serviceConfig.name} started`,
-            status 
-        });
+        if (service === 'webapp') {
+            // Special handling for webapp - build and start all services
+            const buildResult = await execCommand('npm run build');
+            if (!buildResult.success) {
+                return res.status(500).json({ error: 'Failed to build webapp: ' + buildResult.stderr });
+            }
+            
+            // Start all backend services needed for webapp
+            for (const [key, svc] of Object.entries(SERVICES)) {
+                if (svc.type === 'backend' || svc.type === 'frontend') {
+                    const killResult = await execCommand(`pkill -f "${svc.script}"`);
+                    
+                    const startCommand = key === 'proxy' 
+                        ? `cd backend && PROXY_PORT=${svc.port} nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`
+                        : `cd backend && nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`;
+                    
+                    await execCommand(startCommand);
+                }
+            }
+            
+            // Wait for services to start
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+            res.json({ 
+                success: true, 
+                message: 'Web application built and started (all services running)',
+                buildOutput: buildResult.stdout
+            });
+        } else {
+            // Regular service start
+            const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
+            
+            const startCommand = service === 'proxy' 
+                ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`
+                : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
+            
+            const result = await execCommand(startCommand);
+            
+            // Wait a moment for service to start
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const status = await getServiceStatus(service);
+            
+            res.json({ 
+                success: true, 
+                message: `${serviceConfig.name} started`,
+                status 
+            });
+        }
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -251,11 +290,92 @@ app.post('/api/services/:service/stop', async (req, res) => {
     }
     
     try {
-        const result = await execCommand(`pkill -f "${serviceConfig.script}"`);
+        if (service === 'webapp') {
+            // Stop all services for webapp
+            for (const [key, svc] of Object.entries(SERVICES)) {
+                if (svc.type === 'backend' || svc.type === 'frontend') {
+                    await execCommand(`pkill -f "${svc.script}"`);
+                }
+            }
+            
+            res.json({ 
+                success: true, 
+                message: 'Web application stopped (all services stopped)' 
+            });
+        } else {
+            const result = await execCommand(`pkill -f "${serviceConfig.script}"`);
+            
+            res.json({ 
+                success: true, 
+                message: `${serviceConfig.name} stopped` 
+            });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Build webapp
+app.post('/api/webapp/build', async (req, res) => {
+    try {
+        log("INFO", "Starting webapp build...");
         
-        res.json({ 
-            success: true, 
-            message: `${serviceConfig.name} stopped` 
+        // Clean previous build
+        const cleanResult = await execCommand('rm -rf dist');
+        
+        // Build the webapp
+        const buildResult = await execCommand('npm run build');
+        
+        if (!buildResult.success) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Build failed', 
+                output: buildResult.stderr 
+            });
+        }
+        
+        // Verify build
+        const verifyResult = await execCommand('ls -la dist/');
+        
+        res.json({
+            success: true,
+            message: 'Webapp built successfully',
+            buildOutput: buildResult.stdout,
+            buildFiles: verifyResult.stdout
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Start entire system using start-robust.sh
+app.post('/api/system/start', async (req, res) => {
+    try {
+        log("INFO", "Starting entire system...");
+        
+        const startResult = await execCommand('./start-robust.sh --no-webui &');
+        
+        res.json({
+            success: true,
+            message: 'System startup initiated',
+            output: startResult.stdout
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Stop entire system using stop-robust.sh
+app.post('/api/system/stop', async (req, res) => {
+    try {
+        log("INFO", "Stopping entire system...");
+        
+        const stopResult = await execCommand('./stop-robust.sh');
+        
+        res.json({
+            success: true,
+            message: 'System stopped',
+            output: stopResult.stdout
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

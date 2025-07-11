@@ -291,11 +291,63 @@
         <div class="tab-content" id="mainTabsContent">
             <!-- Dashboard Tab -->
             <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Web Management Console</strong> - Control your Phone Configuration Generator webapp from here.
+                    The "Main Web Application" represents the public-facing website that users access.
+                </div>
+                
+                <!-- Main Webapp Control -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-globe"></i> <strong>Main Web Application</strong>
+                                <small class="ms-2">🌐 Public website (https://123hostedtools.com)</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div><strong>Status:</strong> <span id="webapp-status" class="badge badge-lg">Loading...</span></div>
+                                        <div><strong>URL:</strong> <a href="https://123hostedtools.com" target="_blank">https://123hostedtools.com</a></div>
+                                        <div><strong>Components:</strong> Frontend + Backend + Auth + Proxy</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <button class="btn btn-success btn-custom" onclick="startWebApp()">
+                                                <i class="fas fa-play"></i> Start Webapp
+                                            </button>
+                                            <button class="btn btn-warning btn-custom" onclick="restartWebApp()">
+                                                <i class="fas fa-redo"></i> Restart Webapp
+                                            </button>
+                                            <button class="btn btn-danger btn-custom" onclick="stopWebApp()">
+                                                <i class="fas fa-stop"></i> Stop Webapp
+                                            </button>
+                                            <button class="btn btn-info btn-custom" onclick="buildWebApp()">
+                                                <i class="fas fa-hammer"></i> Build
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Backend Services -->
+                <div class="row">
+                    <div class="col-12">
+                        <h5><i class="fas fa-server"></i> Backend Services</h5>
+                        <p class="text-muted">Individual backend components that support the main webapp</p>
+                    </div>
+                </div>
+                
                 <div class="row">
                     <div class="col-md-4">
                         <div class="card service-card">
                             <div class="card-header">
                                 <i class="fas fa-server"></i> SSH WebSocket Server
+                                <small class="text-muted d-block">VPN & SSH functionality</small>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -322,6 +374,7 @@
                         <div class="card service-card">
                             <div class="card-header">
                                 <i class="fas fa-shield-alt"></i> Authentication Server
+                                <small class="text-muted d-block">User login & management</small>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -348,6 +401,7 @@
                         <div class="card service-card">
                             <div class="card-header">
                                 <i class="fas fa-globe"></i> HTTPS Proxy Server
+                                <small class="text-muted d-block">Frontend & API routing</small>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">

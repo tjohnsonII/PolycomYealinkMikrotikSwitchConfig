@@ -142,6 +142,35 @@ class ManagementConsole {
                 }
             }
         }
+        
+        // Update webapp status (based on all services)
+        const webappStatusElement = document.getElementById('webapp-status');
+        if (webappStatusElement) {
+            webappStatusElement.className = 'badge badge-lg';
+            
+            // Check if all main services are healthy
+            const requiredServices = ['ssh-ws', 'auth', 'proxy'];
+            const allHealthy = requiredServices.every(service => 
+                this.services[service] && this.services[service].status === 'healthy'
+            );
+            
+            if (allHealthy) {
+                webappStatusElement.classList.add('bg-success');
+                webappStatusElement.textContent = '✅ Online';
+            } else {
+                const anyRunning = requiredServices.some(service => 
+                    this.services[service] && this.services[service].status === 'healthy'
+                );
+                
+                if (anyRunning) {
+                    webappStatusElement.classList.add('bg-warning');
+                    webappStatusElement.textContent = '⚠️ Partial';
+                } else {
+                    webappStatusElement.classList.add('bg-danger');
+                    webappStatusElement.textContent = '❌ Offline';
+                }
+            }
+        }
 
         // Update header stats
         document.getElementById('healthy-count').textContent = healthyCount;
@@ -529,16 +558,139 @@ async function buildApplication() {
     await app.buildApplication();
 }
 
-async function runHealthChecks() {
-    await app.runHealthChecks();
+//=============================================================================
+// Webapp Control Functions
+//=============================================================================
+
+async function startWebApp() {
+    try {
+        const response = await fetch('/api/services/webapp/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Web Application Started Successfully!\n\nAll services are now running and the webapp is accessible at:\nhttps://123hostedtools.com');
+        } else {
+            alert('❌ Failed to start webapp: ' + result.error);
+        }
+    } catch (error) {
+        alert('❌ Error starting webapp: ' + error.message);
+    }
+}
+
+async function stopWebApp() {
+    if (confirm('⚠️ This will stop the entire web application.\nUsers will not be able to access the website.\n\nContinue?')) {
+        try {
+            const response = await fetch('/api/services/webapp/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('✅ Web Application Stopped\n\nAll services have been stopped.');
+            } else {
+                alert('❌ Failed to stop webapp: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error stopping webapp: ' + error.message);
+        }
+    }
+}
+
+async function restartWebApp() {
+    if (confirm('⚠️ This will restart the entire web application.\nUsers may experience a brief interruption.\n\nContinue?')) {
+        try {
+            await stopWebApp();
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await startWebApp();
+        } catch (error) {
+            alert('❌ Error restarting webapp: ' + error.message);
+        }
+    }
+}
+
+async function buildWebApp() {
+    try {
+        const response = await fetch('/api/webapp/build', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✅ Webapp Built Successfully!\n\nThe frontend has been rebuilt and is ready for deployment.');
+        } else {
+            alert('❌ Build failed: ' + result.error);
+        }
+    } catch (error) {
+        alert('❌ Error building webapp: ' + error.message);
+    }
+}
+
+//=============================================================================
+// System Control Functions
+//=============================================================================
+
+async function startEntireSystem() {
+    if (confirm('🚀 This will start the entire Phone Configuration Generator system.\n\nContinue?')) {
+        try {
+            const response = await fetch('/api/system/start', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('✅ System Startup Initiated\n\nThe entire system is starting up. This may take a moment.');
+            } else {
+                alert('❌ Failed to start system: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error starting system: ' + error.message);
+        }
+    }
+}
+
+async function stopEntireSystem() {
+    if (confirm('⚠️ This will stop the ENTIRE Phone Configuration Generator system.\nAll services will be stopped and users will lose access.\n\nContinue?')) {
+        try {
+            const response = await fetch('/api/system/stop', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('✅ System Stopped\n\nAll services have been stopped.');
+            } else {
+                alert('❌ Failed to stop system: ' + result.error);
+            }
+        } catch (error) {
+            alert('❌ Error stopping system: ' + error.message);
+        }
+    }
 }
 
 async function refreshLogs() {
     await app.refreshLogs();
-}
-
-async function refreshFiles() {
-    await app.refreshFiles();
 }
 
 async function checkPorts() {
