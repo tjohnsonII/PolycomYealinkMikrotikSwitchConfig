@@ -30,6 +30,10 @@ backend/*.ovpn
 backend/*.ovpn.*
 **/*.ovpn
 **/*.ovpn.*
+vpn-credentials.txt
+openvpn-*
+work.ovpn
+home.ovpn
 
 # SSH keys and certificates (NEVER commit these!)
 *.pem

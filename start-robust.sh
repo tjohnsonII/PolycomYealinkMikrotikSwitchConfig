@@ -9,22 +9,67 @@
 # Services started:
 # 1. SSH WebSocket backend server (port 3001) - VPN/SSH functionality
 # 2. Authentication server (port 3002) - User management and auth
-# 3. Reverse proxy server (port 3000) - Production frontend + API routing
+# 3. Reverse proxy server - Production frontend + API routing
 # 
 # Features:
 # - Comprehensive health checks
 # - Automatic service recovery
 # - Process monitoring
 # - Graceful shutdown handling
-# - External access support via reverse proxy
+# - Multiple domain support (timsablab.ddns.net, 123hostedtools.com)
+# - HTTPS and HTTP support
 # 
-# Usage: ./start-robust.sh [--production|--dev]
+# Usage: 
+#   ./start-robust.sh                          # Default production (123hostedtools.com HTTPS)
+#   ./start-robust.sh --domain=timsablab       # Use timsablab.ddns.net
+#   ./start-robust.sh --domain=123hostedtools  # Use 123hostedtools.com
+#   ./start-robust.sh --http                   # Use HTTP only
+#   ./start-robust.sh --dev                    # Development mode
 #################################################################################
 
 set -e  # Exit on any error
 
-# Configuration
-PRODUCTION_MODE=${1:-"--production"}  # Default to production mode
+# Parse command line arguments
+DOMAIN="123hostedtools"  # Default domain
+USE_HTTPS="true"
+PRODUCTION_MODE="true"
+VERBOSE="false"
+
+for arg in "$@"; do
+    case $arg in
+        --domain=timsablab)
+            DOMAIN="timsablab"
+            ;;
+        --domain=123hostedtools)
+            DOMAIN="123hostedtools"
+            ;;
+        --http)
+            USE_HTTPS="false"
+            ;;
+        --https)
+            USE_HTTPS="true"
+            ;;
+        --dev)
+            PRODUCTION_MODE="false"
+            ;;
+        --verbose)
+            VERBOSE="true"
+            ;;
+        --help)
+            echo "Usage: $0 [options]"
+            echo "Options:"
+            echo "  --domain=timsablab      Use timsablab.ddns.net domain"
+            echo "  --domain=123hostedtools Use 123hostedtools.com domain (default)"
+            echo "  --http                  Use HTTP only"
+            echo "  --https                 Use HTTPS (default)"
+            echo "  --dev                   Development mode"
+            echo "  --verbose               Verbose logging"
+            echo "  --help                  Show this help"
+            exit 0
+            ;;
+    esac
+done
+# Configuration based on domain and mode
 LOG_FILE="startup-robust.log"
 HEALTH_CHECK_INTERVAL=30  # Seconds between health checks
 MAX_RESTART_ATTEMPTS=3
@@ -36,11 +81,38 @@ AUTH_PID=""
 PROXY_PID=""
 MONITOR_PID=""
 
+# Domain-specific configuration
+if [ "$DOMAIN" = "timsablab" ]; then
+    DOMAIN_NAME="timsablab.ddns.net"
+    if [ "$USE_HTTPS" = "true" ]; then
+        PROXY_SCRIPT="backend/simple-proxy-https.js"
+        PROXY_PORT="443"
+        PROXY_HEALTH_URL="https://localhost:443/proxy-health"
+        SSL_PATH="ssl"
+    else
+        PROXY_SCRIPT="backend/simple-proxy.js"
+        PROXY_PORT="3000"
+        PROXY_HEALTH_URL="http://localhost:3000/proxy-health"
+    fi
+elif [ "$DOMAIN" = "123hostedtools" ]; then
+    DOMAIN_NAME="123hostedtools.com"
+    if [ "$USE_HTTPS" = "true" ]; then
+        PROXY_SCRIPT="backend/simple-proxy-123hostedtools.js"
+        PROXY_PORT="443"
+        PROXY_HEALTH_URL="https://localhost:443/proxy-health"
+        SSL_PATH="ssl"
+    else
+        PROXY_SCRIPT="backend/simple-proxy.js"
+        PROXY_PORT="3000"
+        PROXY_HEALTH_URL="http://localhost:3000/proxy-health"
+    fi
+fi
+
 # Service definitions
 declare -A SERVICES=(
-    ["ssh-ws"]="backend/ssh-ws-server.js:3001:/health"
-    ["auth"]="backend/auth-server.js:3002:/health" 
-    ["proxy"]="backend/simple-proxy.js:3000:/proxy-health"
+    ["ssh-ws"]="backend/ssh-ws-server.js:3001:http://localhost:3001/health"
+    ["auth"]="backend/auth-server.js:3002:http://localhost:3002/api/health" 
+    ["proxy"]="$PROXY_SCRIPT:$PROXY_PORT:$PROXY_HEALTH_URL"
 )
 
 # Enhanced logging function with log levels
@@ -432,15 +504,27 @@ echo ""
 echo "🎉 All services started successfully!"
 echo ""
 echo "📍 Service URLs:"
-echo "   🌐 Main Application:     http://localhost:3000"
+echo "   🌐 Main Application:     $PROXY_HEALTH_URL"
 echo "   🔧 SSH WebSocket API:    http://localhost:3001 (internal)"
 echo "   🔐 Authentication API:   http://localhost:3002 (internal)"
 echo ""
 echo "🌍 External Access:"
 local_ip=$(hostname -I | awk '{print $1}')
-echo "   📱 From LAN:             http://$local_ip:3000"
-echo "   🌐 From Internet:        http://your-external-ip:3000"
-echo "   ✅ All API calls routed through port 3000 (reverse proxy)"
+if [ "$USE_HTTPS" = "true" ]; then
+    echo "   📱 From LAN:             https://$local_ip:$PROXY_PORT"
+    echo "   🌐 From Internet:        https://$DOMAIN_NAME"
+    echo "   🔒 SSL/TLS:              Enabled ($SSL_PATH)"
+else
+    echo "   📱 From LAN:             http://$local_ip:$PROXY_PORT"
+    echo "   🌐 From Internet:        http://$DOMAIN_NAME"
+fi
+echo "   ✅ All API calls routed through port $PROXY_PORT (reverse proxy)"
+echo ""
+echo "🏷️  Configuration:"
+echo "   Domain: $DOMAIN_NAME"
+echo "   Mode: $([ "$PRODUCTION_MODE" = "true" ] && echo "Production" || echo "Development")"
+echo "   Protocol: $([ "$USE_HTTPS" = "true" ] && echo "HTTPS" || echo "HTTP")"
+echo "   Proxy Script: $PROXY_SCRIPT"
 echo ""
 echo "👤 Default Admin Credentials:"
 if [ -f ".env" ]; then
@@ -474,14 +558,14 @@ echo "   • Production-optimized React build"
 echo "   • Comprehensive logging and error handling"
 echo ""
 echo "🔧 Router Configuration:"
-echo "   Only forward port 3000 to $local_ip:3000"
+echo "   Only forward port $PROXY_PORT to $local_ip:$PROXY_PORT"
 echo "   All API calls are routed internally by the reverse proxy"
 echo ""
 echo "⌨️  Press Ctrl+C to stop all services"
 echo ""
 
 log "SUCCESS" "Production application is running with monitoring"
-log "INFO" "System ready for external access"
+log "INFO" "System ready for external access on $DOMAIN_NAME"
 
 # Wait for monitoring to complete (or until interrupted)
 wait $MONITOR_PID

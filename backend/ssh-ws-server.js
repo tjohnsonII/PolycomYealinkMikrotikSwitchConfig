@@ -275,14 +275,47 @@ wss.on('connection', function connection(ws) {
 });
 
 // VPN Status endpoint
-app.get('/vpn/status', (req, res) => {
-  res.json({
-    status: vpnState.status,
-    interface: vpnState.interface,
-    ip: vpnState.ip,
-    logs: vpnState.logs.slice(-20), // Return last 20 logs
-    hasConfig: !!vpnState.configPath
-  });
+app.get('/vpn/status', async (req, res) => {
+  try {
+    // Check if dual VPN is configured
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    // Check if VPN status script exists
+    const statusScriptPath = path.join(__dirname, '..', 'check-vpn-status.sh');
+    
+    if (existsSync(statusScriptPath)) {
+      try {
+        const { stdout } = await execAsync(`bash ${statusScriptPath}`);
+        const vpnStatus = JSON.parse(stdout);
+        res.json(vpnStatus);
+        return;
+      } catch (error) {
+        console.error('Dual VPN status check failed:', error);
+      }
+    }
+    
+    // Fallback to single VPN status
+    res.json({
+      vpn_status: "single_vpn",
+      connections: {
+        single: {
+          status: vpnState.status,
+          interface: vpnState.interface,
+          ip: vpnState.ip,
+          logs: vpnState.logs.slice(-20),
+          hasConfig: !!vpnState.configPath
+        }
+      },
+      message: "Using single VPN mode. Run setup-dual-vpn.sh for dual VPN support"
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to get VPN status',
+      details: error.message 
+    });
+  }
 });
 
 // Upload and save OpenVPN config
@@ -578,6 +611,106 @@ app.post('/vpn/disconnect', (req, res) => {
     res.json({ success: true, message: 'VPN disconnected' });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Dual VPN Management Endpoints
+app.post('/vpn/dual/start', async (req, res) => {
+  try {
+    const { vpn } = req.body; // 'work', 'home', or 'both'
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    let command;
+    switch (vpn) {
+      case 'work':
+        command = 'sudo systemctl start openvpn-work';
+        break;
+      case 'home':
+        command = 'sudo systemctl start openvpn-home';
+        break;
+      case 'both':
+        command = 'sudo /usr/local/bin/vpn-manager start-both';
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid VPN type. Use: work, home, or both' });
+    }
+    
+    await execAsync(command);
+    res.json({ success: true, message: `Started ${vpn} VPN` });
+  } catch (error) {
+    res.status(500).json({ 
+      error: `Failed to start VPN: ${error.message}`,
+      suggestion: 'Make sure dual VPN is configured (run setup-dual-vpn.sh)'
+    });
+  }
+});
+
+app.post('/vpn/dual/stop', async (req, res) => {
+  try {
+    const { vpn } = req.body; // 'work', 'home', or 'both'
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    let command;
+    switch (vpn) {
+      case 'work':
+        command = 'sudo systemctl stop openvpn-work';
+        break;
+      case 'home':
+        command = 'sudo systemctl stop openvpn-home';
+        break;
+      case 'both':
+        command = 'sudo /usr/local/bin/vpn-manager stop-both';
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid VPN type. Use: work, home, or both' });
+    }
+    
+    await execAsync(command);
+    res.json({ success: true, message: `Stopped ${vpn} VPN` });
+  } catch (error) {
+    res.status(500).json({ 
+      error: `Failed to stop VPN: ${error.message}`,
+      suggestion: 'Make sure dual VPN is configured (run setup-dual-vpn.sh)'
+    });
+  }
+});
+
+app.get('/vpn/dual/logs', async (req, res) => {
+  try {
+    const { vpn } = req.query; // 'work', 'home', or 'both'
+    const { exec } = await import('child_process');
+    const { promisify } = await import('util');
+    const execAsync = promisify(exec);
+    
+    let logs = {};
+    
+    if (vpn === 'work' || vpn === 'both' || !vpn) {
+      try {
+        const { stdout: workLogs } = await execAsync('sudo tail -50 /var/log/openvpn/work-vpn.log 2>/dev/null || echo "No work VPN logs"');
+        logs.work = workLogs.split('\n').filter(line => line.trim());
+      } catch (error) {
+        logs.work = ['Work VPN logs not available'];
+      }
+    }
+    
+    if (vpn === 'home' || vpn === 'both' || !vpn) {
+      try {
+        const { stdout: homeLogs } = await execAsync('sudo tail -50 /var/log/openvpn/home-vpn.log 2>/dev/null || echo "No home VPN logs"');
+        logs.home = homeLogs.split('\n').filter(line => line.trim());
+      } catch (error) {
+        logs.home = ['Home VPN logs not available'];
+      }
+    }
+    
+    res.json({ logs });
+  } catch (error) {
+    res.status(500).json({ 
+      error: `Failed to get VPN logs: ${error.message}` 
+    });
   }
 });
 
