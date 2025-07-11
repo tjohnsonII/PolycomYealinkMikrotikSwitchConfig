@@ -17,13 +17,12 @@ const PORT = process.env.PROXY_PORT || 3000;
 const projectRoot = path.join(__dirname, '..');
 const distPath = path.join(projectRoot, 'dist');
 
-// SSL certificate paths - Using No-IP certificates
+// SSL certificate paths - Using 123hostedtools.com certificates
 const SSL_PATHS = {
-  key: path.resolve(__dirname, '../ssl/PrivateKey.key'),
-  cert: path.resolve(__dirname, '../ssl/timsablab_ddns_net.crt'),
+  key: path.resolve(__dirname, '../ssl/123hostedtools.com.key'),
+  cert: path.resolve(__dirname, '../ssl/123hostedtools_com.crt'),
   ca: [
-    path.resolve(__dirname, '../ssl/DigiCertCA.crt'),
-    path.resolve(__dirname, '../ssl/TrustedRoot.crt')
+    path.resolve(__dirname, '../ssl/123hostedtools_com.ca-bundle')
   ]
 };
 
@@ -35,7 +34,7 @@ if (!fs.existsSync(distPath)) {
 
 // Check if SSL certificates exist
 if (!fs.existsSync(SSL_PATHS.key) || !fs.existsSync(SSL_PATHS.cert)) {
-  console.error('❌ SSL certificates not found. Please ensure no-ip certificates are properly installed.');
+  console.error('❌ SSL certificates not found. Please ensure 123hostedtools.com certificates are properly installed.');
   process.exit(1);
 }
 
@@ -149,59 +148,59 @@ const server = https.createServer(sslOptions, (req, res) => {
   
   // Proxy API calls
   if (url.startsWith('/api/auth/')) {
-    // Proxy to HTTPS auth server, rewriting path
-    const targetUrl = url.replace('/api/auth', '/api');
+    // Proxy to HTTP auth server, rewriting path
+    const targetUrl = url.replace('/api/auth', '');
     req.url = targetUrl;
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3002${targetUrl} (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3002' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3002${targetUrl} (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3002' });
     return;
   }
   
   if (url.startsWith('/api/admin/')) {
-    // Proxy to HTTPS auth server
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3002${url} (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3002' });
+    // Proxy to HTTP auth server
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3002${url} (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3002' });
     return;
   }
   
   if (url.startsWith('/api/vpn/')) {
-    // Proxy VPN API calls to HTTPS SSH WebSocket server, rewriting path
+    // Proxy VPN API calls to HTTP SSH WebSocket server, rewriting path
     const targetUrl = url.replace('/api/vpn', '/vpn');
     req.url = targetUrl;
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl} (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl} (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
   }
   
   if (url.startsWith('/api/system/')) {
-    // Proxy system API calls to HTTPS SSH WebSocket server, rewriting path
+    // Proxy system API calls to HTTP SSH WebSocket server, rewriting path
     const targetUrl = url.replace('/api/system', '/system');
     req.url = targetUrl;
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl} (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${targetUrl} (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
   }
   
   // Special handling for ping endpoint
   if (url === '/api/ping') {
     req.url = '/ping';
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/ping (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/ping (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
   }
   
   // Special handling for health endpoint
   if (url === '/api/health') {
     req.url = '/health';
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/health (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001/health (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
   }
 
   if (url.startsWith('/api/')) {
     // Proxy other API calls to HTTPS SSH WebSocket server
-    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${url} (HTTPS)`);
-    proxy.web(req, res, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying ${method} ${url} → localhost:3001${url} (HTTP)`);
+    proxy.web(req, res, { target: 'http://localhost:3001' });
     return;
   }
   
@@ -231,8 +230,8 @@ server.on('upgrade', (req, socket, head) => {
     // Proxy WebSocket to HTTPS SSH server, rewriting path
     const targetUrl = url.replace('/ws', '');
     req.url = targetUrl;
-    console.log(`🔄 Proxying WebSocket ${url} → localhost:3001${targetUrl} (HTTPS)`);
-    proxy.ws(req, socket, head, { target: 'https://localhost:3001' });
+    console.log(`🔄 Proxying WebSocket ${url} → localhost:3001${targetUrl} (HTTP)`);
+    proxy.ws(req, socket, head, { target: 'http://localhost:3001' });
   } else {
     socket.destroy();
   }
@@ -240,16 +239,16 @@ server.on('upgrade', (req, socket, head) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTPS reverse proxy server running on https://0.0.0.0:${PORT}`);
-  console.log(`🔒 Using No-IP SSL certificate for: timsablab.ddns.net`);
+  console.log(`🔒 Using 123hostedtools.com SSL certificate`);
   console.log(`📁 Serving static files from: ${distPath}`);
-  console.log(`🔄 Proxying API calls (HTTPS):`);
-  console.log(`   • /api/auth/* → localhost:3002/* (HTTPS)`);
-  console.log(`   • /api/admin/* → localhost:3002/api/admin/* (HTTPS)`);
-  console.log(`   • /api/vpn/* → localhost:3001/vpn/* (HTTPS)`);
-  console.log(`   • /api/system/* → localhost:3001/system/* (HTTPS)`);
-  console.log(`   • /api/* → localhost:3001/api/* (HTTPS)`);
-  console.log(`   • /ws/* → localhost:3001/* (HTTPS)`);
-  console.log(`🌐 Access at: https://localhost:${PORT} or https://timsablab.ddns.net:${PORT}`);
+  console.log(`🔄 Proxying API calls (HTTP):`);
+  console.log(`   • /api/auth/* → localhost:3002/* (HTTP)`);
+  console.log(`   • /api/admin/* → localhost:3002/api/admin/* (HTTP)`);
+  console.log(`   • /api/vpn/* → localhost:3001/vpn/* (HTTP)`);
+  console.log(`   • /api/system/* → localhost:3001/system/* (HTTP)`);
+  console.log(`   • /api/* → localhost:3001/api/* (HTTP)`);
+  console.log(`   • /ws/* → localhost:3001/* (HTTP)`);
+  console.log(`🌐 Access at: https://localhost:${PORT} or https://123hostedtools.com:${PORT}`);
 });
 
 // Graceful shutdown

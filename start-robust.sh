@@ -111,7 +111,7 @@ fi
 # Service definitions
 declare -A SERVICES=(
     ["ssh-ws"]="backend/ssh-ws-server.js:3001:http://localhost:3001/health"
-    ["auth"]="backend/auth-server.js:3002:http://localhost:3002/api/health" 
+    ["auth"]="backend/auth-server.js:3002:http://localhost:3002/health" 
     ["proxy"]="$PROXY_SCRIPT:$PROXY_PORT:$PROXY_HEALTH_URL"
 )
 
