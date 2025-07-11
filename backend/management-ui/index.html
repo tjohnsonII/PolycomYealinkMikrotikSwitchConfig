@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Phone Config Manager - Web Console</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --text-light: #f8f9fa;
+            --border-color: #444;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: var(--bg-card) !important;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            color: var(--text-light) !important;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-light);
+        }
+
+        .card-body {
+            color: var(--text-light);
+        }
+
+        .status-healthy { color: var(--success); }
+        .status-unhealthy { color: var(--danger); }
+        .status-warning { color: var(--warning); }
+        .status-stopped { color: var(--danger); }
+
+        .service-card {
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .log-output {
+            background-color: #0d1117;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 15px;
+            color: #f0f6fc;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .btn-custom {
+            margin: 2px;
+        }
+
+        .tab-content {
+            padding: 20px 0;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--text-light);
+            border-color: var(--border-color);
+        }
+
+        .nav-tabs .nav-link.active {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-light);
+        }
+
+        .table-dark {
+            background-color: var(--bg-card);
+        }
+
+        .badge-lg {
+            font-size: 0.9em;
+            padding: 0.5em 0.8em;
+        }
+
+        .file-tree {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .file-exists { color: var(--success); }
+        .file-missing { color: var(--danger); }
+        .file-directory { color: var(--info); }
+
+        .real-time-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success);
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--info);
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-card);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        /* Terminal Styles */
+        .terminal-output {
+            background-color: #1a1a1a;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            color: #00ff00;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-welcome {
+            color: #00aaff;
+            font-weight: bold;
+        }
+
+        .terminal-input {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+        }
+
+        .terminal-input:focus {
+            background-color: var(--bg-card);
+            border-color: #00aaff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.25);
+            color: var(--text-light);
+        }
+
+        .terminal-command {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .terminal-error {
+            color: #ff6b6b;
+        }
+
+        .terminal-success {
+            color: #00ff00;
+        }
+
+        .terminal-info {
+            color: #00aaff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-phone"></i> Phone Config Manager
+                <small class="text-muted">Web Console</small>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <span class="real-time-indicator"></span>
+                    <small id="last-update">Loading...</small>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <!-- Header Stats -->
+        <div class="header-stats">
+            <div class="stat-item">
+                <div class="stat-value text-success" id="healthy-count">0</div>
+                <div class="stat-label">Healthy Services</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value text-warning" id="warning-count">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value text-danger" id="error-count">0</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value text-info" id="uptime">--</div>
+                <div class="stat-label">Uptime</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="services-tab" data-bs-toggle="tab" data-bs-target="#services" type="button" role="tab">
+                    <i class="fas fa-cogs"></i> Services
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logs" type="button" role="tab">
+                    <i class="fas fa-file-alt"></i> Logs
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files" type="button" role="tab">
+                    <i class="fas fa-folder"></i> Files
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="troubleshoot-tab" data-bs-toggle="tab" data-bs-target="#troubleshoot" type="button" role="tab">
+                    <i class="fas fa-wrench"></i> Troubleshoot
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="terminal-tab" data-bs-toggle="tab" data-bs-target="#terminal" type="button" role="tab">
+                    <i class="fas fa-terminal"></i> Terminal
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="mainTabsContent">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card service-card">
+                            <div class="card-header">
+                                <i class="fas fa-server"></i> SSH WebSocket Server
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div><strong>Port:</strong> 3001</div>
+                                        <div><strong>Status:</strong> <span id="ssh-ws-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('ssh-ws')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('ssh-ws')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('ssh-ws')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card service-card">
+                            <div class="card-header">
+                                <i class="fas fa-shield-alt"></i> Authentication Server
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div><strong>Port:</strong> 3002</div>
+                                        <div><strong>Status:</strong> <span id="auth-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('auth')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('auth')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('auth')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card service-card">
+                            <div class="card-header">
+                                <i class="fas fa-globe"></i> HTTPS Proxy Server
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div><strong>Port:</strong> 8443</div>
+                                        <div><strong>Status:</strong> <span id="proxy-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('proxy')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('proxy')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('proxy')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-bolt"></i> Quick Actions
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary btn-custom" onclick="startAllServices()">
+                            <i class="fas fa-play-circle"></i> Start All Services
+                        </button>
+                        <button class="btn btn-warning btn-custom" onclick="restartAllServices()">
+                            <i class="fas fa-redo-alt"></i> Restart All Services
+                        </button>
+                        <button class="btn btn-danger btn-custom" onclick="stopAllServices()">
+                            <i class="fas fa-stop-circle"></i> Stop All Services
+                        </button>
+                        <button class="btn btn-info btn-custom" onclick="runHealthChecks()">
+                            <i class="fas fa-heartbeat"></i> Run Health Checks
+                        </button>
+                        <button class="btn btn-secondary btn-custom" onclick="buildApplication()">
+                            <i class="fas fa-hammer"></i> Build Application
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Access Information -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-link"></i> Access Information
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>🌐 Web Access URLs:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>External:</strong> <a href="https://123hostedtools.com:8443" target="_blank">https://123hostedtools.com:8443</a></li>
+                                    <li><strong>Local:</strong> <a href="https://localhost:8443" target="_blank">https://localhost:8443</a></li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>🔐 Authentication:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Admin:</strong> admin / 123NetAdmin2024!</li>
+                                    <li><strong>User:</strong> tjohnson / Joshua3412@</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Tab -->
+            <div class="tab-pane fade" id="services" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-server"></i> Service Management
+                    </div>
+                    <div class="card-body">
+                        <div id="services-details">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading service details...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div class="tab-pane fade" id="logs" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-file-alt"></i> Service Logs
+                        <div class="float-end">
+                            <select id="log-service" class="form-select form-select-sm" style="width: auto; display: inline;">
+                                <option value="startup">Startup Log</option>
+                                <option value="ssh-ws">SSH WebSocket Log</option>
+                                <option value="auth">Auth Server Log</option>
+                                <option value="proxy">Proxy Log</option>
+                            </select>
+                            <button class="btn btn-primary btn-sm ms-2" onclick="refreshLogs()">
+                                <i class="fas fa-sync"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="log-output" class="log-output">
+                            Select a service to view logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Files Tab -->
+            <div class="tab-pane fade" id="files" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-folder"></i> Project Files Overview
+                        <button class="btn btn-primary btn-sm float-end" onclick="refreshFiles()">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="files-content">
+                            <div class="loading">
+                                <i class="fas fa-spinner fa-spin"></i> Loading file information...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshoot Tab -->
+            <div class="tab-pane fade" id="troubleshoot" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-network-wired"></i> Port Status
+                            </div>
+                            <div class="card-body">
+                                <div id="port-status">
+                                    <div class="loading">
+                                        <i class="fas fa-spinner fa-spin"></i> Checking ports...
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-sm mt-2" onclick="checkPorts()">
+                                    <i class="fas fa-sync"></i> Check Ports
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-certificate"></i> SSL Certificates
+                            </div>
+                            <div class="card-body">
+                                <div id="ssl-status">
+                                    <div class="loading">
+                                        <i class="fas fa-spinner fa-spin"></i> Checking SSL...
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-sm mt-2" onclick="checkSSL()">
+                                    <i class="fas fa-sync"></i> Check SSL
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="fas fa-tools"></i> Dependencies
+                            </div>
+                            <div class="card-body">
+                                <div id="deps-status">
+                                    <div class="loading">
+                                        <i class="fas fa-spinner fa-spin"></i> Checking dependencies...
+                                    </div>
+                                </div>
+                                <button class="btn btn-primary btn-sm mt-2" onclick="checkDependencies()">
+                                    <i class="fas fa-sync"></i> Check Dependencies
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Terminal Tab -->
+            <div class="tab-pane fade" id="terminal" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-terminal"></i> Interactive Terminal
+                        <small class="text-muted ms-2">Execute commands safely</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Terminal Access:</strong> Execute commands directly on the server. 
+                            Dangerous commands are blocked for security.
+                        </div>
+                        
+                        <div id="terminal-output" class="terminal-output mb-3">
+                            <div class="terminal-welcome">
+                                🖥️ <strong>Phone Config Manager Terminal</strong><br>
+                                Ready to execute commands. Type your command and press Enter.<br>
+                                <small class="text-muted">Current directory: /home/tim2/v3_PYMSC/PolycomYealinkMikrotikSwitchConfig</small><br>
+                                <hr>
+                            </div>
+                        </div>
+                        
+                        <div class="terminal-input-group">
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="text" id="terminal-input" class="form-control terminal-input" 
+                                       placeholder="Enter command..." autocomplete="off">
+                                <button class="btn btn-primary" onclick="executeCommand()">
+                                    <i class="fas fa-play"></i> Execute
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Quick Commands:</h6>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('ps aux | grep node')">
+                                            <i class="fas fa-server"></i> Show Node processes
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('netstat -tulpn | grep -E &quot;:(3000|3001|3002|8443|3099)&quot;')">
+                                            <i class="fas fa-network-wired"></i> Show service ports
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('npm list')">
+                                            <i class="fas fa-cube"></i> Show npm packages
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('git status')">
+                                            <i class="fas fa-code-branch"></i> Git status
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>System Info:</h6>
+                                    <div class="btn-group-vertical w-100" role="group">
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('df -h')">
+                                            <i class="fas fa-hdd"></i> Disk usage
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('free -h')">
+                                            <i class="fas fa-memory"></i> Memory usage
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('uptime')">
+                                            <i class="fas fa-clock"></i> System uptime
+                                        </button>
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="insertCommand('ls -la')">
+                                            <i class="fas fa-list"></i> List files
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button class="btn btn-warning btn-sm" onclick="clearTerminal()">
+                                <i class="fas fa-eraser"></i> Clear Terminal
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

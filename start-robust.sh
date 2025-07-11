@@ -10,6 +10,7 @@
 # 1. SSH WebSocket backend server (port 3001) - VPN/SSH functionality
 # 2. Authentication server (port 3002) - User management and auth
 # 3. Reverse proxy server - Production frontend + API routing
+# 4. Web Management Console (port 3099) - Admin monitoring and control (localhost-only)
 # 
 # Features:
 # - Comprehensive health checks
@@ -18,6 +19,7 @@
 # - Graceful shutdown handling
 # - Multiple domain support (timsablab.ddns.net, 123hostedtools.com)
 # - HTTPS and HTTP support
+# - Web-based admin console for monitoring and troubleshooting
 # 
 # Usage: 
 #   ./start-robust.sh                          # Default production (123hostedtools.com HTTPS)
@@ -25,6 +27,7 @@
 #   ./start-robust.sh --domain=123hostedtools  # Use 123hostedtools.com
 #   ./start-robust.sh --http                   # Use HTTP only
 #   ./start-robust.sh --dev                    # Development mode
+#   ./start-robust.sh --no-webui               # Skip web management console
 #################################################################################
 
 set -e  # Exit on any error
@@ -34,6 +37,7 @@ DOMAIN="123hostedtools"  # Default domain
 USE_HTTPS="true"
 PRODUCTION_MODE="true"
 VERBOSE="false"
+ENABLE_WEBUI="true"
 
 for arg in "$@"; do
     case $arg in
@@ -55,6 +59,9 @@ for arg in "$@"; do
         --verbose)
             VERBOSE="true"
             ;;
+        --no-webui)
+            ENABLE_WEBUI="false"
+            ;;
         --help)
             echo "Usage: $0 [options]"
             echo "Options:"
@@ -64,6 +71,7 @@ for arg in "$@"; do
             echo "  --https                 Use HTTPS (default)"
             echo "  --dev                   Development mode"
             echo "  --verbose               Verbose logging"
+            echo "  --no-webui              Skip web management console"
             echo "  --help                  Show this help"
             exit 0
             ;;
@@ -80,6 +88,7 @@ SSH_WS_PID=""
 AUTH_PID=""
 PROXY_PID=""
 MONITOR_PID=""
+WEBUI_PID=""
 
 # Domain-specific configuration
 if [ "$DOMAIN" = "timsablab" ]; then
@@ -114,6 +123,11 @@ declare -A SERVICES=(
     ["auth"]="backend/auth-server.js:3002:http://localhost:3002/health" 
     ["proxy"]="$PROXY_SCRIPT:$PROXY_PORT:$PROXY_HEALTH_URL"
 )
+
+# Web Management Console (optional)
+if [[ "$ENABLE_WEBUI" == "true" ]]; then
+    SERVICES["webui"]="backend/management-server.js:3099:http://localhost:3099/api/dashboard"
+fi
 
 # Enhanced logging function with log levels
 log() {
@@ -366,11 +380,13 @@ cleanup() {
     kill_by_pattern "simple-proxy.js" "Reverse Proxy"
     kill_by_pattern "auth-server.js" "Authentication"
     kill_by_pattern "ssh-ws-server.js" "SSH WebSocket"
+    kill_by_pattern "management-server.js" "Web Management Console"
     
     # Clean up ports
     kill_port 3000 "cleanup" 2>/dev/null || true
     kill_port 3001 "cleanup" 2>/dev/null || true
     kill_port 3002 "cleanup" 2>/dev/null || true
+    kill_port 3099 "cleanup" 2>/dev/null || true
     
     log "SUCCESS" "All services stopped successfully"
     exit 0
@@ -388,6 +404,7 @@ echo "   📱 Phone Configuration Generator (Production Build)"
 echo "   🔐 Authentication System (port 3002)"
 echo "   🔧 SSH WebSocket Backend (port 3001)"
 echo "   🌐 Reverse Proxy Server (port 3000)"
+echo "   🖥️ Web Management Console (port 3099)"
 echo "   📊 Service Monitoring (every ${HEALTH_CHECK_INTERVAL}s)"
 echo "   📝 Logs: $LOG_FILE"
 echo ""
@@ -414,10 +431,12 @@ log "SUCCESS" "npm version: $(npm --version)"
 kill_by_pattern "simple-proxy.js" "Reverse Proxy"
 kill_by_pattern "auth-server.js" "Authentication"  
 kill_by_pattern "ssh-ws-server.js" "SSH WebSocket"
+kill_by_pattern "management-server.js" "Web Management Console"
 
 kill_port 3000 "Initial cleanup" || true
 kill_port 3001 "Initial cleanup" || true
 kill_port 3002 "Initial cleanup" || true
+kill_port 3099 "Initial cleanup" || true
 
 log "SUCCESS" "Initial cleanup completed"
 
@@ -484,6 +503,17 @@ if ! start_service "proxy"; then
     exit 1
 fi
 
+# Start Web Management Console
+if [ "$ENABLE_WEBUI" = "true" ]; then
+    echo ""
+    echo "🖥️ Starting web management console..."
+
+    if ! start_service "webui"; then
+        log "ERROR" "Failed to start Web Management Console"
+        exit 1
+    fi
+fi
+
 #################################################################################
 # STEP 4: Start Service Monitoring
 #################################################################################
@@ -507,6 +537,7 @@ echo "📍 Service URLs:"
 echo "   🌐 Main Application:     $PROXY_HEALTH_URL"
 echo "   🔧 SSH WebSocket API:    http://localhost:3001 (internal)"
 echo "   🔐 Authentication API:   http://localhost:3002 (internal)"
+echo "   🖥️ Web Management Console: http://localhost:3099 (admin only)"
 echo ""
 echo "🌍 External Access:"
 local_ip=$(hostname -I | awk '{print $1}')
@@ -548,6 +579,7 @@ echo "🔍 Process IDs:"
 echo "   🔧 SSH WebSocket: $SSH_WS_PID"
 echo "   🔐 Authentication: $AUTH_PID"
 echo "   🌐 Reverse Proxy: $PROXY_PID"
+echo "   🖥️ Web Management Console: $WEBUI_PID"
 echo "   📊 Monitor: $MONITOR_PID"
 echo ""
 echo "✨ Production Features:"
