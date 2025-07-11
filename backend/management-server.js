@@ -36,16 +36,53 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const MANAGEMENT_PORT = 3099; // Localhost-only management port
+const MANAGEMENT_PORT = 3099; // Management console port
 const PROJECT_ROOT = path.join(__dirname, '..');
 
-// Security: Only allow localhost connections
+// Configuration for network access
+const ALLOW_LAN_ACCESS = process.env.WEBUI_ALLOW_LAN === 'true' || process.argv.includes('--allow-lan');
+const BIND_ADDRESS = ALLOW_LAN_ACCESS ? '0.0.0.0' : '127.0.0.1';
+
+// Security: Control access based on configuration
 app.use((req, res, next) => {
-    const clientIP = req.ip || req.connection.remoteAddress;
-    if (clientIP !== '127.0.0.1' && clientIP !== '::1' && clientIP !== '::ffff:127.0.0.1') {
-        return res.status(403).json({ error: 'Access denied. This interface is only accessible from localhost.' });
+    const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+    
+    // Always allow localhost
+    if (clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1') {
+        return next();
     }
-    next();
+    
+    // If LAN access is enabled, allow private IP ranges
+    if (ALLOW_LAN_ACCESS) {
+        const isPrivateIP = (ip) => {
+            // Remove IPv6 prefix if present
+            const cleanIP = ip.replace(/^::ffff:/, '');
+            
+            // Check for private IP ranges
+            const privateRanges = [
+                /^10\./,                    // 10.0.0.0/8
+                /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+                /^192\.168\./,              // 192.168.0.0/16
+                /^169\.254\./,              // 169.254.0.0/16 (link-local)
+                /^fc00:/,                   // IPv6 private range
+                /^fe80:/                    // IPv6 link-local
+            ];
+            
+            return privateRanges.some(range => range.test(cleanIP));
+        };
+        
+        if (isPrivateIP(clientIP)) {
+            return next();
+        }
+    }
+    
+    // Deny all other connections
+    return res.status(403).json({ 
+        error: 'Access denied. This interface is only accessible from localhost' + 
+               (ALLOW_LAN_ACCESS ? ' or private networks.' : '.'),
+        clientIP: clientIP,
+        allowLAN: ALLOW_LAN_ACCESS
+    });
 });
 
 app.use(express.json());
@@ -668,10 +705,15 @@ io.on('connection', (socket) => {
 // Start Management Server
 //=============================================================================
 
-server.listen(MANAGEMENT_PORT, '127.0.0.1', () => {
+server.listen(MANAGEMENT_PORT, BIND_ADDRESS, () => {
     console.log('🎛️  Web Management Console Started');
-    console.log(`🌐 Access: http://localhost:${MANAGEMENT_PORT}`);
-    console.log('🔒 Security: Localhost only access');
+    console.log(`🌐 Access: http://${BIND_ADDRESS === '0.0.0.0' ? 'localhost' : BIND_ADDRESS}:${MANAGEMENT_PORT}`);
+    if (ALLOW_LAN_ACCESS) {
+        console.log('🌐 LAN Access: Enabled (accessible from private networks)');
+        console.log(`🌐 LAN URL: http://YOUR_SERVER_IP:${MANAGEMENT_PORT}`);
+    } else {
+        console.log('🔒 Security: Localhost only access');
+    }
     console.log('📊 Features: Real-time monitoring, service management, troubleshooting');
     console.log('');
 });

@@ -62,6 +62,9 @@ for arg in "$@"; do
         --no-webui)
             ENABLE_WEBUI="false"
             ;;
+        --webui-allow-lan)
+            WEBUI_ALLOW_LAN="true"
+            ;;
         --help)
             echo "Usage: $0 [options]"
             echo "Options:"
@@ -72,11 +75,13 @@ for arg in "$@"; do
             echo "  --dev                   Development mode"
             echo "  --verbose               Verbose logging"
             echo "  --no-webui              Skip web management console"
+            echo "  --webui-allow-lan       Allow LAN access to web console"
             echo "  --help                  Show this help"
             exit 0
             ;;
     esac
 done
+
 # Configuration based on domain and mode
 LOG_FILE="startup-robust.log"
 HEALTH_CHECK_INTERVAL=30  # Seconds between health checks
@@ -266,7 +271,15 @@ start_service() {
     
     # Start the service
     cd "$(dirname "$script_path")"
-    nohup node "$(basename "$script_path")" > "${service_key}.log" 2>&1 &
+    
+    # Special handling for webui service with LAN access
+    if [[ "$service_key" == "webui" && "$WEBUI_ALLOW_LAN" == "true" ]]; then
+        log "INFO" "Starting webui with LAN access enabled..."
+        WEBUI_ALLOW_LAN=true nohup node "$(basename "$script_path")" --allow-lan > "${service_key}.log" 2>&1 &
+    else
+        nohup node "$(basename "$script_path")" > "${service_key}.log" 2>&1 &
+    fi
+    
     local pid=$!
     cd - > /dev/null
     
@@ -275,6 +288,7 @@ start_service() {
         "ssh-ws") SSH_WS_PID=$pid ;;
         "auth") AUTH_PID=$pid ;;
         "proxy") PROXY_PID=$pid ;;
+        "webui") WEBUI_PID=$pid ;;
     esac
     
     log "SUCCESS" "$service_key started (PID: $pid)"

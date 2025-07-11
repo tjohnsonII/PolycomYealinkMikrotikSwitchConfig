@@ -17,10 +17,12 @@
 # - Network monitoring
 # 
 # Usage:
-#   ./launch-webui.sh           # Launch console and open browser
-#   ./launch-webui.sh --no-open # Launch console only (no browser)
-#   ./launch-webui.sh --status  # Check if console is running
-#   ./launch-webui.sh --stop    # Stop the console
+#   ./launch-webui.sh                 # Launch console and open browser
+#   ./launch-webui.sh --no-open       # Launch console only (no browser)
+#   ./launch-webui.sh --status        # Check if console is running
+#   ./launch-webui.sh --stop          # Stop the console
+#   ./launch-webui.sh --allow-lan     # Allow LAN access
+#   ./launch-webui.sh --allow-lan --no-open  # Allow LAN access without browser
 #################################################################################
 
 set -e
@@ -30,6 +32,16 @@ WEBUI_PORT=3099
 WEBUI_URL="http://localhost:$WEBUI_PORT"
 WEBUI_SCRIPT="backend/management-server.js"
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ALLOW_LAN=false
+
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --allow-lan)
+            ALLOW_LAN=true
+            ;;
+    esac
+done
 
 # Colors for output
 RED='\033[0;31m'
@@ -95,7 +107,13 @@ start_webui() {
     
     # Start the server
     log "INFO" "Launching management server on port $WEBUI_PORT..."
-    nohup node "$WEBUI_SCRIPT" > webui.log 2>&1 &
+    
+    if [ "$ALLOW_LAN" = true ]; then
+        log "INFO" "Enabling LAN access for web console..."
+        WEBUI_ALLOW_LAN=true nohup node "$WEBUI_SCRIPT" --allow-lan > webui.log 2>&1 &
+    else
+        nohup node "$WEBUI_SCRIPT" > webui.log 2>&1 &
+    fi
     
     # Wait for startup
     for i in {1..10}; do
@@ -143,13 +161,22 @@ show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  (no args)     Launch console and open browser"
+    echo "  (no args)     Launch console and open browser (localhost only)"
     echo "  --no-open     Launch console only (no browser)"
+    echo "  --allow-lan   Allow access from LAN/private networks"
     echo "  --status      Check if console is running"
     echo "  --stop        Stop the console"
     echo "  --help        Show this help"
     echo ""
-    echo "The web console will be available at: $WEBUI_URL"
+    echo "Examples:"
+    echo "  $0                    # Start with localhost access only"
+    echo "  $0 --allow-lan        # Start with LAN access enabled"
+    echo "  $0 --allow-lan --no-open  # Start with LAN access, no browser"
+    echo ""
+    echo "Security:"
+    echo "  Localhost only: Access restricted to 127.0.0.1"
+    echo "  LAN access: Access allowed from private IP ranges only"
+    echo "  (10.x.x.x, 172.16-31.x.x, 192.168.x.x)"
 }
 
 # Main logic
@@ -174,9 +201,18 @@ case "${1:-}" in
             
             echo ""
             echo "🖥️ Web Management Console is now running!"
-            echo "   📍 URL: $WEBUI_URL"
+            echo "   📍 Localhost URL: $WEBUI_URL"
+            
+            if [ "$ALLOW_LAN" = true ]; then
+                local_ip=$(hostname -I | awk '{print $1}')
+                echo "   🌐 LAN Access: Enabled"
+                echo "   🌐 LAN URL: http://$local_ip:$WEBUI_PORT"
+                echo "   🔒 Security: Private network access only"
+            else
+                echo "   🔒 Security: Localhost access only"
+            fi
+            
             echo "   📊 Features: Service monitoring, troubleshooting, logs"
-            echo "   🔒 Security: Localhost access only"
             echo ""
             echo "Press Ctrl+C to stop the console, or run: $0 --stop"
             echo ""
