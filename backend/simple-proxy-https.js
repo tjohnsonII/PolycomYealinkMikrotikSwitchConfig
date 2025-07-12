@@ -11,7 +11,7 @@ import { lookup } from 'mime-types';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const PORT = process.env.PROXY_PORT || 3000;
+const PORT = process.env.PROXY_PORT || (process.getuid && process.getuid() === 0 ? 443 : 3000);
 
 // Get the project root directory (one level up from backend)
 const projectRoot = path.join(__dirname, '..');
