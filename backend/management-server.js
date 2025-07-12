@@ -264,39 +264,79 @@ app.post('/api/services/:service/start', async (req, res) => {
     
     try {
         if (service === 'webapp') {
-            // Special handling for webapp - build and start all services
-            const buildResult = await execCommand('npm run build');
-            if (!buildResult.success) {
-                return res.status(500).json({ error: 'Failed to build webapp: ' + buildResult.stderr });
+            // Special handling for webapp - use production build with timeout
+            log("INFO", "Starting webapp build...");
+            
+            // Check if build already exists and is recent
+            const distPath = path.join(PROJECT_ROOT, 'dist');
+            const buildExists = fs.existsSync(distPath);
+            let buildRecent = false;
+            
+            if (buildExists) {
+                try {
+                    const stats = fs.statSync(distPath);
+                    const ageMinutes = (Date.now() - stats.mtime.getTime()) / (1000 * 60);
+                    buildRecent = ageMinutes < 30; // Build is recent if less than 30 minutes old
+                } catch (error) {
+                    buildRecent = false;
+                }
+            }
+            
+            if (!buildRecent) {
+                log("INFO", "Building webapp (this may take a few minutes)...");
+                
+                // Use timeout to prevent hanging
+                const buildResult = await execCommand('timeout 180 npm run build');
+                
+                if (!buildResult.success) {
+                    log("ERROR", "Build failed, trying alternative build approach...");
+                    
+                    // Try building with dev config
+                    const devBuildResult = await execCommand('timeout 120 npm run build:dev');
+                    
+                    if (!devBuildResult.success) {
+                        return res.status(500).json({ 
+                            error: 'Failed to build webapp',
+                            details: 'Both production and development builds failed',
+                            buildOutput: buildResult.stderr || buildResult.stdout
+                        });
+                    }
+                }
+            } else {
+                log("INFO", "Using existing build (recent)");
             }
             
             // Start all backend services needed for webapp
             for (const [key, svc] of Object.entries(SERVICES)) {
                 if (svc.type === 'backend' || svc.type === 'frontend') {
-                    const killResult = await execCommand(`pkill -f "${svc.script}"`);
+                    // Kill existing process
+                    await execCommand(`pkill -f "${svc.script}"`);
                     
+                    // Start service
                     const startCommand = key === 'proxy' 
-                        ? `cd backend && PROXY_PORT=${svc.port} nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`
+                        ? `cd backend && PROXY_PORT=${svc.port} nohup node simple-proxy-https.js > ${key}.log 2>&1 &`
                         : `cd backend && nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`;
                     
-                    await execCommand(startCommand);
+                    const startResult = await execCommand(startCommand);
+                    log("INFO", `Started ${svc.name}: ${startResult.success ? 'OK' : 'Failed'}`);
                 }
             }
             
             // Wait for services to start
-            await new Promise(resolve => setTimeout(resolve, 5000));
+            await new Promise(resolve => setTimeout(resolve, 3000));
             
             res.json({ 
                 success: true, 
-                message: 'Web application built and started (all services running)',
-                buildOutput: buildResult.stdout
+                message: 'Web application started successfully',
+                buildSkipped: buildRecent,
+                note: buildRecent ? 'Used existing build' : 'Fresh build completed'
             });
         } else {
             // Regular service start
             const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
             
             const startCommand = service === 'proxy' 
-                ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`
+                ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node simple-proxy-https.js > ${service}.log 2>&1 &`
                 : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
             
             const result = await execCommand(startCommand);
@@ -435,7 +475,7 @@ app.post('/api/services/:service/restart', async (req, res) => {
         
         // Start
         const startCommand = service === 'proxy' 
-            ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`
+            ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node simple-proxy-https.js > ${service}.log 2>&1 &`
             : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
         
         await execCommand(startCommand);
@@ -780,6 +820,148 @@ app.post('/api/vpn/saml-connect', async (req, res) => {
             message: 'Failed to connect to SAML VPN. Check your credentials and try again.'
         });
     }
+});
+
+//=============================================================================
+// Diagnostics API Endpoints
+//=============================================================================
+
+// Ping command
+app.post('/api/diagnostics/ping', async (req, res) => {
+    const { host } = req.body;
+    
+    if (!host) {
+        return res.status(400).json({ error: 'Host parameter is required' });
+    }
+    
+    try {
+        const result = await execCommand(`ping -c 4 ${host}`);
+        res.json({
+            success: result.success,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Traceroute command
+app.post('/api/diagnostics/traceroute', async (req, res) => {
+    const { host } = req.body;
+    
+    if (!host) {
+        return res.status(400).json({ error: 'Host parameter is required' });
+    }
+    
+    try {
+        const result = await execCommand(`traceroute -m 15 ${host}`);
+        res.json({
+            success: result.success,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Network interfaces
+app.post('/api/diagnostics/interfaces', async (req, res) => {
+    try {
+        const result = await execCommand('ip addr show');
+        res.json({
+            success: result.success,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Routing table
+app.post('/api/diagnostics/routes', async (req, res) => {
+    try {
+        const result = await execCommand('ip route show');
+        res.json({
+            success: result.success,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DNS resolution
+app.post('/api/diagnostics/dns', async (req, res) => {
+    const { host } = req.body;
+    
+    if (!host) {
+        return res.status(400).json({ error: 'Host parameter is required' });
+    }
+    
+    try {
+        const result = await execCommand(`nslookup ${host}`);
+        
+        // Try to extract IP from nslookup output
+        let ip = 'Unknown';
+        if (result.stdout) {
+            const lines = result.stdout.split('\n');
+            for (const line of lines) {
+                if (line.includes('Address:') && !line.includes('#53')) {
+                    ip = line.split('Address:')[1].trim();
+                    break;
+                }
+            }
+        }
+        
+        res.json({
+            success: result.success,
+            ip: ip,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Port connectivity test
+app.post('/api/diagnostics/port', async (req, res) => {
+    const { host, port } = req.body;
+    
+    if (!host || !port) {
+        return res.status(400).json({ error: 'Host and port parameters are required' });
+    }
+    
+    try {
+        // Use netcat to test port connectivity
+        const result = await execCommand(`nc -zv ${host} ${port}`, { timeout: 5000 });
+        
+        res.json({
+            success: true,
+            reachable: result.success,
+            output: result.stdout || result.stderr,
+            error: result.error
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            reachable: false,
+            error: error.message
+        });
+    }
+});
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        service: 'Management Console'
+    });
 });
 
 //=============================================================================

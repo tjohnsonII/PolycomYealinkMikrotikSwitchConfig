@@ -12,8 +12,8 @@ export default defineConfig({
     open: true,
     allowedHosts: ['timsablab.com', 'timsablab.ddn.net', 'localhost'],
     https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'ssl/private-key.pem')),
-      cert: fs.readFileSync(path.resolve(__dirname, 'ssl/certificate.pem')),
+      key: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools.com.key')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools_com.crt')),
     }
   },
   plugins: [react()],
