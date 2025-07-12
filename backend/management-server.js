@@ -607,6 +607,181 @@ app.post('/api/build', async (req, res) => {
     }
 });
 
+// VPN Management endpoints
+app.get('/api/vpn/status', async (req, res) => {
+    try {
+        const sshWsResponse = await fetch('http://localhost:3001/vpn/status');
+        const vpnStatus = await sshWsResponse.json();
+        
+        const systemVpnResponse = await fetch('http://localhost:3001/system/vpn-status');
+        const systemVpnStatus = await systemVpnResponse.json();
+        
+        res.json({
+            ...vpnStatus,
+            systemStatus: systemVpnStatus,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/connect', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/disconnect', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/disconnect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/dual/start', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/dual/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/dual/stop', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/dual/stop', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/vpn/dual/logs', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/dual/logs');
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/vpn/config-content', async (req, res) => {
+    try {
+        const response = await fetch(`http://localhost:3001/vpn/config-content?name=${req.query.name}`);
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/upload-config', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/upload-config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body)
+        });
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/vpn/requires-credentials', async (req, res) => {
+    try {
+        const response = await fetch(`http://localhost:3001/vpn/requires-credentials?name=${req.query.name}`);
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.get('/api/vpn/saml-login-url', async (req, res) => {
+    try {
+        const response = await fetch('http://localhost:3001/vpn/saml-login-url');
+        const result = await response.json();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/vpn/saml-connect', async (req, res) => {
+    try {
+        const { name, username, password, otp } = req.body;
+        
+        // If manual credentials are provided, pass them to the VPN connection
+        if (username && password) {
+            console.log('SAML connection with manual credentials:', { name, username, hasOtp: !!otp });
+            
+            // For manual SAML authentication, we'll use the regular connect endpoint
+            // but with SAML flag and credentials
+            const response = await fetch('http://localhost:3001/vpn/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name,
+                    username: username,
+                    password: password,
+                    otp: otp,
+                    samlAuth: true
+                })
+            });
+            const result = await response.json();
+            res.json(result);
+        } else {
+            // For automated SAML authentication, use the dedicated SAML endpoint
+            console.log('SAML connection using OpenVPN3 automated flow:', { name });
+            
+            const response = await fetch('http://localhost:3001/vpn/saml-connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: name || 'work'
+                })
+            });
+            const result = await response.json();
+            res.json(result);
+        }
+    } catch (error) {
+        console.error('SAML connect error:', error);
+        res.status(500).json({ 
+            error: error.message,
+            message: 'Failed to connect to SAML VPN. Check your credentials and try again.'
+        });
+    }
+});
+
 //=============================================================================
 // WebSocket for Real-time Updates
 //=============================================================================
