@@ -10,7 +10,7 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     open: true,
-    allowedHosts: ['timsablab.com', 'timsablab.ddn.net', 'localhost'],
+    allowedHosts: ['123hostedtools.com', '67.149.139.23', '192.168.254.253', 'localhost'],
     https: {
       key: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools.com.key')),
       cert: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools_com.crt')),
@@ -19,8 +19,8 @@ export default defineConfig({
   plugins: [react()],
   define: {
     // Update API URLs to use HTTPS
-    'process.env.VITE_API_BASE_URL': JSON.stringify('https://timsablab.com:3001'),
-    'process.env.VITE_WS_URL': JSON.stringify('wss://timsablab.com:3001'),
-    'process.env.VITE_AUTH_URL': JSON.stringify('https://timsablab.com:3002')
+    'process.env.VITE_API_BASE_URL': JSON.stringify('https://123hostedtools.com:3001'),
+    'process.env.VITE_WS_URL': JSON.stringify('wss://123hostedtools.com:3001'),
+    'process.env.VITE_AUTH_URL': JSON.stringify('https://123hostedtools.com:3002')
   }
 })

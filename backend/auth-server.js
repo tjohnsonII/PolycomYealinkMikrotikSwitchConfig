@@ -78,12 +78,14 @@ try {
 // Middleware setup
 app.use(cors({
   origin: [
-    'https://timsablab.ddns.net:3000',
-    'https://timsablab.ddns.net',
-    'https://localhost:3000',
-    'http://localhost:3000',
+    'https://123hostedtools.com:3000',
+    'https://123hostedtools.com',
     'https://67.149.139.23:3000',
-    'https://67.149.139.23'
+    'https://67.149.139.23',
+    'https://192.168.254.253:3000',
+    'https://192.168.254.253',
+    'https://localhost:3000',
+    'http://localhost:3000'
   ],
   credentials: true
 }));                            // Enable CORS for frontend communication

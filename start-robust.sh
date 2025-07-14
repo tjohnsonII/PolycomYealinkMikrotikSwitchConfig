@@ -17,13 +17,13 @@
 # - Automatic service recovery
 # - Process monitoring
 # - Graceful shutdown handling
-# - Multiple domain support (timsablab.ddns.net, 123hostedtools.com)
+# - Multiple domain support (123hostedtools.com, localhost)
 # - HTTPS and HTTP support
 # - Web-based admin console for monitoring and troubleshooting
 # 
 # Usage: 
 #   ./start-robust.sh                          # Default production (123hostedtools.com HTTPS)
-#   ./start-robust.sh --domain=timsablab       # Use timsablab.ddns.net
+#   ./start-robust.sh --domain=123hostedtools  # Use 123hostedtools.com
 #   ./start-robust.sh --domain=123hostedtools  # Use 123hostedtools.com
 #   ./start-robust.sh --http                   # Use HTTP only
 #   ./start-robust.sh --dev                    # Development mode
@@ -68,7 +68,7 @@ for arg in "$@"; do
         --help)
             echo "Usage: $0 [options]"
             echo "Options:"
-            echo "  --domain=timsablab      Use timsablab.ddns.net domain"
+            echo "  --domain=123hostedtools Use 123hostedtools.com domain (default)"
             echo "  --domain=123hostedtools Use 123hostedtools.com domain (default)"
             echo "  --http                  Use HTTP only"
             echo "  --https                 Use HTTPS (default)"
@@ -97,7 +97,7 @@ WEBUI_PID=""
 
 # Domain-specific configuration
 if [ "$DOMAIN" = "timsablab" ]; then
-    DOMAIN_NAME="timsablab.ddns.net"
+    DOMAIN_NAME="123hostedtools.com"
     if [ "$USE_HTTPS" = "true" ]; then
         PROXY_SCRIPT="backend/simple-proxy-https.js"
         PROXY_PORT="443"

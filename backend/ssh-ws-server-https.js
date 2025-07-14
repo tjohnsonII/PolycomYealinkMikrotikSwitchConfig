@@ -26,7 +26,7 @@ const SSL_PATHS = {
 // Create HTTPS server for REST endpoints
 const app = express();
 app.use(cors({
-  origin: ['https://timsablab.com:3000', 'https://timsablab.ddn.net:3000', 'https://localhost:3000'],
+  origin: ['https://123hostedtools.com:3000', 'https://123hostedtools.com', 'https://67.149.139.23:3000', 'https://67.149.139.23', 'https://192.168.254.253:3000', 'https://192.168.254.253', 'https://localhost:3000'],
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -62,7 +62,7 @@ function checkSSLCerts() {
     if (!fs.existsSync(SSL_PATHS.key) || !fs.existsSync(SSL_PATHS.cert)) {
       console.error('🔒 SSL certificates not found! Please generate them first:');
       console.error('mkdir -p ssl');
-      console.error('openssl req -x509 -newkey rsa:4096 -keyout ssl/private-key.pem -out ssl/certificate.pem -days 365 -nodes -subj "/C=US/ST=State/L=City/O=Organization/CN=timsablab.com"');
+      console.error('openssl req -x509 -newkey rsa:4096 -keyout ssl/private-key.pem -out ssl/certificate.pem -days 365 -nodes -subj "/C=US/ST=State/L=City/O=Organization/CN=123hostedtools.com"');
       process.exit(1);
     }
     console.log('🔒 SSL certificates found');
@@ -397,8 +397,12 @@ const wss = new WebSocketServer({
     // Add origin verification for security
     const origin = info.origin;
     const allowedOrigins = [
-      'https://timsablab.com:3000',
-      'https://timsablab.ddn.net:3000', 
+      'https://123hostedtools.com:3000',
+      'https://123hostedtools.com',
+      'https://67.149.139.23:3000',
+      'https://67.149.139.23',
+      'https://192.168.254.253:3000',
+      'https://192.168.254.253',
       'https://localhost:3000'
     ];
     return allowedOrigins.includes(origin) || !origin; // Allow no origin for testing

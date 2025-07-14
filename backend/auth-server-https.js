@@ -65,8 +65,12 @@ const EMAIL_CONFIG = {
 // CORS configuration for HTTPS
 app.use(cors({
   origin: [
-    'https://timsablab.com:3000',
-    'https://timsablab.ddn.net:3000', 
+    'https://123hostedtools.com:3000',
+    'https://123hostedtools.com',
+    'https://67.149.139.23:3000',
+    'https://67.149.139.23',
+    'https://192.168.254.253:3000',
+    'https://192.168.254.253',
     'https://localhost:3000'
   ],
   credentials: true,
@@ -503,7 +507,7 @@ async function startServer() {
     server.listen(PORT, '0.0.0.0', () => {
       console.log('🔒 HTTPS Authentication server running on port', PORT);
       console.log('🔒 SSL/TLS enabled');
-      console.log('🔒 Endpoint: https://timsablab.com:' + PORT);
+      console.log('🔒 Endpoint: https://123hostedtools.com:' + PORT);
       console.log('📁 Users file:', USERS_FILE);
       console.log('👤 Default admin:', DEFAULT_ADMIN.username);
     });

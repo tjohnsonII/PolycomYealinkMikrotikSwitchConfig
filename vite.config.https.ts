@@ -8,7 +8,7 @@ import path from 'path'
 
 const httpsOptions = () => {
   // Try Let's Encrypt certificates first
-  const letsEncryptPath = '/etc/letsencrypt/live/timsablab.ddns.net/';
+  const letsEncryptPath = '/etc/letsencrypt/live/123hostedtools.com/';
   const selfSignedPath = './ssl/';
   
   try {
@@ -47,13 +47,13 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     open: false, // Don't auto-open browser with HTTPS warnings
-    allowedHosts: ['timsablab.ddns.net', 'timsablab.com', 'localhost', '67.149.139.23']
+    allowedHosts: ['123hostedtools.com', 'localhost', '67.149.139.23', '192.168.254.253']
   },
   plugins: [react()],
   // Environment variables for HTTPS API calls
   define: {
-    'process.env.VITE_API_URL': JSON.stringify('https://timsablab.com:3002'),
-    'process.env.VITE_WS_URL': JSON.stringify('wss://timsablab.com:3001'),
+    'process.env.VITE_API_URL': JSON.stringify('https://123hostedtools.com:3002'),
+    'process.env.VITE_WS_URL': JSON.stringify('wss://123hostedtools.com:3001'),
     'process.env.VITE_HTTPS_ENABLED': JSON.stringify('true')
   }
 })
