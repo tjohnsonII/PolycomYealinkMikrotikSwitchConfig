@@ -1,0 +1,103 @@
+{
+  "proxy": {
+    "name": "Enhanced Reverse Proxy",
+    "version": "2.0.0",
+    "description": "Robust reverse proxy with enhanced error handling and port management",
+    "author": "Auto-generated for hostingFromWork environment",
+    "environment": {
+      "network": {
+        "lan": "192.168.254.253/24",
+        "domain": "123hostedtools.com",
+        "publicIp": "67.149.139.23"
+      },
+      "ssl": {
+        "enabled": true,
+        "certificatePath": "../ssl/123hostedtools_com.crt",
+        "privateKeyPath": "../ssl/123hostedtools_private_key.txt",
+        "caPath": "../ssl/123hostedtools_com.ca-bundle"
+      }
+    },
+    "ports": {
+      "http": 3000,
+      "https": 8443,
+      "services": {
+        "auth": 3002,
+        "sshWebSocket": 3001,
+        "webui": 3099
+      }
+    },
+    "routes": {
+      "/api/auth/*": {
+        "target": "http://localhost:3002",
+        "rewrite": "/api/auth → /api",
+        "description": "Authentication service routing"
+      },
+      "/api/admin/*": {
+        "target": "http://localhost:3002",
+        "rewrite": "/api/admin → /api",
+        "description": "Admin authentication routing"
+      },
+      "/api/*": {
+        "target": "http://localhost:3001",
+        "rewrite": "none",
+        "description": "SSH WebSocket service routing"
+      },
+      "/management/*": {
+        "target": "http://localhost:3099",
+        "rewrite": "/management → /",
+        "description": "Management console routing"
+      },
+      "/ws/*": {
+        "target": "ws://localhost:3001",
+        "rewrite": "/ws → /",
+        "description": "WebSocket connections"
+      },
+      "/*": {
+        "target": "static",
+        "rewrite": "none",
+        "description": "React frontend static files"
+      }
+    },
+    "features": {
+      "healthCheck": {
+        "enabled": true,
+        "endpoint": "/proxy-health",
+        "timeout": 30000
+      },
+      "serviceStatus": {
+        "enabled": true,
+        "endpoint": "/proxy-status",
+        "checkInterval": 10000
+      },
+      "errorHandling": {
+        "retry": 3,
+        "timeout": 30000,
+        "gracefulFailover": true
+      },
+      "security": {
+        "headers": {
+          "X-Frame-Options": "DENY",
+          "X-Content-Type-Options": "nosniff",
+          "X-XSS-Protection": "1; mode=block",
+          "Referrer-Policy": "strict-origin-when-cross-origin"
+        },
+        "cors": {
+          "enabled": true,
+          "origin": "*",
+          "credentials": true
+        }
+      },
+      "monitoring": {
+        "accessLog": true,
+        "errorLog": true,
+        "performanceMetrics": true
+      }
+    },
+    "startup": {
+      "portConflictResolution": true,
+      "healthCheckWait": 30,
+      "gracefulShutdown": 10,
+      "buildCheck": true
+    }
+  }
+}
