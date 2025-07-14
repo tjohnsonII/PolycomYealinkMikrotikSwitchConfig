@@ -29,8 +29,8 @@ const app = express();
 
 // SSL certificate paths
 const SSL_PATHS = {
-  key: path.resolve(__dirname, '../ssl/private-key.pem'),
-  cert: path.resolve(__dirname, '../ssl/certificate.pem')
+  key: path.resolve(__dirname, '../ssl/123hostedtools_private_key.txt'),
+  cert: path.resolve(__dirname, '../ssl/123hostedtools_com.crt')
 };
 
 // Configuration

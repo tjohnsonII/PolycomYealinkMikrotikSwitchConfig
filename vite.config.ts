@@ -12,7 +12,7 @@ export default defineConfig({
     open: true,
     allowedHosts: ['123hostedtools.com', '67.149.139.23', '192.168.254.253', 'localhost'],
     https: {
-      key: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools.com.key')),
+      key: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools_private_key.txt')),
       cert: fs.readFileSync(path.resolve(__dirname, 'ssl/123hostedtools_com.crt')),
     }
   },

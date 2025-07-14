@@ -23,10 +23,23 @@ const httpsOptions = () => {
     console.warn('⚠️  Let\'s Encrypt certificates not accessible:', error.message);
   }
   
-  // Fallback to self-signed certificates
+  // Fallback to 123hostedtools.com certificates
+  try {
+    if (fs.existsSync(selfSignedPath + '123hostedtools_private_key.txt')) {
+      console.log('🔒 Using 123hostedtools.com certificates');
+      return {
+        key: fs.readFileSync(selfSignedPath + '123hostedtools_private_key.txt'),
+        cert: fs.readFileSync(selfSignedPath + '123hostedtools_com.crt')
+      };
+    }
+  } catch (error) {
+    console.warn('⚠️  123hostedtools.com certificates not found:', error.message);
+  }
+
+  // Final fallback to self-signed certificates
   try {
     if (fs.existsSync(selfSignedPath + 'private-key.pem')) {
-      console.log('🔒 Using self-signed certificates');
+      console.log('🔒 Using self-signed certificates (fallback)');
       return {
         key: fs.readFileSync(selfSignedPath + 'private-key.pem'),
         cert: fs.readFileSync(selfSignedPath + 'certificate.pem')
@@ -47,7 +60,7 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     open: false, // Don't auto-open browser with HTTPS warnings
-    allowedHosts: ['123hostedtools.com', 'localhost', '67.149.139.23', '192.168.254.253']
+    allowedHosts: ['123hostedtools.com', '67.149.139.23', '192.168.254.253', 'localhost']
   },
   plugins: [react()],
   // Environment variables for HTTPS API calls

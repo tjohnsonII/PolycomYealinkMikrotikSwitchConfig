@@ -32,7 +32,7 @@ console.log(`🌐 Port: ${PORT}`);
 
 // SSL certificate paths - Using 123hostedtools.com certificates
 const SSL_PATHS = {
-  key: path.resolve(__dirname, '../ssl/123hostedtools.com.key'),
+  key: path.resolve(__dirname, '../ssl/123hostedtools_private_key.txt'),
   cert: path.resolve(__dirname, '../ssl/123hostedtools_com.crt'),
   ca: [
     path.resolve(__dirname, '../ssl/123hostedtools_com.ca-bundle')
