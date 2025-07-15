@@ -107,96 +107,33 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      minHeight: '100vh',
-      justifyContent: 'flex-start',
-      padding: '20px',
-      backgroundColor: 'var(--bg-light)'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '1200px',
-        backgroundColor: 'var(--bg-white)',
-        borderRadius: '12px',
-        padding: '32px',
-        boxShadow: 'var(--shadow)',
-        border: '1px solid var(--border-light)'
-      }}>
-        <h1 style={{
-          margin: '0 0 32px 0',
-          color: 'var(--text-primary)',
-          textAlign: 'center',
-          fontSize: '2.5rem',
-          fontWeight: 'bold'
-        }}>
+    <div className="ata-container">
+      <div className="ata-content">
+        <h1 className="ata-title">
           📠 ATA Configuration Generator
         </h1>
         
-        <p style={{
-          textAlign: 'center',
-          color: 'var(--text-secondary)',
-          marginBottom: '32px',
-          fontSize: '1.1rem'
-        }}>
+        <p className="ata-subtitle">
           Configure Analog Telephone Adapters for fax machines and analog devices
         </p>
 
         {/* Tabs */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '32px',
-          borderBottom: '1px solid var(--border-light)',
-          paddingBottom: '8px'
-        }}>
+        <div className="ata-tabs">
           <button
             onClick={() => setActiveTab('general')}
-            style={{
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: activeTab === 'general' ? 'bold' : 'normal',
-              color: activeTab === 'general' ? 'var(--brand-primary)' : 'var(--text-secondary)',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'general' ? '2px solid var(--brand-primary)' : 'none',
-              transition: 'color 0.3s, border-bottom 0.3s'
-            }}
+            className={`ata-tab ${activeTab === 'general' ? 'active' : ''}`}
           >
             General ATA Config
           </button>
           <button
             onClick={() => setActiveTab('grandstream')}
-            style={{
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: activeTab === 'grandstream' ? 'bold' : 'normal',
-              color: activeTab === 'grandstream' ? 'var(--brand-primary)' : 'var(--text-secondary)',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'grandstream' ? '2px solid var(--brand-primary)' : 'none',
-              transition: 'color 0.3s, border-bottom 0.3s'
-            }}
+            className={`ata-tab ${activeTab === 'grandstream' ? 'active' : ''}`}
           >
             Grandstream Specific Config
           </button>
           <button
             onClick={() => setActiveTab('cisco')}
-            style={{
-              padding: '12px 24px',
-              fontSize: '16px',
-              fontWeight: activeTab === 'cisco' ? 'bold' : 'normal',
-              color: activeTab === 'cisco' ? 'var(--brand-primary)' : 'var(--text-secondary)',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              borderBottom: activeTab === 'cisco' ? '2px solid var(--brand-primary)' : 'none',
-              transition: 'color 0.3s, border-bottom 0.3s'
-            }}
+            className={`ata-tab ${activeTab === 'cisco' ? 'active' : ''}`}
           >
             Cisco SPA 122 Config
           </button>
@@ -204,37 +141,23 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
 
         {/* General Tab Content */}
         {activeTab === 'general' && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '24px',
-            marginBottom: '32px'
-          }}>
+          <div className="ata-general-grid">
             
             {/* Device Configuration */}
-            <div style={{
-              backgroundColor: 'var(--bg-light)',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-light)'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0', color: 'var(--brand-primary)' }}>
+            <div className="ata-form-section">
+              <h3 className="ata-form-section-title">
                 Device Configuration
               </h3>
               
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Device Model:
                 </label>
                 <select
                   value={ataConfig.deviceModel}
                   onChange={(e) => handleInputChange('deviceModel', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-select"
+                  title="Device Model"
                 >
                   <option value="Grandstream HT802">Grandstream HT802</option>
                   <option value="Grandstream HT801">Grandstream HT801</option>
@@ -245,8 +168,8 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </select>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   SIP Server:
                 </label>
                 <input
@@ -254,17 +177,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.sipServer}
                   onChange={(e) => handleInputChange('sipServer', e.target.value)}
                   placeholder="192.168.1.100 or pbx.example.com"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   SIP Port:
                 </label>
                 <input
@@ -272,29 +190,19 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.sipPort}
                   onChange={(e) => handleInputChange('sipPort', e.target.value)}
                   placeholder="5060"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
             </div>
 
             {/* Extension Configuration */}
-            <div style={{
-              backgroundColor: 'var(--bg-light)',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-light)'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0', color: 'var(--brand-primary)' }}>
+            <div className="ata-form-section">
+              <h3 className="ata-form-section-title">
                 Extension Configuration
               </h3>
               
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Fax Extension:
                 </label>
                 <input
@@ -302,17 +210,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.faxExtension}
                   onChange={(e) => handleInputChange('faxExtension', e.target.value)}
                   placeholder="2001"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Fax Password:
                 </label>
                 <input
@@ -320,17 +223,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.faxPassword}
                   onChange={(e) => handleInputChange('faxPassword', e.target.value)}
                   placeholder="Extension password"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Analog Extension:
                 </label>
                 <input
@@ -338,17 +236,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.analogExtension}
                   onChange={(e) => handleInputChange('analogExtension', e.target.value)}
                   placeholder="2002"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Analog Password:
                 </label>
                 <input
@@ -356,40 +249,26 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.analogPassword}
                   onChange={(e) => handleInputChange('analogPassword', e.target.value)}
                   placeholder="Extension password"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
             </div>
 
             {/* Audio and Codec Settings */}
-            <div style={{
-              backgroundColor: 'var(--bg-light)',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-light)'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0', color: 'var(--brand-primary)' }}>
+            <div className="ata-form-section">
+              <h3 className="ata-form-section-title">
                 Audio & Codec Settings
               </h3>
               
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Preferred Codec:
                 </label>
                 <select
                   value={ataConfig.codecPreference}
                   onChange={(e) => handleInputChange('codecPreference', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-select"
+                  title="Preferred Codec"
                 >
                   <option value="G.711u">G.711u (μ-law)</option>
                   <option value="G.711a">G.711a (A-law)</option>
@@ -398,19 +277,15 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </select>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Fax Mode:
                 </label>
                 <select
                   value={ataConfig.faxMode}
                   onChange={(e) => handleInputChange('faxMode', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-select"
+                  title="Fax Mode"
                 >
                   <option value="T.38">T.38 (Recommended)</option>
                   <option value="G.711 Passthrough">G.711 Passthrough</option>
@@ -418,34 +293,30 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </select>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label-checkbox">
                   <input
                     type="checkbox"
                     checked={ataConfig.echoCancel}
                     onChange={(e) => handleInputChange('echoCancel', e.target.checked)}
-                    style={{ marginRight: '8px' }}
+                    className="ata-form-checkbox"
                   />
                   Enable Echo Cancellation
                 </label>
-                <small style={{ color: 'var(--text-secondary)' }}>
+                <small className="ata-form-help">
                   (Usually disabled for fax lines)
                 </small>
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   DTMF Mode:
                 </label>
                 <select
                   value={ataConfig.dtmfMode}
                   onChange={(e) => handleInputChange('dtmfMode', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-select"
+                  title="DTMF Mode"
                 >
                   <option value="RFC2833">RFC2833</option>
                   <option value="SIP INFO">SIP INFO</option>
@@ -455,18 +326,13 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
             </div>
 
             {/* Advanced Settings */}
-            <div style={{
-              backgroundColor: 'var(--bg-light)',
-              padding: '24px',
-              borderRadius: '8px',
-              border: '1px solid var(--border-light)'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0', color: 'var(--brand-primary)' }}>
+            <div className="ata-form-section">
+              <h3 className="ata-form-section-title">
                 Advanced Settings
               </h3>
               
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Dial Plan:
                 </label>
                 <input
@@ -474,17 +340,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.dialPlan}
                   onChange={(e) => handleInputChange('dialPlan', e.target.value)}
                   placeholder="(*|#|0|00|[1-9]++|*x+|911|933)"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div className="ata-form-group">
+                <label className="ata-form-label">
                   Registration Expiry (seconds):
                 </label>
                 <input
@@ -492,12 +353,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   value={ataConfig.registrationExpiry}
                   onChange={(e) => handleInputChange('registrationExpiry', e.target.value)}
                   placeholder="3600"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid var(--border-light)'
-                  }}
+                  className="ata-form-input"
                 />
               </div>
             </div>
@@ -507,36 +363,24 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
         {/* Grandstream Tab Content */}
         {activeTab === 'grandstream' && (
           <div>
-            <div style={{
-              background: '#e3f2fd',
-              border: '1px solid #2196f3',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: '#1976d2', margin: '0 0 8px 0' }}>
+            <div className="ata-grandstream-info">
+              <h3 className="ata-grandstream-info-title">
                 📠 Grandstream ATA - Step by Step Configuration
               </h3>
-              <p style={{ margin: 0, color: '#1565c0' }}>
+              <p className="ata-grandstream-info-text">
                 This guide provides detailed instructions for configuring Grandstream ATAs with fax-optimized settings.
               </p>
             </div>
 
             {/* Configuration Input Form */}
-            <div style={{
-              background: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px',
-              padding: '24px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>
+            <div className="ata-grandstream-form">
+              <h3 className="ata-grandstream-form-title">
                 Configuration Parameters
               </h3>
               
-              <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
+              <div className="ata-grandstream-form-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Customer Handle:
                   </label>
                   <input
@@ -544,17 +388,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={grandstreamConfig.customerHandle}
                     onChange={(e) => handleGrandstreamChange('customerHandle', e.target.value)}
                     placeholder="Enter customer handle"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     PBX IP Address:
                   </label>
                   <input
@@ -562,17 +401,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={grandstreamConfig.pbxIP}
                     onChange={(e) => handleGrandstreamChange('pbxIP', e.target.value)}
                     placeholder="192.168.1.100"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Extension Number:
                   </label>
                   <input
@@ -580,17 +414,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={grandstreamConfig.extensionNumber}
                     onChange={(e) => handleGrandstreamChange('extensionNumber', e.target.value)}
                     placeholder="2001"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Extension Secret:
                   </label>
                   <input
@@ -598,33 +427,23 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={grandstreamConfig.extensionSecret}
                     onChange={(e) => handleGrandstreamChange('extensionSecret', e.target.value)}
                     placeholder="Extension password"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
               </div>
             </div>
 
             {/* Grandstream Configuration Steps */}
-            <div style={{
-              background: 'var(--bg-white)',
-              border: '2px solid var(--brand-primary)',
-              borderRadius: '8px',
-              padding: '24px'
-            }}>
-              <h3 style={{ color: 'var(--brand-primary)', marginBottom: '16px' }}>
+            <div className="ata-grandstream-steps">
+              <h3 className="ata-grandstream-steps-title">
                 📋 Grandstream Configuration Steps
               </h3>
               
-              <ol style={{ lineHeight: '1.8', color: 'var(--text-primary)' }}>
+              <ol className="ata-grandstream-steps-list">
                 <li><strong>Access Web Interface:</strong> Connect to the Grandstream device's web interface (usually 192.168.x.x)</li>
                 <li><strong>Login:</strong> Use admin credentials to access the configuration</li>
                 <li><strong>Basic Settings:</strong> Navigate to Basic Settings and configure:
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-grandstream-steps-sublist">
                     <li>Primary SIP Server: <strong>{grandstreamConfig.pbxIP || '[PBX IP Address]'}</strong></li>
                     <li>SIP User ID: <strong>{grandstreamConfig.extensionNumber || '[Extension Number]'}</strong></li>
                     <li>Authenticate ID: <strong>{grandstreamConfig.extensionNumber || '[Extension Number]'}</strong></li>
@@ -632,7 +451,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                   </ul>
                 </li>
                 <li><strong>Audio Settings:</strong> Configure for fax optimization:
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-grandstream-steps-sublist">
                     <li>Set Preferred Vocoder to G.711u or G.711a</li>
                     <li>Enable T.38 fax support</li>
                     <li>Disable echo cancellation for fax lines</li>
@@ -649,36 +468,24 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
         {/* Cisco SPA 122 Tab Content */}
         {activeTab === 'cisco' && (
           <div>
-            <div style={{
-              background: '#fff3cd',
-              border: '1px solid #ffc107',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: '#856404', margin: '0 0 8px 0' }}>
+            <div className="ata-cisco-info">
+              <h3 className="ata-cisco-info-title">
                 📠 Cisco SPA 122 ATA - Step by Step Configuration
               </h3>
-              <p style={{ margin: 0, color: '#856404' }}>
+              <p className="ata-cisco-info-text">
                 This guide provides detailed instructions for configuring Cisco SPA 122 ATAs with fax-optimized settings.
               </p>
             </div>
 
             {/* Configuration Input Form */}
-            <div style={{
-              background: '#f8f9fa',
-              border: '1px solid #dee2e6',
-              borderRadius: '8px',
-              padding: '24px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: 'var(--text-primary)', marginBottom: '16px' }}>
+            <div className="ata-cisco-form">
+              <h3 className="ata-cisco-form-title">
                 Configuration Parameters
               </h3>
               
-              <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
+              <div className="ata-cisco-form-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Customer Handle:
                   </label>
                   <input
@@ -686,17 +493,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={ciscoConfig.customerHandle}
                     onChange={(e) => handleCiscoChange('customerHandle', e.target.value)}
                     placeholder="Enter customer handle"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     PBX IP Address:
                   </label>
                   <input
@@ -704,17 +506,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={ciscoConfig.pbxIP}
                     onChange={(e) => handleCiscoChange('pbxIP', e.target.value)}
                     placeholder="192.168.1.100"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Extension Number:
                   </label>
                   <input
@@ -722,17 +519,12 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={ciscoConfig.extensionNumber}
                     onChange={(e) => handleCiscoChange('extensionNumber', e.target.value)}
                     placeholder="2001"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
                 
                 <div>
-                  <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+                  <label className="ata-form-label">
                     Extension Password:
                   </label>
                   <input
@@ -740,67 +532,50 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                     value={ciscoConfig.extensionPassword}
                     onChange={(e) => handleCiscoChange('extensionPassword', e.target.value)}
                     placeholder="Extension password"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      border: '1px solid var(--border-light)'
-                    }}
+                    className="ata-form-input"
                   />
                 </div>
               </div>
             </div>
 
             {/* Step-by-Step Configuration Guide */}
-            <div style={{
-              background: 'var(--bg-white)',
-              border: '1px solid var(--border-light)',
-              borderRadius: '8px',
-              padding: '24px',
-              marginBottom: '24px'
-            }}>
-              <h3 style={{ color: 'var(--brand-primary)', marginBottom: '16px' }}>
+            <div className="ata-cisco-steps">
+              <h3 className="ata-cisco-steps-title">
                 📋 Step-by-Step Configuration Instructions
               </h3>
               
-              <div style={{
-                background: '#ffeaa7',
-                border: '1px solid #fdcb6e',
-                borderRadius: '4px',
-                padding: '12px',
-                marginBottom: '16px'
-              }}>
+              <div className="ata-cisco-warning">
                 <strong>⚠️ Important:</strong> This process requires physical access to the Cisco SPA 122 device and network connectivity.
               </div>
 
-              <ol style={{ lineHeight: '1.8', color: 'var(--text-primary)' }}>
+              <ol className="ata-cisco-steps-list">
                 <li><strong>Factory Reset:</strong> Hold down the physical Reset button on the SPA122 device until it resets to factory defaults.</li>
                 
                 <li><strong>Initial Login:</strong> Once factory defaulted, log into the ATA via web browser using default credentials:
-                  <ul style={{ marginTop: '8px' }}>
-                    <li>Username: <code style={{ background: '#f8f9fa', padding: '2px 4px', borderRadius: '3px' }}>admin</code></li>
-                    <li>Password: <code style={{ background: '#f8f9fa', padding: '2px 4px', borderRadius: '3px' }}>admin</code></li>
+                  <ul className="ata-cisco-steps-sublist">
+                    <li>Username: <code className="ata-cisco-code">admin</code></li>
+                    <li>Password: <code className="ata-cisco-code">admin</code></li>
                   </ul>
                 </li>
                 
                 <li><strong>Firmware Upgrade:</strong> Select the <strong>Administration</strong> tab, then <strong>Firmware Upgrade</strong>. Upgrade the firmware file to the latest version.</li>
                 
                 <li><strong>Post-Firmware Access:</strong> After firmware update, access the ATA locally via Ethernet port on IP address:
-                  <code style={{ background: '#f8f9fa', padding: '2px 4px', borderRadius: '3px', margin: '0 4px' }}>192.168.15.1</code>
+                  <code className="ata-cisco-code-inline">192.168.15.1</code>
                   (Web Access is disabled after firmware update)
                 </li>
                 
                 <li><strong>Change Admin Password:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Go to <strong>Administration</strong> → <strong>User List</strong></li>
                     <li>Edit the admin user</li>
-                    <li>Set password to: <code style={{ background: '#f8f9fa', padding: '2px 4px', borderRadius: '3px' }}>08520852</code></li>
+                    <li>Set password to: <code className="ata-cisco-code">08520852</code></li>
                     <li>Submit changes</li>
                   </ul>
                 </li>
                 
                 <li><strong>Enable Remote Management:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Go to <strong>Administration</strong> → <strong>Web Access Management</strong></li>
                     <li>Set <strong>Remote Management</strong> to <strong>Enabled</strong></li>
                     <li>Submit changes</li>
@@ -808,7 +583,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </li>
                 
                 <li><strong>Configure Hostname:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Go to <strong>Network Setup</strong> → <strong>Internet Settings</strong></li>
                     <li>Set Host Name to: <strong>{ciscoConfig.customerHandle}</strong>ATA (or similar identifier)</li>
                     <li>Submit changes</li>
@@ -816,7 +591,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </li>
                 
                 <li><strong>Set Timezone:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Go to <strong>Network Setup</strong> → <strong>Time Settings</strong></li>
                     <li>Set Timezone to <strong>Eastern</strong></li>
                     <li>Submit changes</li>
@@ -824,7 +599,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </li>
                 
                 <li><strong>Disable Provisioning:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Go to <strong>Voice</strong> → <strong>Provisioning</strong></li>
                     <li>Set <strong>Provisioning Enable</strong> to <strong>No</strong></li>
                     <li>Submit changes</li>
@@ -833,19 +608,19 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 
                 <li><strong>Configure Line 1:</strong> Go to <strong>Voice</strong> → <strong>Line 1</strong> and configure the following sections:
                   
-                  <div style={{ marginTop: '12px', marginLeft: '20px' }}>
-                    <h4 style={{ color: 'var(--brand-secondary)', marginBottom: '8px' }}>a. Network Settings:</h4>
+                  <div className="ata-cisco-line-config">
+                    <h4 className="ata-cisco-line-config-title">a. Network Settings:</h4>
                     <ul>
                       <li>Set <strong>Jitter Buffer Adjustment</strong> to <strong>No</strong></li>
                       <li>Set <strong>Network Jitter Level</strong> to <strong>Very High</strong></li>
                     </ul>
                     
-                    <h4 style={{ color: 'var(--brand-secondary)', marginBottom: '8px', marginTop: '16px' }}>b. Proxy and Registration:</h4>
+                    <h4 className="ata-cisco-line-config-title">b. Proxy and Registration:</h4>
                     <ul>
                       <li>Enter PBX IP Address: <strong>{ciscoConfig.pbxIP || '[Enter PBX IP]'}</strong></li>
                     </ul>
                     
-                    <h4 style={{ color: 'var(--brand-secondary)', marginBottom: '8px', marginTop: '16px' }}>c. Subscriber Information:</h4>
+                    <h4 className="ata-cisco-line-config-title">c. Subscriber Information:</h4>
                     <ul>
                       <li>Display Name: <strong>{ciscoConfig.extensionNumber || '[Extension Number]'}</strong></li>
                       <li>User ID: <strong>{ciscoConfig.extensionNumber || '[Extension Number]'}</strong></li>
@@ -853,18 +628,18 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                       <li>Password: <strong>{ciscoConfig.extensionPassword || '[Extension Password]'}</strong></li>
                     </ul>
                     
-                    <h4 style={{ color: 'var(--brand-secondary)', marginBottom: '8px', marginTop: '16px' }}>d. Supplementary Service Subscription:</h4>
+                    <h4 className="ata-cisco-line-config-title">d. Supplementary Service Subscription:</h4>
                     <ul>
                       <li>Set <strong>Call Waiting Serv</strong> to <strong>No</strong></li>
                       <li>Set <strong>Three Way Conf Serv</strong> to <strong>No</strong></li>
                       <li>Set <strong>Service Announcement Serv</strong> to <strong>No</strong></li>
                     </ul>
                     
-                    <h4 style={{ color: 'var(--brand-secondary)', marginBottom: '8px', marginTop: '16px' }}>e. Audio Configuration:</h4>
+                    <h4 className="ata-cisco-line-config-title">e. Audio Configuration:</h4>
                     <ul>
                       <li>Set <strong>Second Preferred Codec</strong> to <strong>G711a</strong></li>
                       <li>Set the following to <strong>Yes</strong>:
-                        <ul style={{ marginTop: '4px' }}>
+                        <ul className="ata-cisco-audio-list">
                           <li>G729a Enable</li>
                           <li>G726a Enable</li>
                           <li>FAX V21 Detect Enable</li>
@@ -886,7 +661,7 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
                 </li>
                 
                 <li><strong>Apply and Test:</strong>
-                  <ul style={{ marginTop: '8px' }}>
+                  <ul className="ata-cisco-steps-sublist">
                     <li>Submit all changes</li>
                     <li>Reboot the device if required</li>
                     <li>Test registration with the PBX</li>
@@ -897,17 +672,11 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
             </div>
 
             {/* Additional Notes */}
-            <div style={{
-              background: '#d1ecf1',
-              border: '1px solid #bee5eb',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '24px'
-            }}>
-              <h4 style={{ color: '#0c5460', margin: '0 0 8px 0' }}>
+            <div className="ata-cisco-notes">
+              <h4 className="ata-cisco-notes-title">
                 📝 Additional Configuration Notes:
               </h4>
-              <ul style={{ margin: 0, color: '#0c5460' }}>
+              <ul className="ata-cisco-notes-list">
                 <li>The SPA 122 supports 2 FXS ports for analog devices</li>
                 <li>Default IP after firmware update: 192.168.15.1</li>
                 <li>For fax optimization, T.38 should be enabled</li>
@@ -920,20 +689,10 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
         )}
 
         {/* Generate Button */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div className="ata-generate-button-container">
           <button
             onClick={generateAtaConfig}
-            style={{
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              color: 'white',
-              backgroundColor: 'var(--brand-primary)',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s'
-            }}
+            className="ata-generate-button"
           >
             🔧 Generate ATA Configuration
           </button>
@@ -941,45 +700,21 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
 
         {/* Generated Configuration Display */}
         {generatedConfig && (
-          <div style={{
-            backgroundColor: 'var(--bg-light)',
-            border: '1px solid var(--border-light)',
-            borderRadius: '8px',
-            padding: '24px'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '16px'
-            }}>
-              <h3 style={{ margin: 0, color: 'var(--brand-primary)' }}>
+          <div className="ata-output-section">
+            <div className="ata-output-header">
+              <h3 className="ata-output-title">
                 Generated ATA Configuration
               </h3>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="ata-output-actions">
                 <button
                   onClick={copyToClipboard}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: 'var(--brand-secondary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="ata-action-button secondary"
                 >
                   📋 Copy
                 </button>
                 <button
                   onClick={downloadConfig}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: 'var(--brand-primary)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
+                  className="ata-action-button primary"
                 >
                   💾 Download
                 </button>
@@ -989,17 +724,8 @@ Registration Expiry: ${ataConfig.registrationExpiry} seconds
             <textarea
               value={generatedConfig}
               readOnly
-              style={{
-                width: '100%',
-                height: '400px',
-                padding: '16px',
-                fontFamily: 'monospace',
-                fontSize: '14px',
-                backgroundColor: 'var(--bg-white)',
-                border: '1px solid var(--border-light)',
-                borderRadius: '4px',
-                resize: 'vertical'
-              }}
+              className="ata-output-textarea"
+              title="Generated ATA Configuration"
             />
           </div>
         )}

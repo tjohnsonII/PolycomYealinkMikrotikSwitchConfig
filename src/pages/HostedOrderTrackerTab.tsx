@@ -139,43 +139,70 @@ const HostedOrderTrackerTab: React.FC = () => {
     setData(d => {
       const newData = { ...d };
       for (const f of fields) {
-        const { [name]: _removed, ...rest } = newData[f];
-        newData[f] = rest;
+        const fieldData = { ...newData[f] };
+        delete fieldData[name];
+        newData[f] = fieldData;
       }
       return newData;
     });
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-      <h2>Hosted Order Tracker</h2>
-      <div style={{ marginBottom: 12 }}>
-        <input type="file" accept=".csv" onChange={handleImport} />
-        <button type="button" onClick={handleExport} style={{ marginLeft: 8 }}>Export as CSV</button>
-        <button type="button" onClick={handleAddCustomer} style={{ marginLeft: 8 }}>Add Column</button>
-        <a ref={downloadRef} style={{ display: 'none' }}>Download</a>
+    <div className="hosted-order-tracker-container">
+      <h2 className="hosted-order-tracker-title">Hosted Order Tracker</h2>
+      <div className="hosted-order-tracker-controls">
+        <label htmlFor="csv-import" className="sr-only">Import CSV file</label>
+        <input 
+          id="csv-import"
+          type="file" 
+          accept=".csv" 
+          onChange={handleImport}
+          className="hosted-order-tracker-file-input"
+          aria-label="Import CSV file"
+        />
+        <button 
+          type="button" 
+          onClick={handleExport} 
+          className="hosted-order-tracker-button"
+          aria-label="Export data as CSV file"
+        >
+          Export as CSV
+        </button>
+        <button 
+          type="button" 
+          onClick={handleAddCustomer} 
+          className="hosted-order-tracker-button hosted-order-tracker-button-secondary"
+          aria-label="Add new customer column"
+        >
+          Add Column
+        </button>
+        <a ref={downloadRef} className="hosted-order-tracker-download-link">Download</a>
       </div>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 6px', minWidth: 1000 }}>
-          <thead>
+      <div className="hosted-order-tracker-table-container">
+        <table className="hosted-order-tracker-table">
+          <thead className="hosted-order-tracker-table-header">
             <tr>
-              <th style={{ border: '1px solid #ccc', padding: '12px 8px', background: '#f4f4f4', textAlign: 'center' }}>Field</th>
+              <th className="hosted-order-tracker-table-th">Field</th>
               {customers.map((c, i) => (
-                <th key={i} style={{ border: '1px solid #ccc', padding: '12px 8px', background: '#f4f4f4', position: 'relative', minWidth: 120, height: 48, verticalAlign: 'middle', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <th key={i} className="hosted-order-tracker-table-th-customer">
+                  <div className="hosted-order-tracker-customer-controls">
+                    <label htmlFor={`customer-${i}`} className="sr-only">Customer handle</label>
                     <input
+                      id={`customer-${i}`}
                       type="text"
                       value={c}
                       onChange={e => handleCustomerHandleChange(i, e.target.value)}
                       placeholder="Handle (e.g. WS7)"
-                      style={{ width: 100, fontWeight: 'bold', border: '1px solid #bbb', borderRadius: 4, padding: 4, marginRight: 8, textAlign: 'center' }}
+                      className="hosted-order-tracker-customer-input"
+                      aria-label={`Customer ${i + 1} handle`}
                     />
                     {customers.length > 1 && (
                       <button
                         type="button"
                         onClick={() => handleDeleteCustomer(i)}
-                        style={{ background: '#fff', border: '1px solid #f00', color: '#f00', fontWeight: 'bold', cursor: 'pointer', borderRadius: 4, padding: '2px 10px', marginLeft: 4, height: 32 }}
-                        title={`Delete customer column`}
+                        className="hosted-order-tracker-button-danger"
+                        title={`Delete customer column ${c || i + 1}`}
+                        aria-label={`Delete customer column ${c || i + 1}`}
                       >
                         Delete
                       </button>
@@ -187,27 +214,42 @@ const HostedOrderTrackerTab: React.FC = () => {
           </thead>
           <tbody>
             {fields.map((field) => (
-              <tr key={field} style={{ height: 44 }}>
-                <td style={{ border: '1px solid #ccc', padding: '8px 0', background: '#f4f4f4', textAlign: 'center' }}>
+              <tr key={field} className="hosted-order-tracker-table-row">
+                <td className="hosted-order-tracker-table-td">
                   {field}
                 </td>
                 {customers.map(cust => (
-                  <td key={cust} style={{ border: '1px solid #ccc', padding: '8px 0', verticalAlign: 'middle', textAlign: 'center', background: '#fff' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                  <td key={cust} className="hosted-order-tracker-table-td-data">
+                    <div className="hosted-order-tracker-cell-container">
                       {CHECKBOX_FIELDS.has(field) ? (
-                        <input
-                          type="checkbox"
-                          checked={data[field]?.[cust] === 'TRUE'}
-                          onChange={e => handleCheckboxChange(field, cust, e.target.checked)}
-                          style={{ width: 20, height: 20 }}
-                        />
+                        <>
+                          <label htmlFor={`${field}-${cust}`} className="sr-only">
+                            {field} for {cust || 'customer'}
+                          </label>
+                          <input
+                            id={`${field}-${cust}`}
+                            type="checkbox"
+                            checked={data[field]?.[cust] === 'TRUE'}
+                            onChange={e => handleCheckboxChange(field, cust, e.target.checked)}
+                            className="hosted-order-tracker-checkbox"
+                            aria-label={`${field} for ${cust || 'customer'}`}
+                          />
+                        </>
                       ) : (
-                        <input
-                          type="text"
-                          value={data[field]?.[cust] || ''}
-                          onChange={e => handleCellChange(field, cust, e.target.value)}
-                          style={{ width: '90%', border: '1px solid #ccc', borderRadius: 4, padding: '8px 0', fontSize: 15, textAlign: 'center', background: '#fff' }}
-                        />
+                        <>
+                          <label htmlFor={`${field}-${cust}-text`} className="sr-only">
+                            {field} for {cust || 'customer'}
+                          </label>
+                          <input
+                            id={`${field}-${cust}-text`}
+                            type="text"
+                            value={data[field]?.[cust] || ''}
+                            onChange={e => handleCellChange(field, cust, e.target.value)}
+                            className="hosted-order-tracker-text-input"
+                            aria-label={`${field} for ${cust || 'customer'}`}
+                            placeholder={`Enter ${field.toLowerCase()}`}
+                          />
+                        </>
                       )}
                     </div>
                   </td>

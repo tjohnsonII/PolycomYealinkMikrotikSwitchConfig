@@ -1,0 +1,7 @@
+// User interface for authentication
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: 'admin' | 'user';
+}

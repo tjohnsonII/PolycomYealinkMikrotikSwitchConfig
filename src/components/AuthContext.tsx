@@ -10,17 +10,10 @@
  * - Automatic token validation
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { getApiUrl } from '../utils/api-config';
-
-// Type definitions for user data and context
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: 'admin' | 'user';
-}
+import type { User } from '../types/auth';
 
 interface AuthContextType {
   user: User | null;                    // Current authenticated user
@@ -52,20 +45,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
-  // Effect to validate token and fetch user data on component mount
-  useEffect(() => {
-    if (token) {
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
   /**
    * Fetch current user data using stored token
    * Validates token and retrieves user information
    */
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl('me'), {
         headers: {
@@ -89,7 +73,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  // Effect to validate token and fetch user data on component mount
+  useEffect(() => {
+    if (token) {
+      fetchCurrentUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token, fetchCurrentUser]);
 
   /**
    * Login function
@@ -188,6 +181,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
  * @returns AuthContextType object with auth state and functions
  * @throws Error if used outside of AuthProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

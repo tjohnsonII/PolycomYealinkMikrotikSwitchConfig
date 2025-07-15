@@ -31,7 +31,7 @@ const Diagnostic: React.FC = () => {
   // Load VPN status on component mount
   React.useEffect(() => {
     loadVpnStatus();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load current VPN status from backend
   const loadVpnStatus = async () => {
@@ -138,7 +138,7 @@ const Diagnostic: React.FC = () => {
       }
 
       // Start VPN connection
-      const connectPayload: any = {};
+      const connectPayload: { username?: string; password?: string } = {};
       if (requiresCredentials && authType === 'credentials') {
         connectPayload.username = vpnCredentials.username;
         connectPayload.password = vpnCredentials.password;
@@ -161,6 +161,7 @@ const Diagnostic: React.FC = () => {
     } catch (error) {
       setVpnStatus('error');
       addLog('❌ VPN connection failed: ' + (error as Error).message);
+      console.error('VPN connection error:', error);
     }
   };
 
@@ -188,7 +189,7 @@ const Diagnostic: React.FC = () => {
           addLog('💡 Import this file into OpenVPN Connect or compatible client');
           return;
         }
-      } catch (error) {
+      } catch {
         console.log('Backend config not available, trying uploaded file');
       }
 
@@ -212,6 +213,7 @@ const Diagnostic: React.FC = () => {
       addLog('💡 Import this file into OpenVPN Connect or compatible client');
     } catch (error) {
       addLog('❌ Failed to download config file: ' + (error as Error).message);
+      console.error('Download config error:', error);
     }
   };
 
@@ -259,12 +261,13 @@ const Diagnostic: React.FC = () => {
           window.open(url, '_blank');
           URL.revokeObjectURL(url);
           addLog('🔗 Opened config in new tab - save and import to VPN client');
-        } catch (error) {
+        } catch {
           addLog('❌ Could not open in VPN client - please download and import manually');
         }
       }
     } catch (error) {
       addLog('❌ Failed to open in VPN client: ' + (error as Error).message);
+      console.error('Open VPN client error:', error);
     }
   };
 
@@ -281,7 +284,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           fileContent = result.content;
         }
-      } catch (error) {
+      } catch {
         console.log('Backend config not available, trying uploaded file');
       }
 
@@ -315,6 +318,7 @@ const Diagnostic: React.FC = () => {
       }
     } catch (error) {
       addLog('❌ Failed to copy config: ' + (error as Error).message);
+      console.error('Copy config error:', error);
     }
   };
 
@@ -331,7 +335,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           fileContent = result.content;
         }
-      } catch (error) {
+      } catch {
         if (vpnConfig.configFile) {
           fileContent = await readFileAsText(vpnConfig.configFile);
         }
@@ -347,6 +351,7 @@ const Diagnostic: React.FC = () => {
       addLog('💡 Scan with OpenVPN mobile app to import config');
     } catch (error) {
       addLog('❌ Failed to generate QR code: ' + (error as Error).message);
+      console.error('QR code generation error:', error);
     }
   };
 
@@ -387,8 +392,8 @@ const Diagnostic: React.FC = () => {
           setTimeout(pollVpnStatus, 2000);
         }
       }
-    } catch (error) {
-      console.error('Failed to poll VPN status:', error);
+    } catch {
+      console.error('Failed to poll VPN status:');
     }
   };
 
@@ -522,7 +527,7 @@ const Diagnostic: React.FC = () => {
         // Fallback to browser-based connectivity test
         return await performBrowserConnectivityTest(host, port);
       }
-    } catch (error) {
+    } catch {
       // Fallback to browser-based connectivity test
       return await performBrowserConnectivityTest(host, port);
     }
@@ -566,9 +571,7 @@ const Diagnostic: React.FC = () => {
         responseTime,
         details: `Host responded (${response.type} response)`
       };
-      
     } catch (error) {
-      
       if ((error as Error).name === 'AbortError') {
         return {
           success: false,
@@ -648,7 +651,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           samlUrl = result.loginUrl;
         }
-      } catch (error) {
+      } catch {
         console.log('Could not get SAML URL from backend, using default');
       }
       
@@ -709,6 +712,7 @@ const Diagnostic: React.FC = () => {
       addLog(`📝 Command: ${installCommand}`);
     } catch (error) {
       addLog('❌ Failed to prepare installation: ' + (error as Error).message);
+      console.error('Installation preparation error:', error);
     }
   };
 
@@ -728,7 +732,7 @@ const Diagnostic: React.FC = () => {
           configContent = result.content;
           filename = result.filename || filename;
         }
-      } catch (error) {
+      } catch {
         if (vpnConfig.configFile) {
           configContent = await readFileAsText(vpnConfig.configFile);
           filename = vpnConfig.configFile.name;
@@ -764,11 +768,12 @@ const Diagnostic: React.FC = () => {
       try {
         await fetch(getApiUrl('systemOpenNetworkSettings'), { method: 'POST' });
         addLog('🔧 Attempted to open Network Settings');
-      } catch (error) {
+      } catch {
         addLog('💡 Manually open: Settings → Network → VPN → + → Import from file');
       }
     } catch (error) {
       addLog('❌ Failed to import to NetworkManager: ' + (error as Error).message);
+      console.error('NetworkManager import error:', error);
     }
   };
 
@@ -787,6 +792,7 @@ const Diagnostic: React.FC = () => {
       await connectVPN();
     } catch (error) {
       addLog('❌ Command-line OpenVPN connection failed: ' + (error as Error).message);
+      console.error('OpenVPN CLI connection error:', error);
     }
   };
 
@@ -826,6 +832,7 @@ const Diagnostic: React.FC = () => {
       addLog('⚠️  Press Ctrl+C to disconnect when done');
     } catch (error) {
       addLog('❌ Failed to generate command: ' + (error as Error).message);
+      console.error('Command generation error:', error);
     }
   };
 
@@ -862,7 +869,7 @@ const Diagnostic: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 32 }}>
+    <div className="diagnostic-container">
       <h1>Diagnostics</h1>
       <p>This page provides diagnostic tools, VPN connectivity, and system monitoring for troubleshooting and support.</p>
       
@@ -870,17 +877,11 @@ const Diagnostic: React.FC = () => {
       <HealthCheck />
       
       {/* VPN Connection Section */}
-      <div style={{ margin: '32px 0', maxWidth: 1000 }}>
+      <div className="diagnostic-section">
         <h2>🔐 VPN Connection & PBX Diagnostics</h2>
         
         {/* VPN Status */}
-        <div style={{ 
-          backgroundColor: vpnStatus === 'connected' ? '#d4edda' : vpnStatus === 'error' ? '#f8d7da' : '#fff3cd',
-          border: `1px solid ${vpnStatus === 'connected' ? '#c3e6cb' : vpnStatus === 'error' ? '#f5c6cb' : '#ffeaa7'}`,
-          borderRadius: '4px',
-          padding: '10px',
-          marginBottom: '20px'
-        }}>
+        <div className={`alert ${vpnStatus === 'connected' ? 'alert-success' : vpnStatus === 'error' ? 'alert-danger' : 'alert-warning'}`}>
           <strong>Status: </strong>
           {vpnStatus === 'connected' && '🟢 Connected'}
           {vpnStatus === 'connecting' && '🟡 Connecting...'}
@@ -889,21 +890,15 @@ const Diagnostic: React.FC = () => {
         </div>
 
         {/* VPN Configuration */}
-        <div style={{ 
-          backgroundColor: '#f8f9fa', 
-          border: '1px solid #e9ecef', 
-          borderRadius: '6px', 
-          padding: '15px', 
-          marginBottom: '20px' 
-        }}>
+        <div className="diagnostic-vpn-section">
           <h3>Work VPN Configuration</h3>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+          <p className="diagnostic-note margin-bottom-15px">
             Upload your work OpenVPN configuration file to establish a secure connection to the corporate network and test PBX connectivity.
           </p>
           
           {/* Config File Upload */}
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+          <div className="diagnostic-form-group">
+            <label className="diagnostic-form-label">
               OpenVPN Config File (.ovpn):
             </label>
             <input
@@ -911,16 +906,16 @@ const Diagnostic: React.FC = () => {
               accept=".ovpn,.conf"
               ref={fileInputRef}
               onChange={handleConfigFileUpload}
-              style={{ marginBottom: '5px' }}
+              className="margin-bottom-5px"
               disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
             />
             {vpnConfig.configFile && (
-              <div style={{ fontSize: '14px', color: '#28a745' }}>
+              <div className="diagnostic-connection-status">
                 ✅ {vpnConfig.configFile.name}
               </div>
             )}
             {!vpnConfig.configFile && (
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '5px' }}>
+              <div className="diagnostic-connection-timestamp">
                 Select your work VPN .ovpn configuration file
               </div>
             )}
@@ -928,18 +923,18 @@ const Diagnostic: React.FC = () => {
 
           {/* VPN Credentials - only show if required */}
           {requiresCredentials !== false && authType !== 'saml' && (
-            <div style={{ marginBottom: '15px' }}>
-              <h4 style={{ margin: '0 0 10px 0', fontSize: '16px' }}>
+            <div className="diagnostic-form-group">
+              <h4 className="diagnostic-vpn-title">
                 VPN Credentials
                 {requiresCredentials === null && (
-                  <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>
+                  <span className="diagnostic-vpn-subtitle">
                     {' '}(Upload config file to check if credentials are needed)
                   </span>
                 )}
               </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div className="diagnostic-vpn-grid">
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>
+                  <label className="diagnostic-vpn-label">
                     Username:
                   </label>
                   <input
@@ -947,18 +942,12 @@ const Diagnostic: React.FC = () => {
                     value={vpnCredentials.username}
                     onChange={(e) => setVpnCredentials(prev => ({ ...prev, username: e.target.value }))}
                     placeholder="tjohnson"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
+                    className="diagnostic-vpn-input"
                     disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>
+                  <label className="diagnostic-vpn-label">
                     Password:
                   </label>
                   <input
@@ -966,13 +955,7 @@ const Diagnostic: React.FC = () => {
                     value={vpnCredentials.password}
                     onChange={(e) => setVpnCredentials(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Enter your VPN password"
-                    style={{
-                      width: '100%',
-                      padding: '8px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px',
-                      fontSize: '14px'
-                    }}
+                    className="diagnostic-vpn-input"
                     disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
                   />
                 </div>
@@ -982,152 +965,77 @@ const Diagnostic: React.FC = () => {
 
           {/* Linux Open-Source Client Integration */}
           {authType !== 'saml' && (
-            <div style={{ 
-              marginBottom: '15px', 
-              padding: '15px', 
-              backgroundColor: '#f0f8ff', 
-              border: '1px solid #007bff', 
-              borderRadius: '4px',
-              fontSize: '14px'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#004085' }}>
+            <div className="diagnostic-info-section">
+              <div className="diagnostic-info-title">
                 🐧 Linux Open-Source VPN Options
               </div>
-              <div style={{ marginBottom: '10px' }}>
+              <div className="diagnostic-info-content">
                 For Linux systems, you can use several open-source VPN clients and NetworkManager integration:
               </div>
               
               {/* NetworkManager Integration */}
-              <div style={{ 
-                marginBottom: '15px', 
-                padding: '10px', 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #dee2e6', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🔧 NetworkManager Integration:</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              <div className="diagnostic-info-subsection">
+                <div className="diagnostic-info-subsection-title">🔧 NetworkManager Integration:</div>
+                <div className="diagnostic-button-group">
                   <button
                     onClick={() => installNetworkManagerOpenVPN()}
-                    style={{
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-secondary"
                   >
                     📦 Install NetworkManager OpenVPN
                   </button>
                   
                   <button
                     onClick={() => importToNetworkManager()}
-                    style={{
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button"
                   >
                     🔗 Import to NetworkManager
                   </button>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
+                <div className="diagnostic-note">
                   NetworkManager provides GUI integration with your desktop environment
                 </div>
               </div>
 
               {/* Command Line Options */}
-              <div style={{ 
-                marginBottom: '15px', 
-                padding: '10px', 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #dee2e6', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>⌨️ Command Line Options:</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '8px' }}>
+              <div className="diagnostic-info-subsection">
+                <div className="diagnostic-info-subsection-title">⌨️ Command Line Options:</div>
+                <div className="diagnostic-button-group">
                   <button
                     onClick={() => connectWithOpenVPN()}
-                    style={{
-                      backgroundColor: '#17a2b8',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button"
                   >
                     🔐 Connect with OpenVPN CLI
                   </button>
                   
                   <button
                     onClick={() => generateOpenVPNCommand()}
-                    style={{
-                      backgroundColor: '#6c757d',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button"
                   >
                     📝 Generate Command
                   </button>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>
+                <div className="diagnostic-note">
                   Direct command-line connection using the system OpenVPN client
                 </div>
               </div>
 
               {/* Third-Party Clients */}
-              <div style={{ 
-                marginBottom: '15px', 
-                padding: '10px', 
-                backgroundColor: '#ffffff', 
-                border: '1px solid #dee2e6', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🎛️ Third-Party Clients:</div>
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', fontSize: '12px' }}>
+              <div className="diagnostic-info-subsection">
+                <div className="diagnostic-info-subsection-title">🎛️ Third-Party Clients:</div>
+                <div className="diagnostic-button-group">
                   <a href="https://openvpn.net/community-downloads/" target="_blank" rel="noopener noreferrer" 
-                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                     className="diagnostic-link">
                     🔽 OpenVPN Community
                   </a>
                   <button
                     onClick={() => tryTunnelblick()}
-                    style={{
-                      backgroundColor: 'transparent',
-                      color: '#007bff',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      textDecoration: 'underline'
-                    }}
+                    className="diagnostic-link"
                   >
                     🍎 Tunnelblick (if available)
                   </button>
                   <button
                     onClick={() => showLinuxVpnClients()}
-                    style={{
-                      backgroundColor: 'transparent',
-                      color: '#007bff',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      textDecoration: 'underline'
-                    }}
+                    className="diagnostic-link"
                   >
                     📋 More Linux Clients
                   </button>
@@ -1135,31 +1043,25 @@ const Diagnostic: React.FC = () => {
               </div>
 
               {/* Installation Instructions */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '15px', 
-                backgroundColor: '#f1f3f4', 
-                border: '1px solid #dadce0', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>📖 Linux VPN Setup:</div>
-                <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+              <div className="diagnostic-setup-section">
+                <div className="diagnostic-setup-list-title">📖 Linux VPN Setup:</div>
+                <ol className="diagnostic-setup-list">
                   <li><strong>Ubuntu/Debian:</strong>
-                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                    <div className="diagnostic-code-block">
                       sudo apt-get install network-manager-openvpn-gnome
                     </div>
                   </li>
-                  <li style={{ marginTop: '8px' }}><strong>Fedora/CentOS:</strong>
-                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                  <li className="diagnostic-setup-list-item"><strong>Fedora/CentOS:</strong>
+                    <div className="diagnostic-code-block">
                       sudo dnf install NetworkManager-openvpn-gnome
                     </div>
                   </li>
-                  <li style={{ marginTop: '8px' }}><strong>Arch Linux:</strong>
-                    <div style={{ backgroundColor: '#2d3748', color: '#e2e8f0', padding: '8px', borderRadius: '4px', marginTop: '4px', fontFamily: 'monospace', fontSize: '12px' }}>
+                  <li className="diagnostic-setup-list-item"><strong>Arch Linux:</strong>
+                    <div className="diagnostic-code-block">
                       sudo pacman -S networkmanager-openvpn
                     </div>
                   </li>
-                  <li style={{ marginTop: '8px' }}>After installation, use NetworkManager GUI or the buttons above for easy setup</li>
+                  <li className="diagnostic-setup-list-item">After installation, use NetworkManager GUI or the buttons above for easy setup</li>
                 </ol>
               </div>
             </div>
@@ -1167,44 +1069,22 @@ const Diagnostic: React.FC = () => {
 
           {/* Show message for SAML authentication */}
           {authType === 'saml' && (
-            <div style={{ 
-              marginBottom: '15px', 
-              padding: '15px', 
-              backgroundColor: '#fff3cd', 
-              border: '1px solid #ffc107', 
-              borderRadius: '4px',
-              fontSize: '14px'
-            }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#856404' }}>
+            <div className="diagnostic-setup-section">
+              <div className="diagnostic-setup-title">
                 🔍 SAML Authentication Required
               </div>
-              <div style={{ marginBottom: '10px' }}>
+              <div className="diagnostic-setup-content">
                 This VPN configuration requires <strong>SAML web-based authentication</strong> and cannot be used with standard command-line OpenVPN clients.
               </div>
               
               {/* Quick Actions for SAML VPNs */}
-              <div style={{ 
-                marginBottom: '15px', 
-                padding: '10px', 
-                backgroundColor: '#f8f9fa', 
-                border: '1px solid #dee2e6', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>🚀 Quick Actions:</div>
-                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <div className="diagnostic-saml-actions">
+                <div className="diagnostic-saml-actions-title">🚀 Quick Actions:</div>
+                <div className="diagnostic-button-group">
                   {/* Download Config Button */}
                   <button
                     onClick={() => downloadVpnConfig()}
-                    style={{
-                      backgroundColor: '#007bff',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-primary"
                   >
                     📁 Download Config
                   </button>
@@ -1212,16 +1092,7 @@ const Diagnostic: React.FC = () => {
                   {/* Try to Open in OpenVPN Connect */}
                   <button
                     onClick={() => openInVpnClient()}
-                    style={{
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-success"
                   >
                     🔗 Open in VPN Client
                   </button>
@@ -1229,16 +1100,7 @@ const Diagnostic: React.FC = () => {
                   {/* Copy Config Content */}
                   <button
                     onClick={() => copyConfigToClipboard()}
-                    style={{
-                      backgroundColor: '#6c757d',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-secondary"
                   >
                     📋 Copy Config
                   </button>
@@ -1246,16 +1108,7 @@ const Diagnostic: React.FC = () => {
                   {/* Generate QR Code */}
                   <button
                     onClick={() => generateQrCode()}
-                    style={{
-                      backgroundColor: '#17a2b8',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-info"
                   >
                     📱 QR Code
                   </button>
@@ -1263,16 +1116,7 @@ const Diagnostic: React.FC = () => {
                   {/* Manual SAML Login */}
                   <button
                     onClick={() => openSamlLogin()}
-                    style={{
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      padding: '8px 12px',
-                      cursor: 'pointer',
-                      fontSize: '12px',
-                      fontWeight: 'bold'
-                    }}
+                    className="diagnostic-button diagnostic-button-danger"
                   >
                     🌐 Manual SAML Login
                   </button>
@@ -1280,22 +1124,16 @@ const Diagnostic: React.FC = () => {
               </div>
 
               {/* Step-by-Step Instructions */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '15px', 
-                backgroundColor: '#f1f3f4', 
-                border: '1px solid #dadce0', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '10px', color: '#333' }}>📖 How to Connect:</div>
+              <div className="diagnostic-setup-section">
+                <div className="diagnostic-setup-title">📖 How to Connect:</div>
                 
                 {/* Option 1: Using OpenVPN Connect */}
-                <div style={{ marginBottom: '15px' }}>
-                  <div style={{ fontWeight: 'bold', color: '#007bff', marginBottom: '5px' }}>Option 1: Using OpenVPN Connect (Recommended)</div>
-                  <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+                <div className="diagnostic-setup-option">
+                  <div className="diagnostic-setup-option-title">Option 1: Using OpenVPN Connect (Recommended)</div>
+                  <ol className="diagnostic-setup-list">
                     <li>Download and install <strong>OpenVPN Connect</strong> on your device</li>
                     <li>Use one of the options above to get the VPN config:
-                      <ul style={{ marginTop: '5px', marginBottom: '5px' }}>
+                      <ul className="diagnostic-setup-sublist">
                         <li><strong>📁 Download Config:</strong> Save .ovpn file and import manually</li>
                         <li><strong>🔗 Open in VPN Client:</strong> Try to launch OpenVPN Connect directly</li>
                         <li><strong>📋 Copy Config:</strong> Copy text and paste into client</li>
@@ -1309,9 +1147,9 @@ const Diagnostic: React.FC = () => {
                 </div>
 
                 {/* Option 2: Manual Browser Login */}
-                <div style={{ marginBottom: '0' }}>
-                  <div style={{ fontWeight: 'bold', color: '#ff6b35', marginBottom: '5px' }}>Option 2: Manual Browser Login (For Testing/Troubleshooting)</div>
-                  <ol style={{ margin: '0', paddingLeft: '20px', fontSize: '13px', lineHeight: '1.5' }}>
+                <div className="diagnostic-setup-option">
+                  <div className="diagnostic-setup-option-title-alt">Option 2: Manual Browser Login (For Testing/Troubleshooting)</div>
+                  <ol className="diagnostic-setup-list">
                     <li>Click <strong>🌐 Login in Browser</strong> above to open the SAML login page</li>
                     <li>Complete your company authentication in the browser</li>
                     <li>Note: This won't establish a VPN connection, but confirms SAML auth works</li>
@@ -1321,25 +1159,19 @@ const Diagnostic: React.FC = () => {
               </div>
 
               {/* Download Links */}
-              <div style={{ 
-                marginTop: '15px', 
-                padding: '10px', 
-                backgroundColor: '#e8f4fd', 
-                border: '1px solid #007bff', 
-                borderRadius: '4px' 
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '8px', color: '#004085' }}>📱 Download VPN Clients:</div>
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', fontSize: '12px' }}>
+              <div className="diagnostic-download-section">
+                <div className="diagnostic-download-title">📱 Download VPN Clients:</div>
+                <div className="diagnostic-download-links">
                   <a href="https://openvpn.net/connect-app/" target="_blank" rel="noopener noreferrer" 
-                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                     className="diagnostic-link">
                     🖥️ OpenVPN Connect (Desktop)
                   </a>
                   <a href="https://play.google.com/store/apps/details?id=net.openvpn.openvpn" target="_blank" rel="noopener noreferrer"
-                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                     className="diagnostic-link">
                     🤖 Android App
                   </a>
                   <a href="https://apps.apple.com/app/openvpn-connect/id590379981" target="_blank" rel="noopener noreferrer"
-                     style={{ color: '#007bff', textDecoration: 'none' }}>
+                     className="diagnostic-link">
                     🍎 iOS App
                   </a>
                 </div>
@@ -1348,102 +1180,65 @@ const Diagnostic: React.FC = () => {
           )}
 
           {/* VPN Control Buttons */}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div className="diagnostic-button-row">
             <button
               onClick={connectVPN}
               disabled={vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile || authType === 'saml'}
-              style={{
-                backgroundColor: vpnStatus === 'connected' ? '#6c757d' : authType === 'saml' ? '#6c757d' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '8px 16px',
-                cursor: (vpnStatus === 'connecting' || vpnStatus === 'connected' || !vpnConfig.configFile || authType === 'saml') ? 'not-allowed' : 'pointer',
-                fontWeight: 'bold',
-                opacity: (!vpnConfig.configFile || authType === 'saml') ? 0.6 : 1
-              }}
+              className={`diagnostic-button ${vpnStatus === 'connected' ? 'diagnostic-button-disabled' : authType === 'saml' ? 'diagnostic-button-disabled' : 'diagnostic-button-success'}`}
             >
               {authType === 'saml' ? '🚫 SAML Not Supported' : vpnStatus === 'connecting' ? '🔄 Connecting...' : '🔐 Connect VPN'}
             </button>
             <button
               onClick={disconnectVPN}
               disabled={vpnStatus !== 'connected'}
-              style={{
-                backgroundColor: vpnStatus === 'connected' ? '#dc3545' : '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '8px 16px',
-                cursor: vpnStatus === 'connected' ? 'pointer' : 'not-allowed',
-                fontWeight: 'bold'
-              }}
+              className={`diagnostic-button ${vpnStatus === 'connected' ? 'diagnostic-button-danger' : 'diagnostic-button-disabled'}`}
             >
               🔌 Disconnect
             </button>
             <button
               onClick={runVpnConnectScript}
-              style={{
-                backgroundColor: '#17a2b8',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                padding: '8px 16px',
-                cursor: 'pointer',
-                fontWeight: 'bold'
-              }}
+              className="diagnostic-button diagnostic-button-info"
             >
               🚀 Run VPN Script
             </button>
           </div>
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+          <div className="diagnostic-note">
             💡 The "Run VPN Script" button executes connect-vpn.sh to connect all available VPN configs using appropriate methods (OpenVPN 3 for SAML, classic OpenVPN for others)
           </div>
         </div>
 
         {/* PBX Server Testing */}
-        <div style={{ 
-          backgroundColor: '#f8f9fa', 
-          border: '1px solid #e9ecef', 
-          borderRadius: '6px', 
-          padding: '15px', 
-          marginBottom: '20px' 
-        }}>
+        <div className="diagnostic-section">
           <h3>PBX Server Testing</h3>
-          <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+          <p className="diagnostic-note margin-bottom-15px">
             Configure your PBX servers and test connectivity through the VPN tunnel.
           </p>
 
           {pbxServers.map((server, index) => (
-            <div key={index} style={{ 
-              border: '1px solid #ddd', 
-              borderRadius: '4px', 
-              padding: '10px', 
-              marginBottom: '10px',
-              backgroundColor: '#fff'
-            }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 1fr 100px', gap: '10px', alignItems: 'center' }}>
+            <div key={index} className="diagnostic-pbx-server">
+              <div className="diagnostic-pbx-grid">
                 <input
                   type="text"
                   value={server.name}
                   onChange={e => updatePbxServer(index, 'name', e.target.value)}
                   placeholder="PBX Name"
-                  style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  className="diagnostic-input"
                 />
                 <input
                   type="text"
                   value={server.host}
                   onChange={e => updatePbxServer(index, 'host', e.target.value)}
                   placeholder="pbx.example.com"
-                  style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  className="diagnostic-input"
                 />
                 <input
                   type="text"
                   value={server.port}
                   onChange={e => updatePbxServer(index, 'port', e.target.value)}
                   placeholder="5060"
-                  style={{ padding: '6px', border: '1px solid #ccc', borderRadius: '4px' }}
+                  className="diagnostic-input"
                 />
-                <div style={{ textAlign: 'center' }}>
+                <div className="diagnostic-pbx-status">
                   {server.status === 'unknown' && '❓ Unknown'}
                   {server.status === 'testing' && '🔄 Testing...'}
                   {server.status === 'reachable' && '✅ Reachable'}
@@ -1452,15 +1247,7 @@ const Diagnostic: React.FC = () => {
                 <button
                   onClick={() => testPbxServer(index)}
                   disabled={vpnStatus !== 'connected' || server.status === 'testing' || !server.host}
-                  style={{
-                    backgroundColor: '#007bff',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    padding: '6px 12px',
-                    cursor: (vpnStatus === 'connected' && server.status !== 'testing' && server.host) ? 'pointer' : 'not-allowed',
-                    fontSize: '12px'
-                  }}
+                  className={`diagnostic-button ${(vpnStatus === 'connected' && server.status !== 'testing' && server.host) ? 'diagnostic-button-primary' : 'diagnostic-button-disabled'}`}
                 >
                   Test
                 </button>
@@ -1471,35 +1258,16 @@ const Diagnostic: React.FC = () => {
           <button
             onClick={testAllPbxServers}
             disabled={vpnStatus !== 'connected'}
-            style={{
-              backgroundColor: '#17a2b8',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '8px 16px',
-              cursor: vpnStatus === 'connected' ? 'pointer' : 'not-allowed',
-              fontWeight: 'bold',
-              marginTop: '10px'
-            }}
+            className={`diagnostic-button ${vpnStatus === 'connected' ? 'diagnostic-button-info' : 'diagnostic-button-disabled'}`}
           >
             🧪 Test All PBX Servers
           </button>
         </div>
 
         {/* Connection Log */}
-        <div style={{ 
-          backgroundColor: '#000', 
-          color: '#00ff00', 
-          borderRadius: '4px', 
-          padding: '15px', 
-          height: '200px', 
-          overflowY: 'auto',
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          marginBottom: '20px'
-        }}>
+        <div className="diagnostic-log">
           {logs.length === 0 ? (
-            <div style={{ color: '#888' }}>VPN connection log will appear here...</div>
+            <div className="diagnostic-log-empty">VPN connection log will appear here...</div>
           ) : (
             logs.map((log, index) => (
               <div key={index}>{log}</div>
@@ -1509,31 +1277,19 @@ const Diagnostic: React.FC = () => {
       </div>
 
       {/* Troubleshooting Guide */}
-      <div style={{
-        backgroundColor: '#f8f9fa',
-        border: '1px solid #e9ecef',
-        borderRadius: '8px',
-        padding: '20px',
-        marginBottom: '20px'
-      }}>
-        <h3 style={{ 
-          color: '#333', 
-          marginTop: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
+      <div className="diagnostic-troubleshooting">
+        <h3 className="diagnostic-troubleshooting-title">
           🔧 PBX Connectivity Troubleshooting
         </h3>
         
-        <div style={{ marginBottom: '15px' }}>
+        <div className="diagnostic-troubleshooting-intro">
           <strong>If VPN shows "Connected" but PBX servers are "Unreachable":</strong>
         </div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <div className="diagnostic-troubleshooting-grid">
           <div>
-            <h4 style={{ color: '#495057', marginBottom: '10px' }}>🔍 Common Issues:</h4>
-            <ul style={{ color: '#6c757d', lineHeight: '1.6' }}>
+            <h4 className="diagnostic-troubleshooting-subtitle">🔍 Common Issues:</h4>
+            <ul className="diagnostic-troubleshooting-list">
               <li><strong>VPN Routing:</strong> VPN might not route to PBX subnet</li>
               <li><strong>Firewall:</strong> PBX firewall blocking your VPN IP</li>
               <li><strong>Network Segmentation:</strong> PBX on isolated network</li>
@@ -1543,8 +1299,8 @@ const Diagnostic: React.FC = () => {
           </div>
           
           <div>
-            <h4 style={{ color: '#495057', marginBottom: '10px' }}>🛠️ Troubleshooting Steps:</h4>
-            <ol style={{ color: '#6c757d', lineHeight: '1.6' }}>
+            <h4 className="diagnostic-troubleshooting-subtitle">🛠️ Troubleshooting Steps:</h4>
+            <ol className="diagnostic-troubleshooting-list">
               <li>Check VPN routes: <code>route -n</code> or <code>ip route</code></li>
               <li>Test basic connectivity: <code>ping 69.39.69.102</code></li>
               <li>Test specific port: <code>telnet 69.39.69.102 5060</code></li>
@@ -1554,13 +1310,7 @@ const Diagnostic: React.FC = () => {
           </div>
         </div>
         
-        <div style={{
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeaa7',
-          borderRadius: '4px',
-          padding: '12px',
-          marginTop: '15px'
-        }}>
+        <div className="diagnostic-troubleshooting-tip">
           <strong>💡 Pro Tip:</strong> The PBX connectivity tests above use TCP connections to verify that SIP services are reachable through the VPN.
         </div>
       </div>
@@ -1569,34 +1319,22 @@ const Diagnostic: React.FC = () => {
       <VpnStatusPanel />
       
       {/* SSH Terminal Access */}
-      <div style={{ 
-        backgroundColor: '#f8f9fa', 
-        border: '1px solid #e9ecef', 
-        borderRadius: '6px', 
-        padding: '15px', 
-        margin: '20px 0' 
-      }}>
+      <div className="diagnostic-section">
         <h3>🖥️ FreePBX SSH Terminal Access</h3>
-        <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
+        <p className="diagnostic-note margin-bottom-15px">
           Connect to FreePBX servers via SSH for administration, troubleshooting, and configuration.
           <br />
           <strong>Note:</strong> VPN connection required for SSH access to remote FreePBX servers.
         </p>
         
-        <div style={{ marginBottom: '15px' }}>
+        <div className="diagnostic-ssh-servers">
           <h4>Available SSH Servers:</h4>
           {sshServers.map((server, index) => (
-            <div key={index} style={{ 
-              backgroundColor: '#ffffff', 
-              border: '1px solid #dee2e6', 
-              borderRadius: '4px', 
-              padding: '10px', 
-              marginBottom: '10px' 
-            }}>
-              <div style={{ fontWeight: 'bold' }}>
+            <div key={index} className="diagnostic-ssh-server">
+              <div className="diagnostic-ssh-server-name">
                 {server.name} - {server.host}:{server.port}
               </div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
+              <div className="diagnostic-ssh-server-description">
                 {server.description} | Default user: {server.username}
               </div>
             </div>
@@ -1605,17 +1343,9 @@ const Diagnostic: React.FC = () => {
         
         <TerminalPanel />
         
-        <div style={{ 
-          fontSize: '12px', 
-          color: '#666', 
-          marginTop: '10px',
-          padding: '10px',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeaa7',
-          borderRadius: '4px'
-        }}>
+        <div className="diagnostic-ssh-tips">
           <strong>🔐 SSH Connection Tips:</strong>
-          <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+          <ul className="diagnostic-ssh-tips-list">
             <li>Ensure VPN is connected before attempting SSH connections</li>
             <li>Use the primary FreePBX server IP: 69.39.69.102</li>
             <li>Default SSH port: 22 (may be configured differently)</li>
@@ -1626,15 +1356,9 @@ const Diagnostic: React.FC = () => {
       </div>
       
       {/* Additional Network Information */}
-      <div style={{ 
-        backgroundColor: '#f8f9fa', 
-        border: '1px solid #e9ecef', 
-        borderRadius: '6px', 
-        padding: '15px', 
-        margin: '20px 0' 
-      }}>
+      <div className="diagnostic-section">
         <h3>📊 Network Connectivity Information</h3>
-        <div style={{ fontSize: '14px', color: '#666' }}>
+        <div className="diagnostic-network-info">
           <p><strong>PBX Testing:</strong> TCP connectivity tests verify that SIP services (port 5060/5061) are reachable through the VPN tunnel.</p>
           <p><strong>VPN Status:</strong> Live monitoring of OpenVPN sessions, network interfaces, and routing information.</p>
           <p><strong>Troubleshooting:</strong> If PBX servers show as unreachable, check VPN connection, firewall rules, and PBX server status.</p>

@@ -88,36 +88,94 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'management-ui')));
 
-// Service definitions
+// Service definitions - New consolidated server architecture
 const SERVICES = {
-    'ssh-ws': {
-        script: 'backend/ssh-ws-server.js',
-        port: 3001,
-        health: 'http://localhost:3001/health',
-        name: 'SSH WebSocket Server',
-        type: 'backend'
+    'production': {
+        script: 'backend/production-proxy.js',
+        port: 3000,
+        httpsPort: 8443,
+        health: 'https://localhost:8443/health',
+        name: 'Production Server (123hostedtools.com)',
+        type: 'priority-1',
+        priority: 1,
+        description: 'Production server with SSL for 123hostedtools.com domain'
     },
-    'auth': {
-        script: 'backend/auth-server.js',
+    'management': {
+        script: 'backend/management-server.js',
+        port: 3099,
+        health: 'http://localhost:3099/api/health',
+        name: 'Management Console',
+        type: 'priority-1',
+        priority: 1,
+        description: 'Web-based management console for system control'
+    },
+    'vpn': {
+        script: 'backend/vpn-server.js',
+        port: 3001,
+        health: 'https://localhost:3001/health',
+        name: 'VPN Server',
+        type: 'priority-2',
+        priority: 2,
+        description: 'VPN connectivity and network diagnostics'
+    },
+    'development': {
+        script: 'backend/dev-server.js',
         port: 3002,
         health: 'http://localhost:3002/health',
-        name: 'Authentication Server',
-        type: 'backend'
-    },
-    'proxy': {
-        script: 'backend/simple-proxy-https.js',
-        port: 8443,
-        health: 'https://localhost:8443/proxy-health',
-        name: 'HTTPS Proxy Server',
-        type: 'frontend'
+        name: 'Development Server',
+        type: 'priority-3',
+        priority: 3,
+        description: 'Development tools, hot reloading, and testing'
     },
     'webapp': {
-        script: null, // Special handling for webapp
-        port: 8443,
+        script: null, // Special handling for webapp (starts production server)
+        port: 3000,
+        httpsPort: 8443,
         health: 'https://localhost:8443/',
         name: 'Main Web Application',
-        type: 'webapp'
+        type: 'webapp',
+        description: 'Full web application with all services'
     }
+};
+
+// Port cleanup function - Updated for new server architecture
+const cleanupPorts = async () => {
+    console.log('🧹 Cleaning up ports for consolidated server architecture...');
+    const ports = [
+        3000,  // Production HTTP
+        3001,  // VPN Server
+        3002,  // Development Server
+        3099,  // Management Console (keep running)
+        8443   // Production HTTPS
+    ];
+    
+    for (const port of ports) {
+        // Skip management port (this server)
+        if (port === MANAGEMENT_PORT) continue;
+        
+        try {
+            const result = await execCommand(`lsof -Pi :${port} -sTCP:LISTEN -t`);
+            if (result.success && result.stdout.trim()) {
+                const pids = result.stdout.trim().split('\n');
+                for (const pid of pids) {
+                    console.log(`🔄 Killing process ${pid} on port ${port}`);
+                    await execCommand(`kill -TERM ${pid}`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Force kill if still running
+                    const stillRunning = await execCommand(`kill -0 ${pid}`);
+                    if (stillRunning.success) {
+                        console.log(`⚡ Force killing process ${pid}`);
+                        await execCommand(`kill -KILL ${pid}`);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error(`Error cleaning port ${port}:`, error.message);
+        }
+    }
+    
+    console.log('✅ Port cleanup complete - ready for consolidated servers');
 };
 
 // Project file categories
@@ -253,6 +311,19 @@ app.get('/api/services/status', async (req, res) => {
     }
 });
 
+// Cleanup ports endpoint
+app.post('/api/system/cleanup-ports', async (req, res) => {
+    try {
+        await cleanupPorts();
+        res.json({
+            success: true,
+            message: 'Ports cleaned up successfully'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Start service
 app.post('/api/services/:service/start', async (req, res) => {
     const { service } = req.params;
@@ -264,86 +335,89 @@ app.post('/api/services/:service/start', async (req, res) => {
     
     try {
         if (service === 'webapp') {
-            // Special handling for webapp - use production build with timeout
-            log("INFO", "Starting webapp build...");
+            // Special handling for webapp - start production server
+            console.log("🧹 Cleaning up ports before starting webapp...");
+            await cleanupPorts();
             
-            // Check if build already exists and is recent
-            const distPath = path.join(PROJECT_ROOT, 'dist');
-            const buildExists = fs.existsSync(distPath);
-            let buildRecent = false;
+            // Build the webapp first
+            console.log("🔨 Building webapp...");
+            const buildResult = await execCommand('npm run build');
             
-            if (buildExists) {
-                try {
-                    const stats = fs.statSync(distPath);
-                    const ageMinutes = (Date.now() - stats.mtime.getTime()) / (1000 * 60);
-                    buildRecent = ageMinutes < 30; // Build is recent if less than 30 minutes old
-                } catch (error) {
-                    buildRecent = false;
-                }
+            if (!buildResult.success) {
+                return res.status(500).json({ 
+                    error: 'Failed to build webapp',
+                    details: buildResult.stderr || buildResult.stdout
+                });
             }
             
-            if (!buildRecent) {
-                log("INFO", "Building webapp (this may take a few minutes)...");
-                
-                // Use timeout to prevent hanging
-                const buildResult = await execCommand('timeout 180 npm run build');
-                
-                if (!buildResult.success) {
-                    log("ERROR", "Build failed, trying alternative build approach...");
-                    
-                    // Try building with dev config
-                    const devBuildResult = await execCommand('timeout 120 npm run build:dev');
-                    
-                    if (!devBuildResult.success) {
-                        return res.status(500).json({ 
-                            error: 'Failed to build webapp',
-                            details: 'Both production and development builds failed',
-                            buildOutput: buildResult.stderr || buildResult.stdout
-                        });
-                    }
-                }
-            } else {
-                log("INFO", "Using existing build (recent)");
-            }
-            
-            // Start all backend services needed for webapp
-            for (const [key, svc] of Object.entries(SERVICES)) {
-                if (svc.type === 'backend' || svc.type === 'frontend') {
-                    // Kill existing process
-                    await execCommand(`pkill -f "${svc.script}"`);
-                    
-                    // Start service
-                    const startCommand = key === 'proxy' 
-                        ? `cd backend && PROXY_PORT=${svc.port} nohup node simple-proxy-https.js > ${key}.log 2>&1 &`
-                        : `cd backend && nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`;
-                    
-                    const startResult = await execCommand(startCommand);
-                    log("INFO", `Started ${svc.name}: ${startResult.success ? 'OK' : 'Failed'}`);
-                }
-            }
-            
-            // Wait for services to start
+            // Start production server
+            console.log("🚀 Starting production server...");
+            const startCommand = `cd backend && nohup node production-proxy.js > ../logs/production.log 2>&1 &`;
+            await execCommand(startCommand);
             await new Promise(resolve => setTimeout(resolve, 3000));
             
             res.json({ 
                 success: true, 
-                message: 'Web application started successfully',
-                buildSkipped: buildRecent,
-                note: buildRecent ? 'Used existing build' : 'Fresh build completed'
+                message: 'Web application started successfully (production server)',
+                service: 'production'
             });
-        } else {
-            // Regular service start
-            const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
+        } else if (service === 'production') {
+            // Start production server
+            console.log("🚀 Starting production server...");
+            await execCommand(`pkill -f "production-proxy.js"`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            const startCommand = service === 'proxy' 
-                ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node simple-proxy-https.js > ${service}.log 2>&1 &`
-                : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
+            const startCommand = `cd backend && nohup node production-proxy.js > ../logs/production.log 2>&1 &`;
+            await execCommand(startCommand);
+            await new Promise(resolve => setTimeout(resolve, 3000));
             
-            const result = await execCommand(startCommand);
+            const status = await getServiceStatus(service);
+            res.json({ 
+                success: true, 
+                message: 'Production server started',
+                status 
+            });
+        } else if (service === 'vpn') {
+            // Start VPN server
+            console.log("🌐 Starting VPN server...");
+            await execCommand(`pkill -f "vpn-server.js"`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Wait a moment for service to start
+            const startCommand = `cd backend && nohup node vpn-server.js > ../logs/vpn.log 2>&1 &`;
+            await execCommand(startCommand);
             await new Promise(resolve => setTimeout(resolve, 2000));
             
+            const status = await getServiceStatus(service);
+            res.json({ 
+                success: true, 
+                message: 'VPN server started',
+                status 
+            });
+        } else if (service === 'development') {
+            // Start development server
+            console.log("🛠️  Starting development server...");
+            await execCommand(`pkill -f "dev-server.js"`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const startCommand = `cd backend && nohup node dev-server.js > ../logs/dev.log 2>&1 &`;
+            await execCommand(startCommand);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const status = await getServiceStatus(service);
+            res.json({ 
+                success: true, 
+                message: 'Development server started',
+                status 
+            });
+        } else {
+            // Generic service start
+            const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const startCommand = `cd backend && nohup node ${path.basename(serviceConfig.script)} > ../logs/${service}.log 2>&1 &`;
+            const result = await execCommand(startCommand);
+            
+            await new Promise(resolve => setTimeout(resolve, 2000));
             const status = await getServiceStatus(service);
             
             res.json({ 
@@ -369,11 +443,8 @@ app.post('/api/services/:service/stop', async (req, res) => {
     try {
         if (service === 'webapp') {
             // Stop all services for webapp
-            for (const [key, svc] of Object.entries(SERVICES)) {
-                if (svc.type === 'backend' || svc.type === 'frontend') {
-                    await execCommand(`pkill -f "${svc.script}"`);
-                }
-            }
+            console.log("🛑 Stopping all webapp services...");
+            await cleanupPorts();
             
             res.json({ 
                 success: true, 
@@ -1062,17 +1133,24 @@ io.on('connection', (socket) => {
 // Start Management Server
 //=============================================================================
 
-server.listen(MANAGEMENT_PORT, BIND_ADDRESS, () => {
-    console.log('🎛️  Web Management Console Started');
-    console.log(`🌐 Access: http://${BIND_ADDRESS === '0.0.0.0' ? 'localhost' : BIND_ADDRESS}:${MANAGEMENT_PORT}`);
-    if (ALLOW_LAN_ACCESS) {
-        console.log('🌐 LAN Access: Enabled (accessible from private networks)');
-        console.log(`🌐 LAN URL: http://YOUR_SERVER_IP:${MANAGEMENT_PORT}`);
-    } else {
-        console.log('🔒 Security: Localhost only access');
-    }
-    console.log('📊 Features: Real-time monitoring, service management, troubleshooting');
-    console.log('');
+// Clean up ports on startup
+cleanupPorts().then(() => {
+    console.log('🎛️  Starting Web Management Console...');
+    
+    server.listen(MANAGEMENT_PORT, BIND_ADDRESS, () => {
+        console.log('🎛️  Web Management Console Started');
+        console.log(`🌐 Access: http://${BIND_ADDRESS === '0.0.0.0' ? 'localhost' : BIND_ADDRESS}:${MANAGEMENT_PORT}`);
+        if (ALLOW_LAN_ACCESS) {
+            console.log('🌐 LAN Access: Enabled (accessible from private networks)');
+            console.log(`🌐 LAN URL: http://YOUR_SERVER_IP:${MANAGEMENT_PORT}`);
+        } else {
+            console.log('🔒 Security: Localhost only access');
+        }
+        console.log('📊 Features: Real-time monitoring, service management, troubleshooting');
+        console.log('🧹 Port Cleanup: Automatic cleanup of conflicting ports');
+        console.log('🚀 Usage: Start/stop webapp and services through web interface');
+        console.log('');
+    });
 });
 
 // Graceful shutdown

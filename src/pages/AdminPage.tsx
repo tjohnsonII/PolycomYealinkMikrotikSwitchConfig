@@ -14,17 +14,14 @@
  * and is only accessible to users with admin role.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { getApiUrl } from '../utils/api-config';
+import type { User } from '../types/auth';
 import '../styles/123net-theme.css';
 
-// Interface for user data structure
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  role: 'admin' | 'user';
+// Interface for user data structure with additional admin fields
+interface AdminUser extends User {
   status?: 'pending' | 'approved' | 'denied';
   createdAt: string;
   approvedAt?: string;
@@ -50,7 +47,7 @@ interface PendingUser {
  */
 const AdminPage: React.FC = () => {
   // Component state
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingLoading, setPendingLoading] = useState(true);
@@ -66,17 +63,11 @@ const AdminPage: React.FC = () => {
   // Get authentication token from context
   const { token } = useAuth();
 
-  // Fetch users when component mounts
-  useEffect(() => {
-    fetchUsers();
-    fetchPendingUsers();
-  }, []);
-
   /**
    * Fetch all users from the API
    * Called on component mount and after user operations
    */
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl('admin/users'), {
         headers: {
@@ -90,17 +81,17 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to fetch users');
       }
-    } catch (err) {
+    } catch {
       setError('Error fetching users');
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   /**
    * Fetch pending users from the API
    */
-  const fetchPendingUsers = async () => {
+  const fetchPendingUsers = useCallback(async () => {
     try {
       const response = await fetch(getApiUrl('admin/pending-users'), {
         headers: {
@@ -119,7 +110,13 @@ const AdminPage: React.FC = () => {
     } finally {
       setPendingLoading(false);
     }
-  };
+  }, [token]);
+
+  // Fetch users when component mounts
+  useEffect(() => {
+    fetchUsers();
+    fetchPendingUsers();
+  }, [fetchUsers, fetchPendingUsers]);
 
   /**
    * Update a user's role (admin/user)
@@ -145,7 +142,7 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to update user role');
       }
-    } catch (err) {
+    } catch {
       setError('Error updating user role');
     }
   };
@@ -175,7 +172,7 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to delete user');
       }
-    } catch (err) {
+    } catch {
       setError('Error deleting user');
     }
   };
@@ -217,7 +214,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to create user');
       }
-    } catch (err) {
+    } catch {
       setError('Error creating user');
     }
   };
@@ -276,7 +273,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to approve user');
       }
-    } catch (err) {
+    } catch {
       setError('Error approving user');
     }
   };
@@ -306,7 +303,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to deny user');
       }
-    } catch (err) {
+    } catch {
       setError('Error denying user');
     }
   };
@@ -314,93 +311,46 @@ const AdminPage: React.FC = () => {
   // Show loading spinner while fetching data
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '400px',
-        fontSize: '18px',
-        color: '#666'
-      }}>
+      <div className="loading-container">
         Loading users...
       </div>
     );
   }
 
   return (
-    <div style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '20px',
-      background: '#fff',
-      borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-    }}>
+    <div className="admin-page-container">
       {/* Page header with title and user count */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '30px',
-        borderBottom: '2px solid #f0f0f0',
-        paddingBottom: '20px'
-      }}>
-        <h1 style={{
-          margin: 0,
-          color: '#333',
-          fontSize: '32px',
-          fontWeight: '600'
-        }}>
+      <div className="admin-page-header">
+        <h1 className="admin-page-title">
           Admin Dashboard
         </h1>
-        <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: '#fff',
-          padding: '8px 16px',
-          borderRadius: '20px',
-          fontSize: '14px',
-          fontWeight: '500'
-        }}>
+        <div className="admin-page-user-count">
           {users.length} Total Users
         </div>
       </div>
 
       {/* Error message display */}
       {error && (
-        <div style={{
-          background: '#fee',
-          border: '1px solid #fcc',
-          color: '#c66',
-          padding: '12px',
-          borderRadius: '6px',
-          marginBottom: '20px'
-        }}>
+        <div className="error-container">
           {error}
         </div>
       )}
 
       {/* Recent Registrations Alert */}
       {!pendingLoading && pendingUsers.length > 0 && (
-        <div style={{ 
-          marginBottom: '30px',
-          background: 'linear-gradient(135deg, #e67e22 0%, #f39c12 100%)',
-          color: 'white',
-          padding: '20px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(230, 126, 34, 0.3)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
-            <span style={{ fontSize: '24px', marginRight: '10px' }}>🔔</span>
-            <h3 style={{ margin: 0, fontSize: '20px' }}>
+        <div className="pending-users-alert">
+          <div className="pending-users-alert-header">
+            <span className="pending-users-alert-icon">🔔</span>
+            <h3 className="pending-users-alert-title">
               New User Registrations Waiting for Approval!
             </h3>
           </div>
-          <p style={{ margin: '5px 0', opacity: 0.9 }}>
+          <p className="pending-users-alert-message">
             {pendingUsers.length} user{pendingUsers.length > 1 ? 's' : ''} 
             {pendingUsers.length === 1 ? ' has' : ' have'} registered and 
             {pendingUsers.length === 1 ? ' is' : ' are'} waiting for your approval.
           </p>
-          <div style={{ fontSize: '14px', opacity: 0.8 }}>
+          <div className="pending-users-alert-latest">
             <strong>Latest:</strong> {pendingUsers[pendingUsers.length - 1]?.username} 
             ({pendingUsers[pendingUsers.length - 1]?.email})
           </div>
@@ -409,76 +359,41 @@ const AdminPage: React.FC = () => {
 
       {/* Pending Users Section */}
       {!pendingLoading && pendingUsers.length > 0 && (
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            marginBottom: '20px'
-          }}>
-            <h2 style={{
-              color: '#e67e22',
-              fontSize: '24px',
-              margin: 0,
-              fontWeight: '500'
-            }}>
+        <div className="pending-section">
+          <div className="pending-section-header">
+            <h2 className="pending-section-title">
               🕐 Pending Approvals
             </h2>
-            <span style={{
-              background: '#e67e22',
-              color: 'white',
-              padding: '4px 12px',
-              borderRadius: '12px',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              marginLeft: '10px'
-            }}>
+            <span className="pending-section-count">
               {pendingUsers.length}
             </span>
           </div>
 
-          <div style={{
-            background: '#fff3cd',
-            borderRadius: '8px',
-            overflow: 'hidden',
-            border: '1px solid #ffeaa7'
-          }}>
-            <table style={{
-              width: '100%',
-              borderCollapse: 'collapse',
-              fontSize: '14px'
-            }}>
-              <thead>
-                <tr style={{ background: '#f8f9fa' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Username</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Email</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>Requested</th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: '#555' }}>IP Address</th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: '600', color: '#555' }}>Actions</th>
+          <div className="pending-users-table-container">
+            <table className="pending-users-table">
+              <thead className="pending-users-table-header">
+                <tr>
+                  <th className="pending-users-table-th">Username</th>
+                  <th className="pending-users-table-th">Email</th>
+                  <th className="pending-users-table-th">Requested</th>
+                  <th className="pending-users-table-th">IP Address</th>
+                  <th className="pending-users-table-th pending-users-table-td-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {pendingUsers.map(user => (
-                  <tr key={user.id} style={{ borderTop: '1px solid #e9ecef' }}>
-                    <td style={{ padding: '12px', fontWeight: '500' }}>{user.username}</td>
-                    <td style={{ padding: '12px' }}>{user.email}</td>
-                    <td style={{ padding: '12px', color: '#666' }}>
+                  <tr key={user.id} className="pending-users-table-row">
+                    <td className="pending-users-table-td pending-users-table-td-bold">{user.username}</td>
+                    <td className="pending-users-table-td">{user.email}</td>
+                    <td className="pending-users-table-td pending-users-table-td-muted">
                       {new Date(user.createdAt).toLocaleDateString()} {new Date(user.createdAt).toLocaleTimeString()}
                     </td>
-                    <td style={{ padding: '12px', color: '#666' }}>{user.ipAddress || 'Unknown'}</td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                    <td className="pending-users-table-td pending-users-table-td-muted">{user.ipAddress || 'Unknown'}</td>
+                    <td className="pending-users-table-td pending-users-table-td-center">
+                      <div className="pending-users-table-actions">
                         <button
                           onClick={() => approveUser(user.id)}
-                          style={{
-                            background: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}
+                          className="pending-approve-btn"
                           title="Approve user"
                         >
                           ✅ Approve
@@ -488,16 +403,7 @@ const AdminPage: React.FC = () => {
                             const reason = prompt('Reason for denial (optional):');
                             denyUser(user.id, reason || undefined);
                           }}
-                          style={{
-                            background: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            padding: '6px 12px',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}
+                          className="pending-deny-btn"
                           title="Deny user"
                         >
                           ❌ Deny
@@ -513,70 +419,25 @@ const AdminPage: React.FC = () => {
       )}
 
       {/* Main User Management Section */}
-      <div style={{ marginBottom: '30px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px'
-        }}>
-          <h2 style={{
-            color: '#333',
-            fontSize: '24px',
-            margin: 0,
-            fontWeight: '500'
-          }}>
+      <div className="user-management-section">
+        <div className="user-management-header">
+          <h2 className="user-management-title">
             User Management
           </h2>
           
           {/* Create User Button */}
           <button
             onClick={() => setShowCreateForm(true)}
-            style={{
-              background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-              color: '#fff',
-              border: 'none',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
-            }}
+            className="create-user-btn"
           >
             + Create New User
           </button>
         </div>
 
         {/* Users table */}
-        <div style={{
-          background: '#f8f9fa',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          border: '1px solid #e9ecef'
-        }}>
+        <div className="users-table-container">
           {/* Table header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 2fr 1fr 1fr 2fr',
-            gap: '20px',
-            padding: '15px 20px',
-            background: '#e9ecef',
-            fontWeight: '600',
-            color: '#495057',
-            fontSize: '14px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
+          <div className="users-table-header">
             <div>ID</div>
             <div>Username</div>
             <div>Role</div>
@@ -585,30 +446,22 @@ const AdminPage: React.FC = () => {
           </div>
 
           {/* User rows */}
-          {users.map((user, index) => (
+          {users.map((user) => (
             <div
               key={user.id}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 2fr 1fr 1fr 2fr',
-                gap: '20px',
-                padding: '20px',
-                borderBottom: index < users.length - 1 ? '1px solid #e9ecef' : 'none',
-                background: '#fff',
-                alignItems: 'center'
-              }}
+              className="users-table-row"
             >
               {/* User ID */}
-              <div style={{ fontWeight: '500', color: '#6c757d' }}>
+              <div className="users-table-id">
                 #{user.id}
               </div>
               
               {/* Username and email */}
               <div>
-                <div style={{ fontWeight: '500', color: '#333', marginBottom: '4px' }}>
+                <div className="users-table-username">
                   {user.username}
                 </div>
-                <div style={{ fontSize: '14px', color: '#6c757d' }}>
+                <div className="users-table-email">
                   {user.email}
                 </div>
               </div>
@@ -618,15 +471,9 @@ const AdminPage: React.FC = () => {
                 <select
                   value={user.role}
                   onChange={(e) => updateUserRole(user.id, e.target.value as 'admin' | 'user')}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd',
-                    background: user.role === 'admin' ? '#d4edda' : '#fff3cd',
-                    color: user.role === 'admin' ? '#155724' : '#856404',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
+                  className={`users-table-role-select ${user.role}`}
+                  title="Change user role"
+                  aria-label="Change user role"
                 >
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
@@ -634,30 +481,15 @@ const AdminPage: React.FC = () => {
               </div>
               
               {/* Creation date */}
-              <div style={{
-                fontSize: '14px',
-                color: '#6c757d'
-              }}>
+              <div className="users-table-date">
                 {new Date(user.createdAt).toLocaleDateString()}
               </div>
               
               {/* Action buttons */}
-              <div style={{ display: 'flex', gap: '10px' }}>
+              <div className="users-table-actions">
                 <button
                   onClick={() => deleteUser(user.id)}
-                  style={{
-                    padding: '8px 16px',
-                    background: '#dc3545',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#c82333'}
-                  onMouseOut={(e) => e.currentTarget.style.background = '#dc3545'}
+                  className="users-table-delete-btn"
                 >
                   Delete
                 </button>
@@ -669,42 +501,10 @@ const AdminPage: React.FC = () => {
 
       {/* Create User Form Modal */}
       {showCreateForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: '#fff',
-            padding: '30px',
-            borderRadius: '12px',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.3)',
-            width: '90%',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '25px',
-              borderBottom: '2px solid #f0f0f0',
-              paddingBottom: '15px'
-            }}>
-              <h3 style={{
-                margin: 0,
-                color: '#333',
-                fontSize: '22px',
-                fontWeight: '600'
-              }}>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3 className="modal-title">
                 Create New User
               </h3>
               <button
@@ -718,32 +518,15 @@ const AdminPage: React.FC = () => {
                     role: 'user'
                   });
                 }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#666',
-                  padding: '0',
-                  width: '30px',
-                  height: '30px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
+                className="modal-close-btn"
               >
                 ×
               </button>
             </div>
 
             <form onSubmit={handleCreateUser}>
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                  color: '#333'
-                }}>
+              <div className="form-group">
+                <label className="form-label">
                   Username *
                 </label>
                 <input
@@ -753,28 +536,13 @@ const AdminPage: React.FC = () => {
                     ...createFormData,
                     username: e.target.value
                   })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e9ecef',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  className="form-input"
                   placeholder="Enter username"
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                  color: '#333'
-                }}>
+              <div className="form-group">
+                <label className="form-label">
                   Email *
                 </label>
                 <input
@@ -784,28 +552,13 @@ const AdminPage: React.FC = () => {
                     ...createFormData,
                     email: e.target.value
                   })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e9ecef',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  className="form-input"
                   placeholder="Enter email address"
                 />
               </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                  color: '#333'
-                }}>
+              <div className="form-group">
+                <label className="form-label">
                   Password *
                 </label>
                 <input
@@ -815,28 +568,13 @@ const AdminPage: React.FC = () => {
                     ...createFormData,
                     password: e.target.value
                   })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e9ecef',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  className="form-input"
                   placeholder="Enter password (min 6 characters)"
                 />
               </div>
 
-              <div style={{ marginBottom: '25px' }}>
-                <label style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: '500',
-                  color: '#333'
-                }}>
+              <div className="form-group">
+                <label className="form-label">
                   Role
                 </label>
                 <select
@@ -845,29 +583,16 @@ const AdminPage: React.FC = () => {
                     ...createFormData,
                     role: e.target.value as 'admin' | 'user'
                   })}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '2px solid #e9ecef',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    transition: 'border-color 0.2s',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer'
-                  }}
-                  onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                  onBlur={(e) => e.target.style.borderColor = '#e9ecef'}
+                  className="form-select"
+                  title="Select user role"
+                  aria-label="Select user role"
                 >
                   <option value="user">User</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>
 
-              <div style={{
-                display: 'flex',
-                gap: '15px',
-                justifyContent: 'flex-end'
-              }}>
+              <div className="form-actions">
                 <button
                   type="button"
                   onClick={() => {
@@ -880,44 +605,13 @@ const AdminPage: React.FC = () => {
                       role: 'user'
                     });
                   }}
-                  style={{
-                    padding: '12px 24px',
-                    background: '#6c757d',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'background 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#5a6268'}
-                  onMouseOut={(e) => e.currentTarget.style.background = '#6c757d'}
+                  className="form-cancel-btn"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{
-                    padding: '12px 24px',
-                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.4)';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(40, 167, 69, 0.3)';
-                  }}
+                  className="form-submit-btn"
                 >
                   Create User
                 </button>
@@ -928,25 +622,11 @@ const AdminPage: React.FC = () => {
       )}
 
       {/* Instructions section */}
-      <div style={{
-        background: '#f8f9fa',
-        padding: '20px',
-        borderRadius: '8px',
-        border: '1px solid #e9ecef'
-      }}>
-        <h3 style={{
-          margin: '0 0 15px 0',
-          color: '#333',
-          fontSize: '18px'
-        }}>
+      <div className="instructions-section">
+        <h3 className="instructions-title">
           Admin Instructions
         </h3>
-        <ul style={{
-          margin: 0,
-          paddingLeft: '20px',
-          color: '#6c757d',
-          lineHeight: '1.6'
-        }}>
+        <ul className="instructions-list">
           <li>Click "Create New User" to add new user accounts directly from the admin dashboard</li>
           <li>Use the role dropdown to promote users to admin or demote them to regular users</li>
           <li>Click "Delete" to permanently remove a user account</li>

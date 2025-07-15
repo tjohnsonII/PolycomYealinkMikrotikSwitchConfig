@@ -61,7 +61,7 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
   } as React.CSSProperties;
 
   return (
-    // eslint-disable-next-line
+     
     <div 
       className={`logo-123net ${className}`}
       style={{

@@ -138,7 +138,9 @@ const ExpansionModules: React.FC = () => {
       localStorage.removeItem('yealinkSlots');
       localStorage.removeItem('yealinkTemplateType');
       localStorage.removeItem('polycomSlots');
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to clear localStorage:', error);
+    }
   };
 
   // Utility function to download text as a file
@@ -154,29 +156,30 @@ const ExpansionModules: React.FC = () => {
   };
   
     return (
-      <div style={{ maxWidth: 1200, margin: '0 auto', textAlign: 'center', padding: 16 }}>
-      <button onClick={handleClearExpansionConfig} style={{ float: 'right', marginBottom: 8, background: '#f44336', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', cursor: 'pointer' }}>
+      <div className="expansion-modules-container">
+      <button onClick={handleClearExpansionConfig} className="expansion-modules-clear-btn">
         Clear Config
       </button>
-      <h1 style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>Hosted Config Generator</h1>
-      <h2 style={{ fontSize: 22, fontWeight: 500, marginBottom: 24 }}>Expansion Module Code Generators</h2>
-      <div style={{ display: 'flex', gap: 40, justifyContent: 'center', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+      <h1 className="expansion-modules-title">Hosted Config Generator</h1>
+      <h2 className="expansion-modules-subtitle">Expansion Module Code Generators</h2>
+      <div className="expansion-modules-grid">
         {/* Yealink Expansion Module */}
-        <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
-          <img src="/images/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: 120, marginBottom: 8 }} title="Yealink EXP40 Sidecar: 20 keys per page, up to 3 pages" />
-          <img src="/images/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: 120, marginBottom: 8 }} title="Yealink EXP50 Sidecar: 20 keys per page, up to 3 pages" />
-          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+        <div className="expansion-module-card">
+          <img src="/images/yealinkexp40.jpeg" alt="Yealink EXP40" className="expansion-module-image" title="Yealink EXP40 Sidecar: 20 keys per page, up to 3 pages" />
+          <img src="/images/yealinkexp50.jpeg" alt="Yealink EXP50" className="expansion-module-image" title="Yealink EXP50 Sidecar: 20 keys per page, up to 3 pages" />
+          <div className="expansion-module-instructions">
             <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page & key toggles to preview each key visually. Enter any key to preview the full sidecar.
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <label>Template Type: </label>
-            <select value={yealinkTemplateType} onChange={e => setYealinkTemplateType(e.target.value as 'BLF' | 'SpeedDial')}>
+          <div className="expansion-module-form-container">
+            <label>Template Type: 
+            <select value={yealinkTemplateType} onChange={e => setYealinkTemplateType(e.target.value as 'BLF' | 'SpeedDial')} className="expansion-module-template-select" title="Template Type">
               <option value="BLF">BLF</option>
               <option value="SpeedDial">Speed Dial</option>
             </select>
-            <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 14 }}>
+            </label>
+            <table className="expansion-module-table">
               <thead>
-                <tr style={{ background: '#eaf4fc' }}>
+                <tr className="expansion-module-table-header">
                   <th>Slot</th>
                   <th>Label</th>
                   <th>Value/Ext</th>
@@ -191,47 +194,26 @@ const ExpansionModules: React.FC = () => {
                       const newSlots = [...yealinkSlots];
                       newSlots[idx].label = e.target.value;
                       setYealinkSlots(newSlots);
-                    }} style={{ width: 100 }} /></td>
+                    }} className="expansion-module-table-input" title="Label" placeholder="Enter label" /></td>
                     <td><input type="text" value={slot.value} onChange={e => {
                       const newSlots = [...yealinkSlots];
                       newSlots[idx].value = e.target.value;
                       setYealinkSlots(newSlots);
-                    }} style={{ width: 100 }} /></td>
+                    }} className="expansion-module-table-input" title="Value/Extension" placeholder="Enter value/ext" /></td>
                     <td><input type="text" value={slot.pbxIp} onChange={e => {
                       const newSlots = [...yealinkSlots];
                       newSlots[idx].pbxIp = e.target.value;
                       setYealinkSlots(newSlots);
-                    }} style={{ width: 100 }} /></td>
+                    }} className="expansion-module-table-input" title="PBX IP" placeholder="Enter PBX IP" /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           {/* Yealink Preview Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 8,
-            margin: '16px 0',
-            justifyItems: 'center',
-          }}>
+          <div className="expansion-module-preview-grid">
             {yealinkSlots.map((slot, idx) => (
-              <div key={idx} style={{
-                width: 70,
-                height: 38,
-                background: slot.label ? '#0078d4' : '#e0e0e0',
-                color: slot.label ? '#fff' : '#888',
-                borderRadius: 6,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 500,
-                fontSize: 14,
-                border: '1px solid #b0c4d4',
-                boxShadow: slot.label ? '0 2px 6px rgba(0,120,212,0.10)' : 'none',
-                transition: 'background 0.2s',
-                cursor: slot.label ? 'pointer' : 'default',
-              }} title={slot.label || `Slot ${idx + 1}`}>
+              <div key={idx} className={`expansion-module-preview-key ${slot.label ? 'active' : 'inactive'}`} title={slot.label || `Slot ${idx + 1}`}>
                 {slot.label || idx + 1}
               </div>
             ))}
@@ -247,27 +229,29 @@ const ExpansionModules: React.FC = () => {
             setYealinkOutput(lines.join('\n'));
             try {
               localStorage.setItem('expansionConfig', lines.join('\n'));
-            } catch {}
-          }} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
-          <div className="output" style={{ marginTop: 12 }}>
-            <textarea value={yealinkOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
-            <button onClick={sortYealinkOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
-            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-              <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handleYealinkFileUpload} /></label>
-              <button onClick={() => downloadTextFile('yealink_expansion_sorted.txt', yealinkOutput)} style={{ fontSize: 13 }}>Download</button>
+            } catch (error) {
+              console.warn('Failed to save to localStorage:', error);
+            }
+          }} className="expansion-module-generate-btn">Generate Yealink Expansion Config</button>
+          <div className="expansion-module-output">
+            <textarea value={yealinkOutput} readOnly rows={14} className="expansion-module-output-textarea" title="Yealink Configuration Output" />
+            <button onClick={sortYealinkOutputByLabel} className="expansion-module-sort-btn">Sort Output by Label (A-Z)</button>
+            <div className="expansion-module-file-actions">
+              <label className="expansion-module-file-label">Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handleYealinkFileUpload} /></label>
+              <button onClick={() => downloadTextFile('yealink_expansion_sorted.txt', yealinkOutput)} className="expansion-module-download-btn">Download</button>
             </div>
           </div>
         </div>
         {/* Polycom Expansion Module */}
-        <div style={{ flex: 1, minWidth: 350, background: '#f8fbff', borderRadius: 12, border: '1px solid #cce1fa', padding: 16 }}>
-          <img src="/images/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion" style={{ width: 120, marginBottom: 8 }} />
-          <div style={{ background: '#eaf4fc', border: '1px solid #cce1fa', borderRadius: 8, padding: 10, marginBottom: 12, fontSize: 14 }}>
+        <div className="expansion-module-card">
+          <img src="/images/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion" className="expansion-module-image" />
+          <div className="expansion-module-instructions">
             <b>Instructions:</b> Edit each slot below. Label, Address/Ext, and Type are editable for each key. Click "Generate" to update the config output.
           </div>
-          <div style={{ marginBottom: 12 }}>
-            <table style={{ width: '100%', marginTop: 8, borderCollapse: 'collapse', fontSize: 14 }}>
+          <div className="expansion-module-form-container">
+            <table className="expansion-module-table">
               <thead>
-                <tr style={{ background: '#eaf4fc' }}>
+                <tr className="expansion-module-table-header">
                   <th>Slot</th>
                   <th>Label</th>
                   <th>Address/Ext</th>
@@ -282,18 +266,18 @@ const ExpansionModules: React.FC = () => {
                       const newSlots = [...polycomSlots];
                       newSlots[idx].label = e.target.value;
                       setPolycomSlots(newSlots);
-                    }} style={{ width: 100 }} /></td>
+                    }} className="expansion-module-table-input" title="Label" placeholder="Enter label" /></td>
                     <td><input type="text" value={slot.address} onChange={e => {
                       const newSlots = [...polycomSlots];
                       newSlots[idx].address = e.target.value;
                       setPolycomSlots(newSlots);
-                    }} style={{ width: 100 }} /></td>
+                    }} className="expansion-module-table-input" title="Address/Extension" placeholder="Enter address/ext" /></td>
                     <td>
                       <select value={slot.type} onChange={e => {
                         const newSlots = [...polycomSlots];
                         newSlots[idx].type = e.target.value;
                         setPolycomSlots(newSlots);
-                      }}>
+                      }} className="expansion-module-table-select" title="Type">
                         <option value="automata">Automata</option>
                         <option value="normal">Normal</option>
                       </select>
@@ -304,30 +288,9 @@ const ExpansionModules: React.FC = () => {
             </table>
           </div>
           {/* Polycom Preview Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 8,
-            margin: '16px 0',
-            justifyItems: 'center',
-          }}>
+          <div className="expansion-module-preview-grid">
             {polycomSlots.map((slot, idx) => (
-              <div key={idx} style={{
-                width: 60,
-                height: 34,
-                background: slot.label ? '#2d7d46' : '#e0e0e0',
-                color: slot.label ? '#fff' : '#888',
-                borderRadius: 6,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 500,
-                fontSize: 13,
-                border: '1px solid #b0c4d4',
-                boxShadow: slot.label ? '0 2px 6px rgba(45,125,70,0.10)' : 'none',
-                transition: 'background 0.2s',
-                cursor: slot.label ? 'pointer' : 'default',
-              }} title={slot.label || `Slot ${idx + 1}`}>
+              <div key={idx} className={`expansion-module-preview-key expansion-module-preview-key-polycom ${slot.label ? 'active' : 'inactive'}`} title={slot.label || `Slot ${idx + 1}`}>
                 {slot.label || idx + 1}
               </div>
             ))}
@@ -341,14 +304,16 @@ const ExpansionModules: React.FC = () => {
             setPolycomOutput(lines.join('\n'));
             try {
               localStorage.setItem('expansionConfig', lines.join('\n'));
-            } catch {}
-          }} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
-          <div className="output" style={{ marginTop: 12 }}>
-            <textarea value={polycomOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
-            <button onClick={sortPolycomOutputByLabel} style={{ marginTop: 8 }}>Sort Output by Label (A-Z)</button>
-            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-              <label style={{ fontSize: 13, fontWeight: 500 }}>Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handlePolycomFileUpload} /></label>
-              <button onClick={() => downloadTextFile('polycom_expansion_sorted.txt', polycomOutput)} style={{ fontSize: 13 }}>Download</button>
+            } catch (error) {
+              console.warn('Failed to save to localStorage:', error);
+            }
+          }} className="expansion-module-generate-btn">Generate Polycom Expansion Config</button>
+          <div className="expansion-module-output">
+            <textarea value={polycomOutput} readOnly rows={14} className="expansion-module-output-textarea" title="Polycom Configuration Output" />
+            <button onClick={sortPolycomOutputByLabel} className="expansion-module-sort-btn">Sort Output by Label (A-Z)</button>
+            <div className="expansion-module-file-actions">
+              <label className="expansion-module-file-label">Upload & Sort File: <input type="file" accept=".txt,.cfg" onChange={handlePolycomFileUpload} /></label>
+              <button onClick={() => downloadTextFile('polycom_expansion_sorted.txt', polycomOutput)} className="expansion-module-download-btn">Download</button>
             </div>
           </div>
         </div>

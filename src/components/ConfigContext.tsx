@@ -1,11 +1,6 @@
 import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
-
-export interface GeneratedConfig {
-  model: string;
-  phoneType: 'Polycom' | 'Yealink';
-  config: string;
-}
+import type { GeneratedConfig } from '../types/config';
 
 interface ConfigContextType {
   generatedConfig: GeneratedConfig | null;
@@ -23,6 +18,7 @@ export const ConfigProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useConfigContext() {
   const ctx = useContext(ConfigContext);
   if (!ctx) throw new Error('useConfigContext must be used within ConfigProvider');

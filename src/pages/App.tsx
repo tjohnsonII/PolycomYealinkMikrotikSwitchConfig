@@ -27,7 +27,7 @@ import AdminPage from './AdminPage';
 import ATA from './ATA';
 import AsternicStats from './AsternicStats';
 import '../styles/123net-theme.css';
-import '../styles/App.css'; // eslint-disable-line
+import '../styles/App.css';
 
 
 
@@ -55,59 +55,20 @@ function AppContent() {
     <MainLayout>
       <BrandHeader />
       {isAdmin && <PendingUserNotification />}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '100vh', justifyContent: 'flex-start' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-          maxWidth: '1200px',
-          padding: '20px 20px 0 20px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+      <div className="app-container">
+        <div className="app-header">
+          <div className="app-header-logo">
             <Logo123Net size="compact" showText={false} />
           </div>
           <UserMenu />
         </div>
         
-        <nav
-          className="main-nav"
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 16,
-            margin: '32px 0 32px 0',
-            background: 'var(--bg-white)',
-            borderRadius: 12,
-            boxShadow: 'var(--shadow)',
-            padding: '24px 32px',
-            justifyContent: 'center',
-            width: 'fit-content',
-            flexWrap: 'wrap',
-            maxWidth: '95vw',
-            border: '1px solid var(--border-light)',
-          }}
-        >
+        <nav className="main-nav app-nav">
           {navigationItems.map(({ to, label, adminOnly }) => (
             <Link
               key={to}
               to={to}
               className={adminOnly ? 'nav-link admin-nav-link' : 'nav-link'}
-              style={{
-                textDecoration: 'none',
-                fontWeight: 500,
-                fontSize: 16,
-                padding: '12px 32px',
-                borderRadius: 6,
-                transition: 'background 0.2s, color 0.2s',
-                background: adminOnly ? 'var(--brand-secondary)' : 'var(--brand-primary)',
-                color: 'var(--text-white)',
-                margin: 0,
-                display: 'block',
-                width: 220,
-                textAlign: 'left',
-              }}
               onMouseOver={e => {
                 if (!adminOnly) {
                   e.currentTarget.style.background = '#106ebe';
@@ -129,14 +90,8 @@ function AppContent() {
             </Link>
           ))}
         </nav>
-        <div style={{ width: '100%', maxWidth: 1200, display: 'flex', justifyContent: 'center' }}>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            width: '100%',
-            marginTop: 24,
-          }}>
+        <div className="app-content">
+          <div className="app-content-wrapper">
             <Routes>
               <Route path="/" element={<Navigate to="/phone" replace />} />
               <Route path="/phone" element={<PhoneConfig />} />

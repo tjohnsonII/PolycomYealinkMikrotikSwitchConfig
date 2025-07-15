@@ -78,235 +78,144 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegister }) => {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-accent) 100%)', // 123.net blue gradient
-      padding: '20px'
-    }}>
+    <div className="login-container">
       {/* 123.net branding header */}
-      <div style={{
-        position: 'absolute',
-        top: '40px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        textAlign: 'center',
-        color: 'white'
-      }}>
+      <div className="login-brand-header">
         <Logo123Net size="large" showText={true} variant="white" />
-        <div style={{
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: '600',
-          marginTop: '8px'
-        }}>
+        <div className="login-brand-title">
           Polycom/Yealink Configuration Manager
         </div>
-        <div style={{
-          color: 'rgba(255,255,255,0.9)',
-          fontSize: '14px'
-        }}>
+        <div className="login-brand-subtitle">
           THE INTERNET YOU CAN COUNT ON
         </div>
       </div>
 
       {/* Main login/register card */}
-      <div style={{
-        background: 'var(--bg-white)',
-        borderRadius: '12px',
-        padding: '40px',
-        boxShadow: 'var(--shadow-lg)',
-        width: '100%',
-        maxWidth: '400px',
-        border: '1px solid var(--border-light)'
-      }}>
+      <div className="login-card">
         {/* Header */}
-        <h2 style={{
-          textAlign: 'center',
-          marginBottom: '30px',
-          color: 'var(--text-primary)',
-          fontSize: '28px',
-          fontWeight: '600'
-        }}>
+        <h2 className="login-title">
           {isRegister ? 'Create Account' : 'Welcome Back'}
         </h2>
 
         {/* Error message display */}
         {error && (
-          <div className="alert alert-danger" style={{
-            marginBottom: '20px',
-            textAlign: 'center'
-          }}>
+          <div className="alert alert-danger login-error" role="alert" aria-live="polite">
             {error}
           </div>
         )}
 
         {/* Success message display */}
         {success && (
-          <div className="alert alert-success" style={{
-            marginBottom: '20px',
-            textAlign: 'center',
-            background: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '8px',
-            padding: '12px',
-            color: '#155724'
-          }}>
+          <div className="alert alert-success login-success" role="alert" aria-live="polite">
             {success}
           </div>
         )}
 
         {/* Login/Registration form */}
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {/* Username field */}
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              color: 'var(--text-primary)',
-              fontWeight: '500'
-            }}>
+          <div className="login-form-group">
+            <label htmlFor="username" className="login-form-label">
               Username
             </label>
             <input
+              id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid var(--border-medium)',
-                borderRadius: '6px',
-                fontSize: '16px',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box',
-                background: 'var(--bg-white)',
-                color: 'var(--text-primary)'
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
+              className="login-form-input"
+              aria-required="true"
+              aria-describedby="username-desc"
+              autoComplete="username"
               required
             />
+            <span id="username-desc" className="sr-only">
+              Enter your username to {isRegister ? 'create an account' : 'sign in'}
+            </span>
           </div>
 
           {/* Email field (only shown in registration mode) */}
           {isRegister && (
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                color: 'var(--text-primary)',
-                fontWeight: '500'
-              }}>
+            <div className="login-form-group">
+              <label htmlFor="email" className="login-form-label">
                 Email
               </label>
               <input
+                id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '2px solid var(--border-medium)',
-                  borderRadius: '6px',
-                  fontSize: '16px',
-                  transition: 'border-color 0.2s',
-                  boxSizing: 'border-box',
-                  background: 'var(--bg-white)',
-                  color: 'var(--text-primary)'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
+                className="login-form-input"
+                aria-required="true"
+                aria-describedby="email-desc"
+                autoComplete="email"
                 required
               />
+              <span id="email-desc" className="sr-only">
+                Enter your email address for account creation
+              </span>
             </div>
           )}
 
           {/* Password field */}
-          <div style={{ marginBottom: '25px' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '8px',
-              color: 'var(--text-primary)',
-              fontWeight: '500'
-            }}>
+          <div className="login-form-group">
+            <label htmlFor="password" className="login-form-label">
               Password
             </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '2px solid var(--border-medium)',
-                borderRadius: '6px',
-                fontSize: '16px',
-                transition: 'border-color 0.2s',
-                boxSizing: 'border-box',
-                background: 'var(--bg-white)',
-                color: 'var(--text-primary)'
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--brand-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--border-medium)'}
-              required
-            />
+            {isRegister ? (
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-form-input"
+                aria-required="true"
+                aria-describedby="password-desc"
+                autoComplete="new-password"
+                required
+              />
+            ) : (
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="login-form-input"
+                aria-required="true"
+                aria-describedby="password-desc"
+                autoComplete="current-password"
+                required
+              />
+            )}
+            <span id="password-desc" className="sr-only">
+              Enter your password
+            </span>
           </div>
 
           {/* Submit button */}
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary"
-            style={{
-              width: '100%',
-              padding: '14px',
-              background: loading ? 'var(--brand-gray-400)' : 'var(--brand-primary)',
-              color: 'var(--text-white)',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '16px',
-              fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'background-color 0.2s',
-              marginBottom: '20px'
-            }}
-            onMouseOver={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = '#106ebe';
-            }}
-            onMouseOut={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = 'var(--brand-primary)';
-            }}
+            className="login-submit-button"
+            aria-label={loading ? 'Please wait...' : (isRegister ? 'Create Account' : 'Sign In')}
           >
             {loading ? 'Please wait...' : (isRegister ? 'Create Account' : 'Sign In')}
           </button>
         </form>
 
         {/* Toggle between login and registration */}
-        <div style={{ textAlign: 'center' }}>
-          <span style={{ color: 'var(--text-secondary)' }}>
+        <div className="login-toggle-section">
+          <span className="login-toggle-text">
             {isRegister ? 'Already have an account?' : "Don't have an account?"}
           </span>
           <button
             onClick={onToggleMode}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--brand-primary)',
-              cursor: 'pointer',
-              textDecoration: 'underline',
-              marginLeft: '8px',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
+            className="login-toggle-button"
+            aria-label={isRegister ? 'Switch to sign in' : 'Switch to create account'}
           >
             {isRegister ? 'Sign In' : 'Create Account'}
           </button>
         </div>
-
-
       </div>
     </div>
   );

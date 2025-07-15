@@ -1,3 +1,5 @@
+/* Import utility classes to replace inline styles */
+@import './inline-styles-fix.css';
 
 /* Modern, clean styles for the app using 123.net theme */
 

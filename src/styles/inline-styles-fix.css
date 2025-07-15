@@ -2017,3 +2017,174 @@
 .ata-clean-download-button:hover {
   background-color: var(--brand-primary-hover);
 }
+
+/* ATA Clean Page Notice Section */
+.ata-clean-notice {
+  background: #fff3cd;
+  border: 2px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+  color: #856404;
+}
+
+.ata-clean-notice h3 {
+  margin: 0 0 12px 0;
+  color: #856404;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.ata-clean-notice p {
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+.ata-clean-notice ul {
+  margin: 0 0 12px 0;
+  padding-left: 24px;
+}
+
+.ata-clean-notice li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+
+/* Generate Button Container */
+.ata-clean-generate-button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.ata-clean-generate-button {
+  padding: 14px 32px;
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(var(--brand-primary-rgb), 0.3);
+}
+
+.ata-clean-generate-button:hover {
+  background: linear-gradient(135deg, var(--brand-primary-hover), var(--brand-secondary));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(var(--brand-primary-rgb), 0.4);
+}
+
+.ata-clean-generate-button:active {
+  transform: translateY(0);
+}
+
+/* Output Container */
+.ata-clean-output-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.ata-clean-output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.ata-clean-output-title {
+  margin: 0;
+  color: var(--brand-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.ata-clean-output-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.ata-clean-copy-button {
+  padding: 8px 16px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ata-clean-copy-button:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.ata-clean-copy-button:active {
+  transform: translateY(0);
+}
+
+/* Device Info Notice */
+.ata-clean-device-info {
+  background: #e8f4fd;
+  border: 2px solid #bee5eb;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  color: #0c5460;
+}
+
+.ata-clean-device-info p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.ata-clean-device-info p:last-child {
+  margin-bottom: 0;
+}
+
+/* Fax Not Supported Warning */
+.ata-clean-fax-warning {
+  background: #fff3cd;
+  border: 2px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 20px;
+  color: #856404;
+}
+
+.ata-clean-fax-warning p {
+  margin: 0 0 8px 0;
+  line-height: 1.5;
+}
+
+.ata-clean-fax-warning p:last-child {
+  margin-bottom: 0;
+}
+
+/* Download Button */
+.ata-clean-download-button {
+  background: #007bff;
+  margin-left: 8px;
+}
+
+.ata-clean-download-button:hover {
+  background: #0056b3;
+}
+
+/* Reset Button */
+.ata-clean-reset-button {
+  background: #dc3545;
+  margin-left: 8px;
+}
+
+.ata-clean-reset-button:hover {
+  background: #c82333;
+}
