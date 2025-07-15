@@ -7,33 +7,18 @@
 import React from 'react';
 import Logo123Net from './Logo123Net';
 import '../styles/123net-theme.css';
+import '../styles/inline-styles-fix.css';
 
 const BrandHeader: React.FC = () => {
   return (
-    <div 
-      style={{
-        background: 'linear-gradient(135deg, var(--brand-primary) 0%, #0077bb 100%)',
-        color: 'var(--text-white)',
-        padding: '1rem 2rem',
-        textAlign: 'center',
-        boxShadow: 'var(--shadow)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
+    <div className="brand-header-container">
+      <div className="brand-header-content">
         <Logo123Net size="medium" showText={true} />
-        <div style={{ textAlign: 'left' }}>
-          <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text-white)' }}>
+        <div className="brand-header-text">
+          <h1 className="brand-header-title">
             Polycom/Yealink Configuration Manager
           </h1>
-          <p 
-            className="brand-tagline"
-            style={{ 
-              margin: 0, 
-              fontSize: '0.875rem', 
-              color: 'rgba(255, 255, 255, 0.8)',
-              fontWeight: '400'
-            }}
-          >
+          <p className="brand-header-tagline">
             THE INTERNET YOU CAN COUNT ON
           </p>
         </div>

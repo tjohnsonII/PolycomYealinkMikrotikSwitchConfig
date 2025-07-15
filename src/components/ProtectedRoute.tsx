@@ -15,6 +15,7 @@
 import React from 'react';
 import { useAuth } from './AuthContext';
 import Login from '../pages/Login';
+import '../styles/inline-styles-fix.css';
 
 // Props interface for ProtectedRoute component
 interface ProtectedRouteProps {
@@ -38,14 +39,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   // Show loading spinner while checking authentication
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        fontSize: '18px',
-        color: '#666'
-      }}>
+      <div className="protected-route-loading">
         Loading...
       </div>
     );
@@ -64,15 +58,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
   // Show access denied if admin is required but user is not admin
   if (requireAdmin && !isAdmin) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        flexDirection: 'column',
-        color: '#666'
-      }}>
-        <h2 style={{ color: '#dc3545', marginBottom: '20px' }}>Access Denied</h2>
+      <div className="protected-route-access-denied">
+        <h2 className="protected-route-access-denied-title">Access Denied</h2>
         <p>You need admin privileges to access this page.</p>
       </div>
     );

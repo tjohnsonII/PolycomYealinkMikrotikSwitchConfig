@@ -68,82 +68,171 @@ const ExpansionModuleTab: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+    <div className="expansion-module-container">
       {/* Yealink Expansion Module Preview and Form */}
-      <div style={{ flex: 1, minWidth: 320 }}>
-        <h3>Yealink Expansion Module</h3>
+      <div className="expansion-module-section">
+        <h3 className="expansion-module-title">Yealink Expansion Module</h3>
         {/* Device images for user reference */}
-        <img src="/images/expansion/yealinkexp40.jpeg" alt="Yealink EXP40" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
-        <img src="/images/expansion/yealinkexp50.jpeg" alt="Yealink EXP50" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        <img src="/images/expansion/yealinkexp40.jpeg" alt="Yealink EXP40 expansion module" className="expansion-module-image" />
+        <img src="/images/expansion/yealinkexp50.jpeg" alt="Yealink EXP50 expansion module" className="expansion-module-image" />
         {/* Instructions for users */}
-        <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
+        <div className="expansion-module-instructions">
           <b>Instructions:</b> Fill out the form below to generate a config for a Yealink expansion key. Use the page toggles to preview each page. Hover over any key in the preview for details.
         </div>
         {/* Yealink config form */}
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Template Type:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="BLF: Busy Lamp Field (monitors extension/park status). SpeedDial: Quick dial to a number or extension.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="yealink-template-type" className="expansion-module-label">
+            Template Type:
+            <span className="expansion-module-info-icon" title="BLF: Busy Lamp Field (monitors extension/park status). SpeedDial: Quick dial to a number or extension.">ℹ️</span>
           </label>
-          <select value={yealinkSection.templateType} onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}>
+          <select 
+            id="yealink-template-type"
+            className="expansion-module-select"
+            value={yealinkSection.templateType} 
+            onChange={e => setYealinkSection(s => ({ ...s, templateType: e.target.value }))}
+            aria-describedby="yealink-template-type-desc"
+          >
             <option value="BLF">BLF</option>
             <option value="SpeedDial">SpeedDial</option>
           </select>
+          <span id="yealink-template-type-desc" className="sr-only">
+            Choose between BLF for monitoring extension status or SpeedDial for quick dialing
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Sidecar Page (1-3):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="Select which page of the expansion module to configure (1-3).">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="yealink-sidecar-page" className="expansion-module-label">
+            Sidecar Page (1-3):
+            <span className="expansion-module-info-icon" title="Select which page of the expansion module to configure (1-3).">ℹ️</span>
           </label>
-          <input type="number" min="1" max="3" value={yealinkSection.sidecarPage} onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))} />
+          <input 
+            id="yealink-sidecar-page"
+            type="number" 
+            min="1" 
+            max="3" 
+            className="expansion-module-input"
+            value={yealinkSection.sidecarPage} 
+            onChange={e => setYealinkSection(s => ({ ...s, sidecarPage: e.target.value }))}
+            aria-describedby="yealink-sidecar-page-desc"
+          />
+          <span id="yealink-sidecar-page-desc" className="sr-only">
+            Select page 1, 2, or 3 of the expansion module
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Sidecar Line (1-20):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="Select which button (1-20) on the current page to configure.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="yealink-sidecar-line" className="expansion-module-label">
+            Sidecar Line (1-20):
+            <span className="expansion-module-info-icon" title="Select which button (1-20) on the current page to configure.">ℹ️</span>
           </label>
-          <input type="number" min="1" max="20" value={yealinkSection.sidecarLine} onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))} />
+          <input 
+            id="yealink-sidecar-line"
+            type="number" 
+            min="1" 
+            max="20" 
+            className="expansion-module-input"
+            value={yealinkSection.sidecarLine} 
+            onChange={e => setYealinkSection(s => ({ ...s, sidecarLine: e.target.value }))}
+            aria-describedby="yealink-sidecar-line-desc"
+          />
+          <span id="yealink-sidecar-line-desc" className="sr-only">
+            Select button number 1 through 20 on the current page
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Label:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The text label that will appear on the phone's display for this key.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="yealink-label" className="expansion-module-label">
+            Label:
+            <span className="expansion-module-info-icon" title="The text label that will appear on the phone's display for this key.">ℹ️</span>
           </label>
-          <input type="text" value={yealinkSection.label} onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))} />
+          <input 
+            id="yealink-label"
+            type="text" 
+            className="expansion-module-input"
+            value={yealinkSection.label} 
+            onChange={e => setYealinkSection(s => ({ ...s, label: e.target.value }))}
+            placeholder="Enter display label"
+            aria-describedby="yealink-label-desc"
+          />
+          <span id="yealink-label-desc" className="sr-only">
+            Enter the text that will appear on the phone display for this key
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Value (Phone/Ext):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The extension or number this key will dial or monitor.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="yealink-value" className="expansion-module-label">
+            Value (Phone/Ext):
+            <span className="expansion-module-info-icon" title="The extension or number this key will dial or monitor.">ℹ️</span>
           </label>
-          <input type="text" value={yealinkSection.value} onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))} />
+          <input 
+            id="yealink-value"
+            type="text" 
+            className="expansion-module-input"
+            value={yealinkSection.value} 
+            onChange={e => setYealinkSection(s => ({ ...s, value: e.target.value }))}
+            placeholder="Enter extension or phone number"
+            aria-describedby="yealink-value-desc"
+          />
+          <span id="yealink-value-desc" className="sr-only">
+            Enter the extension or phone number this key will dial or monitor
+          </span>
         </div>
         {/* PBX IP only shown for BLF type */}
         {yealinkSection.templateType === 'BLF' && (
-          <div className="form-group" style={{ marginBottom: 16 }}>
-            <label>PBX IP:
-              <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The PBX IP address for BLF monitoring.">ℹ️</span>
+          <div className="expansion-module-form-group">
+            <label htmlFor="yealink-pbx-ip" className="expansion-module-label">
+              PBX IP:
+              <span className="expansion-module-info-icon" title="The PBX IP address for BLF monitoring.">ℹ️</span>
             </label>
-            <input type="text" value={yealinkSection.pbxIp} onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))} />
+            <input 
+              id="yealink-pbx-ip"
+              type="text" 
+              className="expansion-module-input"
+              value={yealinkSection.pbxIp} 
+              onChange={e => setYealinkSection(s => ({ ...s, pbxIp: e.target.value }))}
+              placeholder="Enter PBX IP address"
+              aria-describedby="yealink-pbx-ip-desc"
+            />
+            <span id="yealink-pbx-ip-desc" className="sr-only">
+              Enter the PBX IP address for BLF monitoring
+            </span>
           </div>
         )}
         {/* Generate config button */}
-        <button onClick={generateYealinkExpansion} style={{ marginBottom: 16 }}>Generate Yealink Expansion Config</button>
+        <button 
+          onClick={generateYealinkExpansion} 
+          className="expansion-module-generate-button"
+          aria-label="Generate Yealink expansion module configuration"
+        >
+          Generate Yealink Expansion Config
+        </button>
         {/* Output area for generated config */}
-        <div className="output" style={{ marginBottom: 16 }}>
-          <textarea value={yealinkOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
+        <div className="expansion-module-output">
+          <label htmlFor="yealink-output" className="expansion-module-label">Generated Configuration:</label>
+          <textarea 
+            id="yealink-output"
+            className="expansion-module-textarea"
+            value={yealinkOutput} 
+            readOnly 
+            rows={6}
+            aria-label="Generated Yealink configuration output"
+          />
         </div>
         {/* Graphical preview of Yealink expansion module keys */}
-        <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-          <div style={{ marginBottom: 8 }}>
+        <div className="expansion-module-preview">
+          <div className="expansion-module-preview-header">
             <b>Preview:</b> Page
             {/* Page toggle buttons */}
             {[1,2,3].map(page => (
               <button
                 key={page}
                 type="button"
-                style={{ margin: '0 4px', background: yealinkSection.sidecarPage === String(page) ? '#0078d4' : '#eee', color: yealinkSection.sidecarPage === String(page) ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}
+                className={`expansion-module-page-button ${yealinkSection.sidecarPage === String(page) ? 'active' : ''}`}
                 onClick={() => setYealinkSection(s => ({ ...s, sidecarPage: String(page) }))}
-              >{page}</button>
+                aria-label={`Switch to page ${page}`}
+              >
+                {page}
+              </button>
             ))}
           </div>
           {/* 2x10 grid for each page */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
+          <div className="expansion-module-grid">
             {Array.from({ length: 20 }).map((_, idx) => {
               // Highlight the currently selected key
               const isCurrent = parseInt(yealinkSection.sidecarLine) === idx + 1 && yealinkSection.sidecarPage === String(Math.ceil((idx + 1) / 20) || '1');
@@ -152,93 +241,178 @@ const ExpansionModuleTab: React.FC = () => {
               const type = isCurrent ? yealinkSection.templateType : '';
               const icon = EXP_TYPE_ICONS[type || 'default'];
               const tooltip = label ? `Line: ${yealinkSection.sidecarLine}\nType: ${type}\nLabel: ${label}\nValue: ${value}` : 'Empty';
+              
+              const keyClasses = [
+                'expansion-module-key',
+                type === 'BLF' ? 'expansion-module-key-blf' : '',
+                type === 'SpeedDial' ? 'expansion-module-key-speeddial' : ''
+              ].filter(Boolean).join(' ');
+              
               return (
                 <div
                   key={idx}
-                  style={{
-                    padding: 5,
-                    background: type === 'BLF' ? '#d6f5d6' : type === 'SpeedDial' ? '#d6e6f5' : '#e0f0ff',
-                    border: '1px solid #aaa',
-                    textAlign: 'center',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    minHeight: 38,
-                    position: 'relative',
-                  }}
+                  className={keyClasses}
                   title={tooltip}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={tooltip}
                 >
-                  <span style={{ fontSize: 18 }} title={EXP_TYPE_TOOLTIPS[type || 'default']}>{icon}</span>
-                  <div>{label || <span style={{ color: '#bbb' }}>Empty</span>}</div>
-                  <div style={{ fontSize: 10, color: '#888' }}>{value}</div>
+                  <span className="expansion-module-key-icon" title={EXP_TYPE_TOOLTIPS[type || 'default']}>
+                    {icon}
+                  </span>
+                  <div className="expansion-module-key-label">
+                    {label || <span className="expansion-module-key-empty">Empty</span>}
+                  </div>
+                  <div className="expansion-module-key-value">{value}</div>
                 </div>
               );
             })}
           </div>
         </div>
       </div>
+      
       {/* Polycom Expansion Module Preview and Form */}
-      <div style={{ flex: 1, minWidth: 320 }}>
-        <h3>Polycom VVX Color Expansion Module</h3>
+      <div className="expansion-module-section">
+        <h3 className="expansion-module-title">Polycom VVX Color Expansion Module</h3>
         {/* Device image for user reference */}
-        <img src="/images/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" style={{ width: '100%', maxWidth: 260, marginBottom: 8, borderRadius: 8, border: '1px solid #ccc' }} />
+        <img src="/images/expansion/polycomVVX_Color_Exp_Module_2201.jpeg" alt="Polycom VVX Color Expansion Module" className="expansion-module-image" />
         {/* Instructions for users */}
-        <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 12, margin: '16px 0' }}>
+        <div className="expansion-module-instructions">
           <b>Instructions:</b> Fill out the form below to generate a config for a Polycom expansion key. The preview grid below shows the button layout for each page (1–3). Hover over any key for details. <br />
           <b>Linekey Index:</b> The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.
         </div>
         {/* Polycom config form */}
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Linekey Index (1-84):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="polycom-linekey-index" className="expansion-module-label">
+            Linekey Index (1-84):
+            <span className="expansion-module-info-icon" title="The key position to configure (1–84). Keys 1–28 appear on Page 1, 29–56 on Page 2, and 57–84 on Page 3. Use the buttons on the bottom of the module to switch pages during use.">ℹ️</span>
           </label>
-          <input type="number" min="1" max="84" value={polycomSection.linekeyIndex} onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))} />
+          <input 
+            id="polycom-linekey-index"
+            type="number" 
+            min="1" 
+            max="84" 
+            className="expansion-module-input"
+            value={polycomSection.linekeyIndex} 
+            onChange={e => setPolycomSection(s => ({ ...s, linekeyIndex: e.target.value }))}
+            placeholder="Enter key position (1-84)"
+            aria-describedby="polycom-linekey-index-desc"
+          />
+          <span id="polycom-linekey-index-desc" className="sr-only">
+            Enter the key position from 1 to 84
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Address (e.g. 1001@ip):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The SIP address or extension for this key.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="polycom-address" className="expansion-module-label">
+            Address (e.g. 1001@ip):
+            <span className="expansion-module-info-icon" title="The SIP address or extension for this key.">ℹ️</span>
           </label>
-          <input type="text" value={polycomSection.address} onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))} />
+          <input 
+            id="polycom-address"
+            type="text" 
+            className="expansion-module-input"
+            value={polycomSection.address} 
+            onChange={e => setPolycomSection(s => ({ ...s, address: e.target.value }))}
+            placeholder="Enter SIP address (e.g. 1001@192.168.1.100)"
+            aria-describedby="polycom-address-desc"
+          />
+          <span id="polycom-address-desc" className="sr-only">
+            Enter the SIP address or extension for this key
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Label:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The text label that will appear on the phone's display for this key.">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="polycom-label" className="expansion-module-label">
+            Label:
+            <span className="expansion-module-info-icon" title="The text label that will appear on the phone's display for this key.">ℹ️</span>
           </label>
-          <input type="text" value={polycomSection.label} onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))} />
+          <input 
+            id="polycom-label"
+            type="text" 
+            className="expansion-module-input"
+            value={polycomSection.label} 
+            onChange={e => setPolycomSection(s => ({ ...s, label: e.target.value }))}
+            placeholder="Enter display label"
+            aria-describedby="polycom-label-desc"
+          />
+          <span id="polycom-label-desc" className="sr-only">
+            Enter the text that will appear on the phone display for this key
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Type:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The function type for this key (e.g., automata for BLF, normal for speed dial).">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="polycom-type" className="expansion-module-label">
+            Type:
+            <span className="expansion-module-info-icon" title="The function type for this key (e.g., automata for BLF, normal for speed dial).">ℹ️</span>
           </label>
-          <input type="text" value={polycomSection.type} onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))} />
+          <input 
+            id="polycom-type"
+            type="text" 
+            className="expansion-module-input"
+            value={polycomSection.type} 
+            onChange={e => setPolycomSection(s => ({ ...s, type: e.target.value }))}
+            placeholder="Enter type (e.g., automata, normal)"
+            aria-describedby="polycom-type-desc"
+          />
+          <span id="polycom-type-desc" className="sr-only">
+            Enter the function type for this key
+          </span>
         </div>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label>Linekey Category:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="The key category (BLF, EFK, etc.).">ℹ️</span>
+        <div className="expansion-module-form-group">
+          <label htmlFor="polycom-linekey-category" className="expansion-module-label">
+            Linekey Category:
+            <span className="expansion-module-info-icon" title="The key category (BLF, EFK, etc.).">ℹ️</span>
           </label>
-          <input type="text" value={polycomSection.linekeyCategory} onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))} />
+          <input 
+            id="polycom-linekey-category"
+            type="text" 
+            className="expansion-module-input"
+            value={polycomSection.linekeyCategory} 
+            onChange={e => setPolycomSection(s => ({ ...s, linekeyCategory: e.target.value }))}
+            placeholder="Enter category (e.g., BLF, EFK)"
+            aria-describedby="polycom-linekey-category-desc"
+          />
+          <span id="polycom-linekey-category-desc" className="sr-only">
+            Enter the key category
+          </span>
         </div>
         {/* Generate config button */}
-        <button onClick={generatePolycomExpansion} style={{ marginBottom: 16 }}>Generate Polycom Expansion Config</button>
+        <button 
+          onClick={generatePolycomExpansion} 
+          className="expansion-module-generate-button"
+          aria-label="Generate Polycom expansion module configuration"
+        >
+          Generate Polycom Expansion Config
+        </button>
         {/* Output area for generated config */}
-        <div className="output" style={{ marginBottom: 16 }}>
-          <textarea value={polycomOutput} readOnly rows={6} style={{ width: '100%', marginTop: 8 }} />
+        <div className="expansion-module-output">
+          <label htmlFor="polycom-output" className="expansion-module-label">Generated Configuration:</label>
+          <textarea 
+            id="polycom-output"
+            className="expansion-module-textarea"
+            value={polycomOutput} 
+            readOnly 
+            rows={6}
+            aria-label="Generated Polycom configuration output"
+          />
         </div>
         {/* Graphical preview of Polycom expansion module keys */}
-        <div style={{ background: '#f8fbff', border: '1px solid #b5d6f7', borderRadius: 8, padding: 12, marginBottom: 16 }}>
-          <div style={{ marginBottom: 8 }}>
+        <div className="expansion-module-preview">
+          <div className="expansion-module-preview-header">
             <b>Preview:</b>
             {/* Page toggle buttons for Polycom preview */}
             {POLYCOM_PAGE_LABELS.map((label, i) => (
               <button
                 key={label}
                 type="button"
-                style={{ margin: '0 4px', background: polycomSection.activePage === i ? '#0078d4' : '#eee', color: polycomSection.activePage === i ? '#fff' : '#333', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}
+                className={`expansion-module-page-button ${polycomSection.activePage === i ? 'active' : ''}`}
                 onClick={() => setPolycomSection(s => ({ ...s, activePage: i }))}
-              >{label}</button>
+                aria-label={`Switch to ${label}`}
+              >
+                {label}
+              </button>
             ))}
           </div>
           {/* 2x14 grid for each Polycom page (28 keys per page) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 120px)', gap: 5 }}>
+          <div className="expansion-module-grid">
             {Array.from({ length: POLYCOM_KEYS_PER_PAGE }).map((_, idx) => {
               // Calculate global key index for Polycom expansion
               const globalIdx = polycomSection.activePage * POLYCOM_KEYS_PER_PAGE + idx + 1;
@@ -249,24 +423,29 @@ const ExpansionModuleTab: React.FC = () => {
               const type = isCurrent ? polycomSection.type : '';
               const icon = EXP_TYPE_ICONS[type === 'automata' ? 'BLF' : type === 'normal' ? 'SpeedDial' : 'default'];
               const tooltip = label ? `Index: ${globalIdx}\nType: ${type}\nLabel: ${label}\nValue: ${value}` : 'Empty';
+              
+              const keyClasses = [
+                'expansion-module-key',
+                type === 'automata' ? 'expansion-module-key-blf' : '',
+                type === 'normal' ? 'expansion-module-key-speeddial' : ''
+              ].filter(Boolean).join(' ');
+              
               return (
                 <div
                   key={idx}
-                  style={{
-                    padding: 5,
-                    background: type === 'automata' ? '#d6f5d6' : type === 'normal' ? '#d6e6f5' : '#e0f0ff',
-                    border: '1px solid #aaa',
-                    textAlign: 'center',
-                    borderRadius: 6,
-                    fontSize: 12,
-                    minHeight: 38,
-                    position: 'relative',
-                  }}
+                  className={keyClasses}
                   title={tooltip}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={tooltip}
                 >
-                  <span style={{ fontSize: 18 }} title={EXP_TYPE_TOOLTIPS[type === 'automata' ? 'BLF' : type === 'normal' ? 'SpeedDial' : 'default']}>{icon}</span>
-                  <div>{label || <span style={{ color: '#bbb' }}>Empty</span>}</div>
-                  <div style={{ fontSize: 10, color: '#888' }}>{value}</div>
+                  <span className="expansion-module-key-icon" title={EXP_TYPE_TOOLTIPS[type === 'automata' ? 'BLF' : type === 'normal' ? 'SpeedDial' : 'default']}>
+                    {icon}
+                  </span>
+                  <div className="expansion-module-key-label">
+                    {label || <span className="expansion-module-key-empty">Empty</span>}
+                  </div>
+                  <div className="expansion-module-key-value">{value}</div>
                 </div>
               );
             })}

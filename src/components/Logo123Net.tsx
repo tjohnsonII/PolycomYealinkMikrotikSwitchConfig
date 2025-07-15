@@ -1,4 +1,5 @@
 import React from 'react';
+import '../styles/inline-styles-fix.css';
 
 interface Logo123NetProps {
   size?: 'small' | 'medium' | 'large' | 'compact';
@@ -42,115 +43,62 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
 
   const colorScheme = colors[variant];
 
+  // Create CSS custom properties for dynamic styling
+  const cssVars = {
+    '--logo-block-size': `${blockSize}px`,
+    '--logo-block-font-size': `${fontSize * 0.75}px`,
+    '--logo-text-font-size': `${fontSize}px`,
+    '--logo-red-bg': colorScheme.red,
+    '--logo-red-text': variant === 'white' ? '#e53e3e' : 'white',
+    '--logo-red-border': variant === 'white' ? '2px solid #e53e3e' : 'none',
+    '--logo-green-bg': colorScheme.green,
+    '--logo-green-text': variant === 'white' ? '#38a169' : 'white',
+    '--logo-green-border': variant === 'white' ? '2px solid #38a169' : 'none',
+    '--logo-blue-bg': colorScheme.blue,
+    '--logo-blue-text': variant === 'white' ? '#3182ce' : 'white',
+    '--logo-blue-border': variant === 'white' ? '2px solid #3182ce' : 'none',
+    '--logo-text-color': colorScheme.text,
+  } as React.CSSProperties;
+
   return (
+    // eslint-disable-next-line
     <div 
       className={`logo-123net ${className}`}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '8px',
+        ...cssVars,
         ...style
       }}
     >
       {/* 123 Blocks */}
-      <div style={{ display: 'flex', gap: '2px' }}>
+      <div className="logo-123net-blocks">
         {/* Red "1" Block */}
-        <div style={{
-          width: blockSize,
-          height: blockSize,
-          backgroundColor: colorScheme.red,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '4px',
-          color: variant === 'white' ? '#e53e3e' : 'white',
-          fontSize: fontSize * 0.75,
-          fontWeight: 'bold',
-          fontFamily: 'Arial, sans-serif',
-          border: variant === 'white' ? '2px solid #e53e3e' : 'none'
-        }}>
+        <div className="logo-123net-block logo-123net-block-1">
           1
         </div>
         
         {/* Green "2" Block */}
-        <div style={{
-          width: blockSize,
-          height: blockSize,
-          backgroundColor: colorScheme.green,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '4px',
-          color: variant === 'white' ? '#38a169' : 'white',
-          fontSize: fontSize * 0.75,
-          fontWeight: 'bold',
-          fontFamily: 'Arial, sans-serif',
-          border: variant === 'white' ? '2px solid #38a169' : 'none'
-        }}>
+        <div className="logo-123net-block logo-123net-block-2">
           2
         </div>
         
         {/* Blue "3" Block */}
-        <div style={{
-          width: blockSize,
-          height: blockSize,
-          backgroundColor: colorScheme.blue,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '4px',
-          color: variant === 'white' ? '#3182ce' : 'white',
-          fontSize: fontSize * 0.75,
-          fontWeight: 'bold',
-          fontFamily: 'Arial, sans-serif',
-          border: variant === 'white' ? '2px solid #3182ce' : 'none'
-        }}>
+        <div className="logo-123net-block logo-123net-block-3">
           3
         </div>
       </div>
 
       {/* NET Text and Connection Icon */}
       {showText && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <span style={{
-            fontSize: fontSize,
-            fontWeight: 'bold',
-            color: colorScheme.text,
-            fontFamily: 'Arial, sans-serif'
-          }}>
+        <div className="logo-123net-text-container">
+          <span className="logo-123net-text">
             NET
           </span>
           
           {/* Connection Icon */}
-          <div style={{ position: 'relative', width: '24px', height: '20px' }}>
-            <div style={{
-              position: 'absolute',
-              top: '8px',
-              left: '2px',
-              width: '6px',
-              height: '6px',
-              backgroundColor: colorScheme.text,
-              borderRadius: '50%'
-            }} />
-            <div style={{
-              position: 'absolute',
-              top: '2px',
-              right: '2px',
-              width: '6px',
-              height: '6px',
-              backgroundColor: colorScheme.text,
-              borderRadius: '50%'
-            }} />
-            <div style={{
-              position: 'absolute',
-              top: '6px',
-              left: '8px',
-              width: '12px',
-              height: '2px',
-              backgroundColor: colorScheme.text,
-              transform: 'rotate(-25deg)',
-              transformOrigin: 'left center'
-            }} />
+          <div className="logo-123net-connection-icon">
+            <div className="logo-123net-connection-dot-left" />
+            <div className="logo-123net-connection-dot-right" />
+            <div className="logo-123net-connection-line" />
           </div>
         </div>
       )}

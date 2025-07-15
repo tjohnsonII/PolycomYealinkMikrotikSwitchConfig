@@ -3,6 +3,7 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { getWsUrl } from '../utils/api-config';
 import 'xterm/css/xterm.css';
+import '../styles/inline-styles-fix.css';
 
 const TerminalPanel: React.FC = () => {
   const xtermRef = useRef<HTMLDivElement>(null);
@@ -142,7 +143,7 @@ const TerminalPanel: React.FC = () => {
             e.preventDefault();
             connectSSH();
           }}
-          style={{ marginBottom: 24, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}
+          className="terminal-panel-form"
         >
           <input
             type="text"
@@ -150,7 +151,7 @@ const TerminalPanel: React.FC = () => {
             value={credentials.host}
             onChange={e => setCredentials({ ...credentials, host: e.target.value })}
             required
-            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 160 }}
+            className="terminal-panel-input"
           />
           <input
             type="text"
@@ -158,7 +159,7 @@ const TerminalPanel: React.FC = () => {
             value={credentials.username}
             onChange={e => setCredentials({ ...credentials, username: e.target.value })}
             required
-            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
+            className="terminal-panel-input username"
           />
           <input
             type="password"
@@ -166,20 +167,12 @@ const TerminalPanel: React.FC = () => {
             value={credentials.password}
             onChange={e => setCredentials({ ...credentials, password: e.target.value })}
             required
-            style={{ padding: 8, borderRadius: 4, border: '1px solid #ccc', minWidth: 120 }}
+            className="terminal-panel-input password"
           />
           <button 
             type="submit" 
             disabled={connecting} 
-            style={{ 
-              padding: '8px 18px', 
-              borderRadius: 4, 
-              background: connecting ? '#6c757d' : '#28a745', 
-              color: '#fff', 
-              border: 'none', 
-              fontWeight: 600,
-              cursor: connecting ? 'not-allowed' : 'pointer'
-            }}
+            className="terminal-panel-connect-button"
           >
             {connecting ? '🔄 Connecting...' : '🔌 Connect SSH'}
           </button>
@@ -187,21 +180,13 @@ const TerminalPanel: React.FC = () => {
       )}
       
       {connected && (
-        <div style={{ marginBottom: 15, display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ color: '#28a745', fontWeight: 600 }}>
+        <div className="terminal-panel-connection-status">
+          <span className="terminal-panel-connected-text">
             ✅ Connected to {credentials.host}
           </span>
           <button
             onClick={disconnectSSH}
-            style={{
-              padding: '6px 12px',
-              borderRadius: 4,
-              background: '#dc3545',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
+            className="terminal-panel-disconnect-button"
           >
             🔌 Disconnect
           </button>
@@ -209,20 +194,13 @@ const TerminalPanel: React.FC = () => {
       )}
       
       {error && (
-        <div style={{ 
-          marginBottom: 15, 
-          padding: 10, 
-          backgroundColor: '#f8d7da', 
-          border: '1px solid #f5c6cb', 
-          borderRadius: 4, 
-          color: '#721c24' 
-        }}>
+        <div className="terminal-panel-error">
           ❌ {error}
         </div>
       )}
       
-      <div style={{ background: '#1e1e1e', borderRadius: 8, overflow: 'hidden', width: '100%', height: 480 }}>
-        <div ref={xtermRef} style={{ width: '100%', height: '100%' }} />
+      <div className="terminal-panel-container">
+        <div ref={xtermRef} className="terminal-panel-xterm" />
       </div>
     </div>
   );

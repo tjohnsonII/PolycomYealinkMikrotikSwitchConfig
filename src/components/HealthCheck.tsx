@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getApiUrl } from '../utils/api-config';
 import API_CONFIG from '../utils/api-config';
+import '../styles/inline-styles-fix.css';
 
 const HealthCheck: React.FC = () => {
   const [healthStatus, setHealthStatus] = useState({
@@ -28,7 +29,7 @@ const HealthCheck: React.FC = () => {
         ...prev, 
         auth: authResponse.ok ? 'healthy' : 'error' 
       }));
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, auth: 'error' }));
     }
 
@@ -46,7 +47,7 @@ const HealthCheck: React.FC = () => {
         ...prev, 
         api: apiResponse.ok ? 'healthy' : 'error' 
       }));
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, api: 'error' }));
     }
 
@@ -68,17 +69,17 @@ const HealthCheck: React.FC = () => {
           ws.close();
         }
       }, 5000);
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, ws: 'error' }));
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusClassName = (status: string) => {
     switch (status) {
-      case 'healthy': return '#28a745';
-      case 'error': return '#dc3545';
-      case 'timeout': return '#ffc107';
-      default: return '#6c757d';
+      case 'healthy': return 'health-check-status-healthy';
+      case 'error': return 'health-check-status-error';
+      case 'timeout': return 'health-check-status-timeout';
+      default: return 'health-check-status-checking';
     }
   };
 
@@ -92,35 +93,29 @@ const HealthCheck: React.FC = () => {
   };
 
   return (
-    <div style={{
-      background: 'var(--bg-white)',
-      border: '1px solid var(--border-light)',
-      borderRadius: '0.5rem',
-      padding: '1rem',
-      marginBottom: '1rem'
-    }}>
-      <h3 style={{ margin: '0 0 1rem 0', color: 'var(--text-primary)' }}>
+    <div className="health-check-container">
+      <h3 className="health-check-title">
         System Health Check
       </h3>
       
-      <div style={{ display: 'grid', gap: '0.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="health-check-grid">
+        <div className="health-check-item">
           <span>Auth Server ({API_CONFIG.authBaseUrl}):</span>
-          <span style={{ color: getStatusColor(healthStatus.auth) }}>
+          <span className={getStatusClassName(healthStatus.auth)}>
             {getStatusText(healthStatus.auth)}
           </span>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="health-check-item">
           <span>API Server ({API_CONFIG.baseUrl}):</span>
-          <span style={{ color: getStatusColor(healthStatus.api) }}>
+          <span className={getStatusClassName(healthStatus.api)}>
             {getStatusText(healthStatus.api)}
           </span>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div className="health-check-item">
           <span>WebSocket ({API_CONFIG.wsBaseUrl}):</span>
-          <span style={{ color: getStatusColor(healthStatus.ws) }}>
+          <span className={getStatusClassName(healthStatus.ws)}>
             {getStatusText(healthStatus.ws)}
           </span>
         </div>
@@ -128,28 +123,13 @@ const HealthCheck: React.FC = () => {
 
       <button
         onClick={checkHealth}
-        style={{
-          marginTop: '1rem',
-          padding: '0.5rem 1rem',
-          background: 'var(--brand-primary)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '0.25rem',
-          cursor: 'pointer'
-        }}
+        className="health-check-refresh-button"
       >
         Refresh Health Check
       </button>
 
-      <div style={{ 
-        marginTop: '1rem', 
-        padding: '0.5rem', 
-        background: 'var(--bg-light)', 
-        borderRadius: '0.25rem',
-        fontSize: '0.875rem',
-        color: 'var(--text-secondary)'
-      }}>
-        <strong>Configuration:</strong><br />
+      <div className="health-check-config-section">
+        <div className="health-check-config-title">Configuration:</div>
         Hostname: {window.location.hostname}<br />
         Protocol: {window.location.protocol}<br />
         Port: {window.location.port || 'default'}

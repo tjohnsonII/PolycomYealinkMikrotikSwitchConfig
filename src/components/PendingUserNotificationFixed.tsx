@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getApiUrl } from '../utils/api-config';
+import '../styles/inline-styles-fix.css';
 
 interface PendingUser {
   id: number;
@@ -18,7 +19,7 @@ const PendingUserNotification: React.FC<PendingUserNotificationProps> = ({ onPen
   const [isVisible, setIsVisible] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchPendingUsers = async () => {
+  const fetchPendingUsers = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(getApiUrl('admin/pending-users'), {
@@ -36,14 +37,14 @@ const PendingUserNotification: React.FC<PendingUserNotificationProps> = ({ onPen
     } catch (error) {
       console.error('Error fetching pending users:', error);
     }
-  };
+  }, [onPendingUsersUpdate]);
 
   useEffect(() => {
     fetchPendingUsers();
     // Refresh every 30 seconds
     const interval = setInterval(fetchPendingUsers, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchPendingUsers]);
 
   const handleApprove = async (userId: number, username: string) => {
     setIsLoading(true);
@@ -107,112 +108,49 @@ const PendingUserNotification: React.FC<PendingUserNotificationProps> = ({ onPen
 
   if (!isVisible) {
     return (
-      <div style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
-        backgroundColor: '#ff9800',
-        color: 'white',
-        padding: '10px 15px',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        zIndex: 1000,
-        fontSize: '14px',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
-      }} onClick={() => setIsVisible(true)}>
+      <div className="pending-user-notification-collapsed" onClick={() => setIsVisible(true)}>
         {pendingUsers.length} pending user{pendingUsers.length > 1 ? 's' : ''}
       </div>
     );
   }
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      backgroundColor: '#fff',
-      border: '2px solid #ff9800',
-      borderRadius: '8px',
-      padding: '20px',
-      maxWidth: '400px',
-      maxHeight: '500px',
-      overflow: 'auto',
-      zIndex: 1000,
-      boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '15px',
-        borderBottom: '1px solid #ddd',
-        paddingBottom: '10px'
-      }}>
-        <h3 style={{ margin: 0, color: '#ff9800' }}>
+    <div className="pending-user-notification-panel">
+      <div className="pending-user-notification-header">
+        <h3 className="pending-user-notification-title">
           🔔 Pending User Approvals ({pendingUsers.length})
         </h3>
         <button
           onClick={() => setIsVisible(false)}
-          style={{
-            background: 'none',
-            border: 'none',
-            fontSize: '18px',
-            cursor: 'pointer',
-            color: '#666'
-          }}
+          className="pending-user-notification-close"
         >
           ×
         </button>
       </div>
 
       {pendingUsers.map(user => (
-        <div key={user.id} style={{
-          backgroundColor: '#f9f9f9',
-          padding: '15px',
-          marginBottom: '10px',
-          borderRadius: '5px',
-          border: '1px solid #ddd'
-        }}>
-          <div style={{ marginBottom: '10px' }}>
+        <div key={user.id} className="pending-user-notification-item">
+          <div className="pending-user-notification-item-content">
             <strong>{user.username}</strong><br />
-            <small style={{ color: '#666' }}>{user.email}</small><br />
-            <small style={{ color: '#888' }}>
+            <small className="pending-user-notification-email">{user.email}</small><br />
+            <small className="pending-user-notification-meta">
               Registered: {new Date(user.createdAt).toLocaleString()}
               {user.ipAddress && ` from ${user.ipAddress}`}
             </small>
           </div>
           
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="pending-user-notification-buttons">
             <button
               onClick={() => handleApprove(user.id, user.username)}
               disabled={isLoading}
-              style={{
-                backgroundColor: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                padding: '8px 15px',
-                borderRadius: '4px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '12px',
-                opacity: isLoading ? 0.6 : 1
-              }}
+              className="pending-user-notification-approve"
             >
               ✓ Approve
             </button>
             <button
               onClick={() => handleDeny(user.id, user.username)}
               disabled={isLoading}
-              style={{
-                backgroundColor: '#f44336',
-                color: 'white',
-                border: 'none',
-                padding: '8px 15px',
-                borderRadius: '4px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '12px',
-                opacity: isLoading ? 0.6 : 1
-              }}
+              className="pending-user-notification-deny"
             >
               ✗ Deny
             </button>
@@ -220,13 +158,7 @@ const PendingUserNotification: React.FC<PendingUserNotificationProps> = ({ onPen
         </div>
       ))}
 
-      <div style={{
-        marginTop: '15px',
-        paddingTop: '10px',
-        borderTop: '1px solid #ddd',
-        fontSize: '12px',
-        color: '#666'
-      }}>
+      <div className="pending-user-notification-footer">
         Updates automatically every 30 seconds
       </div>
     </div>

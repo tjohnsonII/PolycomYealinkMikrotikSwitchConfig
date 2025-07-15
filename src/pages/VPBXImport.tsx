@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRef, useState } from 'react';
+import '../styles/inline-styles-fix.css';
 
 /**
  * VPBXImport Component
@@ -196,20 +197,19 @@ const VPBXImport: React.FC = () => {
 
   return (
     // Main container with optimized styling for proper positioning at 100% zoom
-    <div style={{ 
-      padding: '8px 16px',
-      minWidth: '100%',
-      boxSizing: 'border-box',
-      margin: '0 auto',
-      transform: 'translateX(0)', // Ensures proper horizontal positioning
-      position: 'relative'
-    }}>
+    <div className="vpbx-import-container">
       <h2>VPBX Import</h2>
       
       {/* Control buttons section */}
-      <div style={{ marginBottom: '16px', width: '100%' }}>
-        <input type="file" accept=".csv" onChange={handleVpbxImport} style={{ marginRight: '8px' }} />
-        <button onClick={handleVpbxExport} style={{ marginRight: '8px' }}>Export CSV</button>
+      <div className="vpbx-import-controls">
+        <input 
+          type="file" 
+          accept=".csv" 
+          onChange={handleVpbxImport} 
+          className="vpbx-import-file-input" 
+          title="Import CSV file"
+        />
+        <button onClick={handleVpbxExport} className="vpbx-import-export-button">Export CSV</button>
         <button 
           onClick={() => {
             // Reset horizontal scroll to show leftmost columns
@@ -217,29 +217,17 @@ const VPBXImport: React.FC = () => {
               tableContainerRef.current.scrollLeft = 0;
             }
           }}
-          style={{ 
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '6px 12px',
-            cursor: 'pointer'
-          }}
+          className="vpbx-import-scroll-button"
         >
           ← Scroll to Start
         </button>
       </div>
       
       {/* Hidden download link for CSV export */}
-      <a ref={vpbxDownloadRef} style={{ display: 'none' }}>Download</a>
+      <a ref={vpbxDownloadRef} className="vpbx-import-download-link">Download</a>
       
       {/* Informational text about horizontal scrolling */}
-      <div style={{ 
-        marginBottom: '8px', 
-        fontSize: '14px', 
-        color: '#666',
-        fontStyle: 'italic'
-      }}>
+      <div className="vpbx-import-scroll-info">
         Scroll horizontally to see all {vpbxFields.length} columns →
       </div>
       
@@ -251,18 +239,7 @@ const VPBXImport: React.FC = () => {
       */}
       <div 
         ref={tableContainerRef}
-        style={{ 
-          overflowX: 'auto', 
-          overflowY: 'auto',
-          border: '2px solid #ddd',
-          borderRadius: '4px',
-          maxHeight: '60vh',
-          width: '100%',
-          maxWidth: '100%',
-          backgroundColor: 'white',
-          margin: '0',
-          padding: '0'
-        }}
+        className="vpbx-import-table-container"
         onLoad={() => {
           // Ensure table starts scrolled to the left on load
           if (tableContainerRef.current) {
@@ -276,49 +253,17 @@ const VPBXImport: React.FC = () => {
           - borderCollapse: 'separate' allows for better border control
           - Each column is exactly 100px wide for predictable layout
         */}
-        <table style={{ 
-          borderCollapse: 'separate',
-          borderSpacing: '0',
-          fontSize: '16px',
-          backgroundColor: 'white',
-          width: 'auto',
-          margin: '0',
-          tableLayout: 'fixed'
-        }}>
+        <table className="vpbx-import-table">
           <thead>
             <tr>
               {vpbxFields.map((f) => (
-                <th key={f} style={{ 
-                  border: '2px solid #ccc', 
-                  padding: '8px 4px', 
-                  width: '100px', // Fixed width for consistent layout
-                  minWidth: '100px',
-                  maxWidth: '100px',
-                  backgroundColor: '#f5f5f5',
-                  textAlign: 'center',
-                  verticalAlign: 'top',
-                  whiteSpace: 'normal', // Allow text wrapping
-                  wordWrap: 'break-word', // Break long words if needed
-                  lineHeight: '1.2',
-                  boxSizing: 'border-box'
-                }}>
+                <th key={f} className="vpbx-import-header-cell">
                   {/* Column title with larger font for better readability */}
-                  <div style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '16px', lineHeight: '1.2' }}>{f}</div>
+                  <div className="vpbx-import-header-title">{f}</div>
                   
                   {/* Delete column button */}
                   <button
-                    style={{ 
-                      fontSize: '11px', 
-                      padding: '3px 5px', 
-                      backgroundColor: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      cursor: 'pointer',
-                      width: '85%',
-                      margin: '0 auto',
-                      display: 'block'
-                    }}
+                    className="vpbx-import-delete-column-button"
                     onClick={() => handleVpbxDeleteColumn(f)}
                     title={`Delete column ${f}`}
                   >
@@ -328,21 +273,7 @@ const VPBXImport: React.FC = () => {
               ))}
               
               {/* Actions column header - slightly smaller than data columns */}
-              <th style={{
-                border: '2px solid #ccc',
-                padding: '8px 4px',
-                backgroundColor: '#f5f5f5',
-                width: '80px',
-                minWidth: '80px',
-                maxWidth: '80px',
-                textAlign: 'center',
-                whiteSpace: 'normal',
-                wordWrap: 'break-word',
-                lineHeight: '1.2',
-                boxSizing: 'border-box',
-                fontSize: '16px',
-                fontWeight: 'bold'
-              }}>Actions</th>
+              <th className="vpbx-import-actions-header">Actions</th>
             </tr>
           </thead>
           
@@ -350,17 +281,7 @@ const VPBXImport: React.FC = () => {
             {vpbxRows.map((row, idx) => (
               <tr key={idx}>
                 {vpbxFields.map((f) => (
-                  <td key={f} style={{ 
-                    border: '2px solid #ccc', 
-                    padding: '6px',
-                    backgroundColor: 'white',
-                    width: '100px', // Match header width exactly
-                    minWidth: '100px',
-                    maxWidth: '100px',
-                    textAlign: 'center',
-                    verticalAlign: 'middle',
-                    boxSizing: 'border-box'
-                  }}>
+                  <td key={f} className="vpbx-import-data-cell">
                     {/* 
                       Conditional rendering: 
                       - Use dropdown for "model" column to ensure valid phone model selection
@@ -370,18 +291,9 @@ const VPBXImport: React.FC = () => {
                       <select
                         name={f}
                         value={row[f] || ''}
-                        onChange={e => handleVpbxChange(idx, e as any)}
-                        style={{ 
-                          width: '95%', // Slight margin within cell
-                          padding: '5px',
-                          border: '1px solid #ddd',
-                          borderRadius: '3px',
-                          fontSize: '14px',
-                          textAlign: 'center',
-                          boxSizing: 'border-box',
-                          backgroundColor: 'white',
-                          cursor: 'pointer'
-                        }}
+                        onChange={e => handleVpbxChange(idx, e as React.ChangeEvent<HTMLSelectElement>)}
+                        className="vpbx-import-select"
+                        title={`Select phone model for row ${idx + 1}`}
                       >
                         <option value="">Select Model</option>
                         {PHONE_MODELS.map(model => (
@@ -395,15 +307,7 @@ const VPBXImport: React.FC = () => {
                         name={f}
                         value={row[f] || ''}
                         onChange={e => handleVpbxChange(idx, e)}
-                        style={{ 
-                          width: '95%', // Slight margin within cell
-                          padding: '5px',
-                          border: '1px solid #ddd',
-                          borderRadius: '3px',
-                          fontSize: '14px',
-                          textAlign: 'center',
-                          boxSizing: 'border-box'
-                        }}
+                        className="vpbx-import-input"
                         placeholder={`Enter ${f}`}
                       />
                     )}
@@ -411,30 +315,10 @@ const VPBXImport: React.FC = () => {
                 ))}
                 
                 {/* Actions column - contains delete row button */}
-                <td style={{ 
-                  border: '2px solid #ccc', 
-                  padding: '6px', 
-                  textAlign: 'center',
-                  backgroundColor: 'white',
-                  width: '80px', // Match header width exactly
-                  minWidth: '80px',
-                  maxWidth: '80px',
-                  verticalAlign: 'middle',
-                  boxSizing: 'border-box'
-                }}>
+                <td className="vpbx-import-actions-cell">
                   <button 
                     onClick={() => handleVpbxDeleteRow(idx)}
-                    style={{
-                      backgroundColor: '#ff4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '3px',
-                      padding: '5px 8px',
-                      fontSize: '12px',
-                      cursor: 'pointer',
-                      display: 'block',
-                      margin: '0 auto'
-                    }}
+                    className="vpbx-import-delete-row-button"
                   >
                     Delete
                   </button>
@@ -446,10 +330,10 @@ const VPBXImport: React.FC = () => {
       </div>
       
       {/* Row management buttons */}
-      <div style={{ marginTop: 8 }}>
-        <button onClick={() => handleVpbxAddRow(1)}>Add 1 Row</button>{' '}
-        <button onClick={() => handleVpbxAddRow(5)}>Add 5 Rows</button>{' '}
-        <button onClick={() => handleVpbxAddRow(10)}>Add 10 Rows</button>
+      <div className="vpbx-import-row-controls">
+        <button onClick={() => handleVpbxAddRow(1)} className="vpbx-import-add-row-button">Add 1 Row</button>
+        <button onClick={() => handleVpbxAddRow(5)} className="vpbx-import-add-row-button">Add 5 Rows</button>
+        <button onClick={() => handleVpbxAddRow(10)} className="vpbx-import-add-row-button">Add 10 Rows</button>
       </div>
     </div>
   );

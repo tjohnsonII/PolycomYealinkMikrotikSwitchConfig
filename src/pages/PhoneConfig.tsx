@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useConfigContext } from '../components/ConfigContext';
 import { FaInfoCircle } from 'react-icons/fa';
+import '../styles/inline-styles-fix.css';
 
 // These should be imported from a shared constants file in a real refactor
 const MODEL_OPTIONS = [
@@ -189,55 +190,68 @@ const PhoneConfig: React.FC = () => {
       }
       setOutput(config);
       setGeneratedConfig({ model, phoneType, config });
-    } catch (e: any) {
-      setError('An unexpected error occurred: ' + (e?.message || e));
+    } catch (e: unknown) {
+      setError('An unexpected error occurred: ' + (e as Error).message);
       setOutput('');
     }
   };
 
   return (
-    <>
-      <button onClick={handleClearConfig} style={{ float: 'right', marginBottom: 8, background: '#f44336', color: 'white', border: 'none', borderRadius: 4, padding: '6px 16px', cursor: 'pointer' }}>
+    <div className="phone-config-form">
+      <button 
+        onClick={handleClearConfig} 
+        className="phone-config-clear-button"
+        title="Clear all configuration output"
+      >
         Clear Config
       </button>
-      <h2 style={{marginTop:0}}>Phone Config Generator</h2>
-      <div style={{ background: '#f7fbff', border: '1px solid #cce1fa', borderRadius: 8, padding: 16, marginBottom: 24, maxWidth: 700, marginLeft: 'auto', marginRight: 'auto', textAlign: 'left' }}>
-        <h3 style={{ marginTop: 0 }}>What does each config generator do?</h3>
-        <ul style={{ marginLeft: 20 }}>
+      <h2 className="phone-config-title">Phone Config Generator</h2>
+      <div className="phone-config-description">
+        <h3>What does each config generator do?</h3>
+        <ul>
           <li><b>Base Config Options:</b> Generates the main configuration for Polycom or Yealink phones, including park/BLF keys, static settings, and model-specific options. This section allows you to specify the phone type, model, IP address, park line range, and advanced features such as voicemail indicator, speed dial, intercom, transfer to voicemail, and park keys. You can also set time zone, admin password, and Yealink-specific options like long DSS key labels, missed call notification, and BLF call stealing.</li>
           <li><b>Expansion Module Config:</b> Use the Expansion Modules tab to generate and preview configuration for Yealink or Polycom expansion sidecars. You can append the generated expansion config to your base config here.</li>
           <li><b>Import/Export Tabs:</b> The FBPX, VPBX, Stretto, and Order Tracker tabs allow you to import/export phone and order data using a spreadsheet-like interface with CSV support.</li>
           <li><b>Full Config:</b> The Full Config tab displays the complete generated configuration, including any appended expansion module code, ready for download or provisioning.</li>
         </ul>
-        <div style={{ marginTop: 10, color: '#555', fontSize: 14 }}>
+        <div className="tip">
           <b>Tip:</b> After generating your config, you can download it or append expansion module code. All settings are designed to match Polycom and Yealink provisioning best practices.
         </div>
       </div>
       {/* Base Config Options Form */}
-      <div className="form-section" style={{marginBottom:24}}>
+      <div className="form-section phone-config-form-section">
         <h3>Base Config Options</h3>
         <div className="form-group">
           <label><input type="checkbox" checked={enableMWI} onChange={e => setEnableMWI(e.target.checked)} /> Voicemail Indicator (MWI)</label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableSpeedDial} onChange={e => setEnableSpeedDial(e.target.checked)} /> Speed Dial</label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableIntercom} onChange={e => setEnableIntercom(e.target.checked)} /> Intercom</label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enableTransferVM} onChange={e => setEnableTransferVM(e.target.checked)} /> Transfer to Voicemail</label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={enablePark} onChange={e => setEnablePark(e.target.checked)} /> Park</label>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={enableSpeedDial} onChange={e => setEnableSpeedDial(e.target.checked)} /> Speed Dial</label>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={enableIntercom} onChange={e => setEnableIntercom(e.target.checked)} /> Intercom</label>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={enableTransferVM} onChange={e => setEnableTransferVM(e.target.checked)} /> Transfer to Voicemail</label>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={enablePark} onChange={e => setEnablePark(e.target.checked)} /> Park</label>
         </div>
+        <div className="form-group">
           <label>Phone Type:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.phoneType}>
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.phoneType}>
               <FaInfoCircle />
             </span>
           </label>
-          <select value={phoneType} onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}>
+          <select 
+            value={phoneType} 
+            onChange={e => setPhoneType(e.target.value as 'Polycom' | 'Yealink')}
+            title="Select phone brand"
+          >
             <option value="Polycom">Polycom</option>
             <option value="Yealink">Yealink</option>
           </select>
-          <label style={{marginLeft:16}}>Model:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.model}>
+          <label className="phone-config-field-label">Model:
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.model}>
               <FaInfoCircle />
             </span>
           </label>
-          <select value={model} onChange={e => setModel(e.target.value)}>
+          <select 
+            value={model} 
+            onChange={e => setModel(e.target.value)}
+            title="Select phone model"
+          >
             {MODEL_OPTIONS.map(opt => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
@@ -245,71 +259,115 @@ const PhoneConfig: React.FC = () => {
         </div>
         <div className="form-group">
           <label>IP Address:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.ip}>
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.ip}>
               <FaInfoCircle />
             </span>
           </label>
-          <input type="text" value={ip} onChange={e => setIp(e.target.value)} placeholder="e.g. 192.168.1.100" />
-        <label style={{marginLeft:16}}>Start Park Line:
-          <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="First park line number (e.g. 71)">
+          <input 
+            type="text" 
+            value={ip} 
+            onChange={e => setIp(e.target.value)} 
+            placeholder="e.g. 192.168.1.100"
+            title="Enter the IP address of the phone"
+          />
+        <label className="phone-config-field-label">Start Park Line:
+          <span className="phone-config-info-icon" title="First park line number (e.g. 71)">
             <FaInfoCircle />
           </span>
         </label>
-        <input type="number" value={startPark} onChange={e => setStartPark(e.target.value)} />
-        <label style={{marginLeft:16}}>End Park Line:
-          <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title="Last park line number (e.g. 73)">
+        <input 
+          type="number" 
+          value={startPark} 
+          onChange={e => setStartPark(e.target.value)}
+          placeholder="71"
+          title="First park line number"
+        />
+        <label className="phone-config-field-label">End Park Line:
+          <span className="phone-config-info-icon" title="Last park line number (e.g. 73)">
             <FaInfoCircle />
           </span>
         </label>
-        <input type="number" value={endPark} onChange={e => setEndPark(e.target.value)} />
-          <label style={{marginLeft:16}}>Label Prefix:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.labelPrefix}>
+        <input 
+          type="number" 
+          value={endPark} 
+          onChange={e => setEndPark(e.target.value)}
+          placeholder="73"
+          title="Last park line number"
+        />
+          <label className="phone-config-field-label">Label Prefix:
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.labelPrefix}>
               <FaInfoCircle />
             </span>
           </label>
-          <input type="text" value={labelPrefix} onChange={e => setLabelPrefix(e.target.value)} />
+          <input 
+            type="text" 
+            value={labelPrefix} 
+            onChange={e => setLabelPrefix(e.target.value)}
+            placeholder="Park"
+            title="Prefix for park line labels"
+          />
         </div>
         <div className="form-group">
           <label>Time Offset (e.g. -5):
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.timeOffset}>
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.timeOffset}>
               <FaInfoCircle />
             </span>
           </label>
-          <input type="number" value={timeOffset} onChange={e => setTimeOffset(e.target.value)} />
-          <label style={{marginLeft:16}}>Admin Password:
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.adminPassword}>
+          <input 
+            type="number" 
+            value={timeOffset} 
+            onChange={e => setTimeOffset(e.target.value)}
+            placeholder="-5"
+            title="Time zone offset from UTC"
+          />
+          <label className="phone-config-field-label">Admin Password:
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.adminPassword}>
               <FaInfoCircle />
             </span>
           </label>
-          <input type="text" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} />
+          <input 
+            type="text" 
+            value={adminPassword} 
+            onChange={e => setAdminPassword(e.target.value)}
+            placeholder="admin:password"
+            title="Admin password for phone web interface"
+          />
         </div>
         <div className="form-group">
           <label><input type="checkbox" checked={yealinkLabelLength} onChange={e => setYealinkLabelLength(e.target.checked)} /> Enable long DSS key labels
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkLabelLength}>
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.yealinkLabelLength}>
               <FaInfoCircle />
             </span>
           </label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkDisableMissedCall}>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={yealinkDisableMissedCall} onChange={e => setYealinkDisableMissedCall(e.target.checked)} /> Disable missed call notification
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.yealinkDisableMissedCall}>
               <FaInfoCircle />
             </span>
           </label>
-          <label style={{ marginLeft: 16 }}><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing
-            <span style={{ marginLeft: 4, cursor: 'pointer', color: '#0078d4' }} title={FIELD_TOOLTIPS.yealinkCallStealing}>
+          <label className="phone-config-checkbox-label"><input type="checkbox" checked={yealinkCallStealing} onChange={e => setYealinkCallStealing(e.target.checked)} /> Enable BLF call stealing
+            <span className="phone-config-info-icon" title={FIELD_TOOLTIPS.yealinkCallStealing}>
               <FaInfoCircle />
             </span>
           </label>
         </div>
-        <button onClick={generateConfig} style={{marginTop:8}}>Generate Config</button>
+        <button 
+          onClick={generateConfig} 
+          className="phone-config-generate-button"
+          title="Generate phone configuration"
+        >
+          Generate Config
+        </button>
         <button
-          style={{ marginTop: 8, marginLeft: 8 }}
+          className="phone-config-add-expansion-button"
           title="Append the most recent expansion module config after the base config"
           onClick={() => {
             // Try to get expansion config from localStorage (set by ExpansionModules page)
             let expansionConfig = '';
             try {
               expansionConfig = localStorage.getItem('expansionConfig') || '';
-            } catch {}
+            } catch (error) {
+              console.warn('Failed to get expansion config from localStorage:', error);
+            }
             if (!expansionConfig) {
               alert('No expansion module config found. Please generate one in the Expansion Modules tab first.');
               return;
@@ -320,13 +378,21 @@ const PhoneConfig: React.FC = () => {
           Add Expansion Module Config
         </button>
         {error && (
-          <div style={{ color: 'red', marginTop: 8 }}>{error}</div>
+          <div className="phone-config-error">{error}</div>
         )}
         <div className="output">
-          <textarea value={output} readOnly rows={38} style={{ width: '98vw', maxWidth: 1600, marginTop: 16, fontSize: 16, minHeight: 600, fontFamily: 'monospace', padding: 12, border: '1.5px solid #bbb', borderRadius: 6, resize: 'vertical', display: 'block' }} />
+          <textarea 
+            value={output} 
+            readOnly 
+            rows={38} 
+            className="phone-config-output-textarea"
+            title="Generated phone configuration"
+            placeholder="Generated configuration will appear here..."
+          />
           {output && (
             <button
-              style={{ marginTop: 8 }}
+              className="phone-config-download-button"
+              title="Download configuration as text file"
               onClick={() => {
                 const blob = new Blob([output], { type: 'text/plain' });
                 const url = URL.createObjectURL(blob);
@@ -345,7 +411,8 @@ const PhoneConfig: React.FC = () => {
             </button>
           )}
         </div>
-    </>
+      </div>
+    </div>
   );
 };
 
