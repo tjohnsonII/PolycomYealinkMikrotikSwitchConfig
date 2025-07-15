@@ -908,6 +908,8 @@ const Diagnostic: React.FC = () => {
               onChange={handleConfigFileUpload}
               className="margin-bottom-5px"
               disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+              title="Select OpenVPN configuration file (.ovpn or .conf)"
+              aria-label="Select OpenVPN configuration file"
             />
             {vpnConfig.configFile && (
               <div className="diagnostic-connection-status">
@@ -944,6 +946,8 @@ const Diagnostic: React.FC = () => {
                     placeholder="tjohnson"
                     className="diagnostic-vpn-input"
                     disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+                    title="Enter your VPN username"
+                    aria-label="VPN username"
                   />
                 </div>
                 <div>
@@ -957,6 +961,8 @@ const Diagnostic: React.FC = () => {
                     placeholder="Enter your VPN password"
                     className="diagnostic-vpn-input"
                     disabled={vpnStatus === 'connecting' || vpnStatus === 'connected'}
+                    title="Enter your VPN password"
+                    aria-label="VPN password"
                   />
                 </div>
               </div>
@@ -1223,6 +1229,8 @@ const Diagnostic: React.FC = () => {
                   onChange={e => updatePbxServer(index, 'name', e.target.value)}
                   placeholder="PBX Name"
                   className="diagnostic-input"
+                  title="Enter PBX server name"
+                  aria-label={`PBX server ${index + 1} name`}
                 />
                 <input
                   type="text"
@@ -1230,6 +1238,8 @@ const Diagnostic: React.FC = () => {
                   onChange={e => updatePbxServer(index, 'host', e.target.value)}
                   placeholder="pbx.example.com"
                   className="diagnostic-input"
+                  title="Enter PBX server hostname or IP address"
+                  aria-label={`PBX server ${index + 1} hostname`}
                 />
                 <input
                   type="text"
@@ -1237,6 +1247,8 @@ const Diagnostic: React.FC = () => {
                   onChange={e => updatePbxServer(index, 'port', e.target.value)}
                   placeholder="5060"
                   className="diagnostic-input"
+                  title="Enter PBX server port number"
+                  aria-label={`PBX server ${index + 1} port`}
                 />
                 <div className="diagnostic-pbx-status">
                   {server.status === 'unknown' && '❓ Unknown'}
