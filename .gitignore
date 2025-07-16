@@ -100,3 +100,7 @@ ssl/*.key
 ssl/*.pem
 ssl/*.p12
 ssl/*.pfx
+
+# Archived files
+archive/
+old-scripts/

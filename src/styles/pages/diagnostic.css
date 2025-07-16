@@ -1,0 +1,537 @@
+/* Diagnostic Page Styles */
+
+.diagnostic-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.diagnostic-header {
+  background: var(--bg-white);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+}
+
+.diagnostic-header h1 {
+  color: var(--brand-primary);
+  margin: 0 0 8px 0;
+  font-size: 2.2rem;
+}
+
+.diagnostic-header p {
+  color: var(--text-secondary);
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.diagnostic-tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.diagnostic-tool-card {
+  background: var(--bg-white);
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.diagnostic-tool-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.diagnostic-tool-card h2 {
+  color: var(--brand-primary);
+  margin: 0 0 16px 0;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.diagnostic-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--brand-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-white);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.diagnostic-description {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.diagnostic-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.diagnostic-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.diagnostic-form label {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.diagnostic-form input,
+.diagnostic-form select,
+.diagnostic-form textarea {
+  padding: 12px;
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  font-size: 1rem;
+  background: var(--bg-white);
+  color: var(--text-primary);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.diagnostic-form input:focus,
+.diagnostic-form select:focus,
+.diagnostic-form textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.diagnostic-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.diagnostic-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.diagnostic-actions button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.run-diagnostic-button {
+  background: var(--brand-primary);
+  font-weight: 600;
+}
+
+.run-diagnostic-button:hover {
+  background: var(--brand-primary-dark);
+}
+
+.clear-diagnostic-button {
+  background: var(--bg-gray-100);
+  color: var(--text-primary);
+}
+
+.clear-diagnostic-button:hover {
+  background: var(--bg-gray-200);
+}
+
+.diagnostic-results {
+  background: var(--bg-white);
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  margin-top: 24px;
+}
+
+.diagnostic-results h2 {
+  color: var(--brand-primary);
+  margin: 0 0 16px 0;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.diagnostic-results h2::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: var(--brand-primary);
+  border-radius: 2px;
+}
+
+.diagnostic-output {
+  background: var(--bg-gray-900);
+  color: var(--text-white);
+  padding: 20px;
+  border-radius: 8px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-light);
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.diagnostic-output code {
+  color: var(--text-white);
+  background: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.diagnostic-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.diagnostic-status.running {
+  background: var(--bg-info);
+  color: var(--text-info);
+}
+
+.diagnostic-status.success {
+  background: var(--bg-success);
+  color: var(--text-success);
+}
+
+.diagnostic-status.error {
+  background: var(--bg-danger);
+  color: var(--text-danger);
+}
+
+.diagnostic-status.warning {
+  background: var(--bg-warning);
+  color: var(--text-warning);
+}
+
+.diagnostic-status::before {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.diagnostic-status.running::before {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.diagnostic-summary {
+  background: var(--bg-gray-50);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.diagnostic-summary h3 {
+  margin: 0 0 12px 0;
+  color: var(--brand-primary);
+  font-size: 1.1rem;
+}
+
+.diagnostic-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.diagnostic-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  background: var(--bg-white);
+  border-radius: 6px;
+  border: 1px solid var(--border-light);
+}
+
+.diagnostic-summary-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--brand-primary);
+  margin-bottom: 4px;
+}
+
+.diagnostic-summary-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.diagnostic-details {
+  background: var(--bg-gray-50);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.diagnostic-details h3 {
+  margin: 0 0 12px 0;
+  color: var(--brand-primary);
+  font-size: 1.1rem;
+}
+
+.diagnostic-details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.diagnostic-details-list li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diagnostic-details-list li:last-child {
+  border-bottom: none;
+}
+
+.diagnostic-details-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.diagnostic-details-value {
+  color: var(--text-secondary);
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.diagnostic-progress {
+  background: var(--bg-gray-200);
+  border-radius: 4px;
+  height: 8px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+
+.diagnostic-progress-bar {
+  background: var(--brand-primary);
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.diagnostic-export-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.diagnostic-export-actions button {
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-results-button {
+  background: var(--brand-secondary);
+}
+
+.copy-results-button:hover {
+  background: var(--brand-secondary-dark);
+}
+
+.export-results-button {
+  background: var(--brand-success);
+}
+
+.export-results-button:hover {
+  background: var(--brand-success-dark);
+}
+
+.diagnostic-history {
+  background: var(--bg-white);
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-light);
+  margin-top: 24px;
+}
+
+.diagnostic-history h2 {
+  color: var(--brand-primary);
+  margin: 0 0 16px 0;
+  font-size: 1.4rem;
+}
+
+.diagnostic-history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.diagnostic-history-item {
+  padding: 16px;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  background: var(--bg-gray-50);
+  transition: background-color 0.2s;
+}
+
+.diagnostic-history-item:hover {
+  background: var(--bg-white);
+}
+
+.diagnostic-history-item:last-child {
+  margin-bottom: 0;
+}
+
+.diagnostic-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.diagnostic-history-title {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.diagnostic-history-date {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.diagnostic-history-summary {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.diagnostic-history-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.diagnostic-history-actions button {
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.view-history-button {
+  background: var(--brand-primary);
+  color: var(--text-white);
+}
+
+.delete-history-button {
+  background: var(--bg-danger);
+  color: var(--text-white);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .diagnostic-container {
+    padding: 16px;
+  }
+  
+  .diagnostic-tools-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .diagnostic-actions {
+    flex-direction: column;
+  }
+  
+  .diagnostic-actions button {
+    width: 100%;
+  }
+  
+  .diagnostic-export-actions {
+    flex-direction: column;
+  }
+  
+  .diagnostic-export-actions button {
+    width: 100%;
+  }
+  
+  .diagnostic-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .diagnostic-summary-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+  
+  .diagnostic-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .diagnostic-history-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Print styles */
+@media print {
+  .diagnostic-container {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .diagnostic-actions,
+  .diagnostic-export-actions,
+  .diagnostic-history-actions {
+    display: none;
+  }
+  
+  .diagnostic-tool-card,
+  .diagnostic-results,
+  .diagnostic-history {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .diagnostic-output {
+    background: var(--bg-white);
+    color: var(--text-primary);
+    border: 1px solid #ccc;
+  }
+}

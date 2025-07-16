@@ -1,23 +1,28 @@
 # Archive Directory
 
-This directory contains old startup scripts and configuration files that have been replaced by the simplified startup system.
+This directory contains files that have been moved from the root directory during cleanup.
 
-## New Simplified System
+## Structure
 
-The new system uses only:
-- `start.sh` - Starts the web management console
-- Management console web interface - Controls all services
+- **documentation/**: Old documentation files that have been replaced
+- **configs/**: Legacy configuration files
+- **logs/**: Historical log files
+- **temp/**: Temporary files that were archived
 
-## What's Archived
+## Migration to New System
 
-- `old-startup-scripts/` - All the old startup scripts (start-*.sh)
-- `old-proxy-scripts/` - Old proxy implementations
-- `old-docs/` - Old documentation and config files
+The Phone Configuration Generator has been streamlined to use:
 
-## Migration
+1. **Setup**: `./setup.sh` - One-time system preparation
+2. **Start**: `./start.sh` - Launch management console
+3. **Manage**: Web interface at http://localhost:3099
 
-The old complex startup system has been replaced with a simple two-step process:
-1. Run `./start.sh` to start the web management console
-2. Use the web interface to start/stop the webapp and services
+All functionality from the archived files is now available through the web management interface.
 
-This eliminates the complexity of multiple startup scripts and port conflicts.
+## File References
+
+Most archived documentation has been consolidated into:
+- `PORT_CONFIGURATION.md` - Complete port documentation
+- `SETUP_SUMMARY.md` - Streamlined setup information
+- Management console - Built-in help and documentation
+

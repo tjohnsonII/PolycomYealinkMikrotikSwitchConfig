@@ -1,0 +1,124 @@
+/* Logo123Net Component Styles */
+.logo-123net {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.logo-123net-blocks {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.logo-123net-block {
+  width: var(--logo-block-size);
+  height: var(--logo-block-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: var(--logo-block-font-size);
+  font-weight: bold;
+  color: white;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo-123net-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.logo-123net-block-1 {
+  background-color: var(--logo-red-bg);
+  color: var(--logo-red-text);
+  border: var(--logo-red-border);
+}
+
+.logo-123net-block-2 {
+  background-color: var(--logo-green-bg);
+  color: var(--logo-green-text);
+  border: var(--logo-green-border);
+}
+
+.logo-123net-block-3 {
+  background-color: var(--logo-blue-bg);
+  color: var(--logo-blue-text);
+  border: var(--logo-blue-border);
+}
+
+.logo-123net-text-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.logo-123net-text {
+  font-size: var(--logo-text-font-size);
+  color: var(--logo-text-color);
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+
+.logo-123net-connection-icon {
+  position: relative;
+  width: 20px;
+  height: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-123net-connection-dot-left,
+.logo-123net-connection-dot-right {
+  width: 4px;
+  height: 4px;
+  background-color: var(--logo-text-color);
+  border-radius: 50%;
+  position: absolute;
+  opacity: 0.6;
+}
+
+.logo-123net-connection-dot-left {
+  left: 0;
+}
+
+.logo-123net-connection-dot-right {
+  right: 0;
+}
+
+.logo-123net-connection-line {
+  width: 12px;
+  height: 1px;
+  background-color: var(--logo-text-color);
+  position: absolute;
+  opacity: 0.4;
+}
+
+/* Animation for connection icon */
+.logo-123net:hover .logo-123net-connection-line {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .logo-123net {
+    gap: 6px;
+  }
+  
+  .logo-123net-text-container {
+    gap: 4px;
+  }
+}

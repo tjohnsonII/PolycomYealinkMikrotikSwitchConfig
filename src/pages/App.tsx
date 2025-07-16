@@ -26,7 +26,6 @@ import Diagnostic from './Diagnostic';
 import AdminPage from './AdminPage';
 import ATA from './ATA';
 import AsternicStats from './AsternicStats';
-import '../styles/123net-theme.css';
 import '../styles/App.css';
 
 

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Red "1" block -->
+  <rect x="2" y="8" width="8" height="16" fill="#e53e3e" rx="1"/>
+  <text x="6" y="19" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">1</text>
+  
+  <!-- Green "2" block -->
+  <rect x="12" y="8" width="8" height="16" fill="#38a169" rx="1"/>
+  <text x="16" y="19" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">2</text>
+  
+  <!-- Blue "3" block -->
+  <rect x="22" y="8" width="8" height="16" fill="#3182ce" rx="1"/>
+  <text x="26" y="19" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">3</text>
+</svg>

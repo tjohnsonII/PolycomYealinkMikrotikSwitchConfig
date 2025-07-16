@@ -1,165 +1,173 @@
-# Phone Configuration Generator - Simplified Startup System
+# Phone Configuration Generator - Streamlined Setup
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Start the Management Console
+### 1. One-Time Setup
+```bash
+./setup.sh
+```
+
+### 2. Start Management Console
 ```bash
 ./start.sh
 ```
 
-This will:
-- Clean up any conflicting ports
-- Start the web management console on port 3099
-- Open your browser to the management interface
+### 3. Access Web Interface
+Open: http://localhost:3099
 
-### 2. Use the Web Interface
+## 📊 New Streamlined Architecture
 
-From the management console at `http://localhost:3099`:
-- **Start Webapp**: Click "Start" on the webapp service
-- **Monitor Services**: Real-time status of all components
-- **View Logs**: Check service logs for troubleshooting
-- **Stop Services**: Graceful shutdown of components
+The Phone Configuration Generator now uses a clean, organized structure:
 
-## Architecture
+- **Single Management Console**: Web interface at port 3099
+- **Centralized Service Control**: Start/stop all services from web UI
+- **Automatic Port Management**: No more conflicts or manual cleanup
+- **Real-time Monitoring**: Live status, logs, and diagnostics
 
-### New Simplified System
-- **Single Entry Point**: `start.sh` only starts the management console
-- **Web-Based Control**: All service management through web interface
-- **Automatic Cleanup**: Port conflicts resolved automatically
-- **Centralized Monitoring**: Real-time status and logs
+## 🎛️ Management Console Features
 
-### Services Managed
-- **Authentication Server** (port 3002) - User authentication
-- **SSH WebSocket Server** (port 3001) - SSH terminal functionality
-- **Enhanced Proxy** (ports 3000/8443) - HTTP/HTTPS reverse proxy
-- **Main Web Application** - Complete phone configuration system
+The web interface provides:
+- **Service Control**: Start/stop main app, SSH server, auth server
+- **Real-time Monitoring**: Live service status and health checks
+- **Log Viewing**: Centralized log management and troubleshooting
+- **System Diagnostics**: Built-in diagnostic tools and health checks
+- **Port Management**: Automatic cleanup and conflict resolution
 
-## Port Configuration
+## 🌐 Multi-Domain Access
 
-### Network Setup (hostingFromWork branch)
-- **LAN**: 192.168.254.253/24
-- **Domain**: 123hostedtools.com
-- **Public IP**: 67.149.139.23
-- **SSL Certificates**: 123hostedtools.com production certificates
+The Phone Configuration Generator supports access from multiple domains and networks:
 
-### Port Allocation
-- **3099**: Management Console (always running)
-- **3000**: Enhanced Proxy (HTTP)
-- **8443**: Enhanced Proxy (HTTPS)
-- **3001**: SSH WebSocket Service
-- **3002**: Authentication Service
-
-## Usage Examples
-
-### Start Management Console
-```bash
-./start.sh
-```
-
-### NPM Scripts
-```bash
-npm start          # Start management console
-npm run management # Same as above
-npm run build      # Build the webapp
-```
-
-### Manual Service Control (if needed)
-```bash
-npm run webui      # Start just the management console
-npm run proxy      # Start just the enhanced proxy
-npm run auth       # Start just the authentication server
-npm run ssh        # Start just the SSH WebSocket server
-```
-
-## Accessing the Application
+### Access Methods
+- **Local Development**: http://localhost:3000
+- **LAN Access**: http://192.168.254.253:3000
+- **Domain Access**: https://123hostedtools.com:3000
 
 ### Management Console
 - **Local**: http://localhost:3099
-- **LAN**: http://192.168.254.253:3099 (if on same network)
+- **LAN**: http://192.168.254.253:3099
+- **Domain**: https://123hostedtools.com:3099
 
-### Main Web Application (after starting via web interface)
-- **HTTP**: http://localhost:3000
-- **HTTPS**: https://localhost:8443
-- **Production**: https://123hostedtools.com
+### Network Configuration
+- **Bind Address**: 0.0.0.0 (all interfaces)
+- **LAN Access**: Enabled for private networks
+- **Domain Support**: 123hostedtools.com whitelist
+- **Security**: IP-based access control with domain filtering
 
-## Features
-
-### Web Management Interface
-- **Service Control**: Start/stop individual services or entire webapp
-- **Real-time Monitoring**: Live status updates and health checks
-- **Log Viewing**: Centralized log access for all services
-- **Port Management**: Automatic cleanup of conflicting ports
-- **System Information**: Resource usage and system status
-- **VPN Management**: Control VPN connections for remote access
-
-### Enhanced Proxy
-- **HTTP/HTTPS Support**: Automatic SSL termination
-- **WebSocket Support**: Real-time terminal connections
-- **Load Balancing**: Intelligent routing to backend services
-- **Health Checks**: Automatic failover for unhealthy services
-- **Security Headers**: CORS, XSS protection, content security
-
-### Service Management
-- **Dependency Management**: Services start in correct order
-- **Graceful Shutdown**: Proper cleanup on service stop
-- **Health Monitoring**: Continuous health checks
-- **Auto-restart**: Failed services can be restarted from web interface
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Port Conflicts**
-   - The management console automatically cleans up ports
-   - If issues persist, restart the management console
-
-2. **Services Won't Start**
-   - Check logs in the web interface
-   - Verify all dependencies are installed (`npm install`)
-   - Ensure build is complete (`npm run build`)
-
-3. **Cannot Access Management Console**
-   - Verify port 3099 is not in use by another application
-   - Check if management console is running: `lsof -i :3099`
-
-4. **SSL Certificate Issues**
-   - Certificates are automatically configured for 123hostedtools.com
-   - Check certificate validity in the troubleshooting section
-
-### Getting Help
-
-1. **Web Interface**: Use the built-in troubleshooting tools
-2. **Logs**: Check individual service logs through the web interface
-3. **Health Checks**: Monitor service health in real-time
-4. **System Status**: View resource usage and system information
-
-## Migration from Old System
-
-If you were using the old complex startup system:
-
-1. **All old scripts have been archived** to `archive/old-startup-scripts/`
-2. **New workflow**: Just run `./start.sh` and use the web interface
-3. **Same functionality**: All features are available through the web interface
-4. **Better reliability**: No more port conflicts or startup order issues
-
-## Development
-
-### Project Structure
-```
-├── start.sh                    # Main startup script
-├── backend/
-│   ├── management-server.js    # Web management console
-│   ├── enhanced-proxy.js       # HTTP/HTTPS proxy
-│   ├── auth-server-https.js    # Authentication service
-│   └── ssh-ws-server-https.js  # SSH WebSocket service
-├── src/                        # React frontend
-└── archive/                    # Old scripts (archived)
+### Testing Network Access
+Use the network configuration checker:
+```bash
+./check-network.sh
 ```
 
-### Adding New Services
-1. Define service in `backend/management-server.js`
-2. Add health check endpoint
-3. Update web interface to include new service
-4. Test through management console
+This will test connectivity to all access methods and provide configuration recommendations.
 
-This simplified system eliminates the complexity of multiple startup scripts while providing better control and monitoring capabilities through the web interface.
+## 📋 Services Overview
+
+| Service | Port | Purpose |
+|---------|------|---------|
+| Management Console | 3099 | Primary control interface |
+| Main Web App | 3000 | Phone configuration generator |
+| SSH WebSocket | 3001 | Terminal/SSH/VPN functionality |
+| Authentication | 3002 | User management and sessions |
+
+## 🔧 What's New
+
+### Before (Old System)
+- 20+ scripts in root directory
+- Multiple startup methods
+- Manual port management
+- Scattered configuration
+
+### After (Streamlined)
+- 2 main scripts: `setup.sh` and `start.sh`
+- 1 management interface: Web console
+- Automatic port management
+- Centralized control
+
+## 📁 Setup and Network Management
+
+### Setup Options
+```bash
+# Standard setup
+./setup.sh
+
+# Force rebuild
+./setup.sh --force-build
+
+# Production mode
+./setup.sh --production
+
+# Check network accessibility
+./setup.sh --check-network
+
+# Show help
+./setup.sh --help
+```
+
+### Network Check Feature
+The integrated network check verifies accessibility across all configured domains:
+- **Localhost**: `http://127.0.0.1:3099/`
+- **LAN**: `http://192.168.254.253:3099/`
+- **Domain**: `http://123hostedtools.com:3099/`
+
+### Authentication
+The management console now requires authentication for security:
+- **Default Username**: `admin`
+- **Default Password**: `admin123`
+- **Session Duration**: 24 hours
+- **Secure**: Supports LAN access with proper authentication
+
+This replaces the standalone `check-network.sh` script and provides a single entry point for both setup and network validation.
+
+## 📁 Old Scripts
+
+All legacy scripts have been moved to `old-scripts/` for reference. The new system replaces all previous startup methods.
+
+## 🧹 Clean Directory Structure
+
+The root directory now contains only essential files:
+
+```
+📁 Root Directory
+├── 🚀 setup.sh              # One-time system setup
+├── 🚀 start.sh              # Start management console
+├── 📖 README.md             # This documentation
+├── 📊 PORT_CONFIGURATION.md # Complete port documentation
+├── 📋 SETUP_SUMMARY.md      # Streamlined setup summary
+├── 🔧 package.json          # Node.js configuration
+├── ⚙️ vite.config.ts        # Build configuration
+├── 🗂️ src/                  # Source code
+├── 🗂️ backend/              # Server components
+├── 🗂️ public/               # Static assets
+├── 🗂️ dist/                 # Built application
+├── 🗂️ logs/                 # Application logs
+├── 🗂️ archive/              # Archived old files
+└── 🗂️ old-scripts/          # Legacy scripts (archived)
+```
+
+## 📚 Documentation
+
+- **README.md** - Main documentation (this file)
+- **PORT_CONFIGURATION.md** - Complete port and service documentation
+- **SETUP_SUMMARY.md** - Detailed setup and migration information
+- **TECHNOLOGY.md** - Technical specifications
+- **CONTRIBUTING.md** - Development guidelines
+
+## 🗃️ Archived Files
+
+All old documentation, scripts, and configuration files have been organized into:
+- **archive/documentation/** - Legacy documentation files
+- **archive/configs/** - Old configuration files
+- **archive/logs/** - Historical log files
+- **old-scripts/** - Legacy startup and management scripts
+
+## 🔧 Development
+
+For development and contribution information, see:
+- **CONTRIBUTING.md** - Development guidelines
+- **TECHNOLOGY.md** - Technical stack information
+- **.github/** - GitHub workflows and templates
+
+---
+
+**Your Phone Configuration Generator is now clean, organized, and ready to use!**

@@ -27,6 +27,13 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
+import dotenv from 'dotenv';
+import session from 'express-session';
+import bcrypt from 'bcryptjs';
+import cookieParser from 'cookie-parser';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '.env') });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,19 +43,75 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// Session configuration
+app.use(cookieParser());
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'management-console-secret-key-change-in-production',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false, // Set to true if using HTTPS
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    },
+    name: 'management-session'
+}));
+
+// Load users from JSON file
+const loadUsers = () => {
+    try {
+        const usersPath = path.join(__dirname, 'users.json');
+        if (fs.existsSync(usersPath)) {
+            const usersData = fs.readFileSync(usersPath, 'utf8');
+            return JSON.parse(usersData);
+        }
+        return [];
+    } catch (error) {
+        console.error('Error loading users:', error);
+        return [];
+    }
+};
+
+// Authentication middleware
+const requireAuth = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        return next();
+    }
+    
+    // For API requests, return JSON error
+    if (req.path.startsWith('/api/')) {
+        return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    // For web requests, redirect to login
+    return res.redirect('/login');
+};
+
+// Exclude paths from authentication
+const publicPaths = ['/login', '/api/auth/login', '/api/auth/logout', '/favicon.ico'];
+
 const MANAGEMENT_PORT = 3099; // Management console port
 const PROJECT_ROOT = path.join(__dirname, '..');
 
 // Configuration for network access
 const ALLOW_LAN_ACCESS = process.env.WEBUI_ALLOW_LAN === 'true' || process.argv.includes('--allow-lan');
-const BIND_ADDRESS = ALLOW_LAN_ACCESS ? '0.0.0.0' : '127.0.0.1';
+const BIND_ADDRESS = process.env.BIND_ADDRESS || (ALLOW_LAN_ACCESS ? '0.0.0.0' : '127.0.0.1');
+const ALLOWED_DOMAINS = process.env.ALLOWED_DOMAINS ? process.env.ALLOWED_DOMAINS.split(',') : ['localhost', '127.0.0.1'];
 
 // Security: Control access based on configuration
 app.use((req, res, next) => {
     const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress;
+    const host = req.get('host') || req.headers.host;
+    
+    console.log(`Management console access: IP=${clientIP}, Host=${host}`);
     
     // Always allow localhost
     if (clientIP === '127.0.0.1' || clientIP === '::1' || clientIP === '::ffff:127.0.0.1') {
+        return next();
+    }
+    
+    // Check if the host is in the allowed domains list
+    if (ALLOWED_DOMAINS.some(domain => host && host.includes(domain))) {
         return next();
     }
     
@@ -77,6 +140,7 @@ app.use((req, res, next) => {
     }
     
     // Deny all other connections
+    console.warn(`Management console access denied: IP=${clientIP}, Host=${host}`);
     return res.status(403).json({ 
         error: 'Access denied. This interface is only accessible from localhost' + 
                (ALLOW_LAN_ACCESS ? ' or private networks.' : '.'),
@@ -86,7 +150,279 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json());
+
+// Apply authentication to all routes except public paths
+app.use((req, res, next) => {
+    const isPublicPath = publicPaths.some(path => req.path === path || req.path.startsWith(path));
+    if (isPublicPath) {
+        return next();
+    }
+    return requireAuth(req, res, next);
+});
+
 app.use(express.static(path.join(__dirname, 'management-ui')));
+
+// Authentication routes
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+    
+    try {
+        const users = loadUsers();
+        const user = users.find(u => u.username === username);
+        
+        if (!user) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        
+        if (!isValidPassword) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+        
+        // Set session
+        req.session.userId = user.id;
+        req.session.username = user.username;
+        req.session.role = user.role;
+        
+        res.json({ 
+            success: true, 
+            user: { 
+                id: user.id, 
+                username: user.username, 
+                role: user.role 
+            } 
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({ error: 'Could not log out' });
+        }
+        res.clearCookie('management-session');
+        res.json({ success: true });
+    });
+});
+
+app.get('/api/auth/me', requireAuth, (req, res) => {
+    const users = loadUsers();
+    const user = users.find(u => u.id === req.session.userId);
+    
+    if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json({ 
+        id: user.id, 
+        username: user.username, 
+        role: user.role 
+    });
+});
+
+// Login page route
+app.get('/login', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Console - Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .login-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .login-header p {
+            color: #666;
+            margin: 0.5rem 0 0 0;
+            font-size: 0.9rem;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .login-button {
+            width: 100%;
+            padding: 0.8rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .login-button:hover {
+            transform: translateY(-2px);
+        }
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .error-message {
+            color: #dc3545;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            display: none;
+        }
+        .success-message {
+            color: #155724;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+            display: none;
+        }
+        .default-creds {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        .default-creds strong {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Management Console</h1>
+            <p>Phone Configuration Generator</p>
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="login-button" id="loginButton">Login</button>
+        </form>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        
+        <div class="default-creds">
+            <strong>Default Credentials:</strong><br>
+            Username: <strong>admin</strong><br>
+            Password: <strong>admin123</strong>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('loginButton');
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+            
+            button.disabled = true;
+            button.textContent = 'Logging in...';
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: document.getElementById('username').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    successDiv.textContent = 'Login successful! Redirecting...';
+                    successDiv.style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Login';
+            }
+        });
+    </script>
+</body>
+</html>
+    `);
+});
 
 // Service definitions - New consolidated server architecture
 const SERVICES = {
