@@ -100,13 +100,52 @@ class ManagementConsole {
         try {
             const response = await fetch('/api/dashboard');
             const data = await response.json();
-            
             if (data.services) {
                 this.services = data.services;
                 this.updateServiceStatus();
             }
+            // Check LAN and Internet status for the main webapp
+            this.updateWebAppReachability();
         } catch (error) {
             console.error('Error loading dashboard:', error);
+        }
+    }
+
+    async updateWebAppReachability() {
+        // LAN: try local IP or localhost
+        const lanStatus = document.getElementById('lan-status');
+        const internetStatus = document.getElementById('internet-status');
+        if (lanStatus) lanStatus.textContent = 'Checking...';
+        if (internetStatus) internetStatus.textContent = 'Checking...';
+
+        // LAN/localhost check
+        try {
+            const res = await fetch('https://localhost:8443/health', { method: 'GET', mode: 'cors' });
+            if (res.ok) {
+                lanStatus.className = 'badge badge-lg bg-success';
+                lanStatus.textContent = '✅ LAN/Local OK';
+            } else {
+                lanStatus.className = 'badge badge-lg bg-danger';
+                lanStatus.textContent = '❌ LAN/Local Down';
+            }
+        } catch (e) {
+            lanStatus.className = 'badge badge-lg bg-danger';
+            lanStatus.textContent = '❌ LAN/Local Down';
+        }
+
+        // Internet/public check
+        try {
+            const res = await fetch('https://123hostedtools.com:8443/health', { method: 'GET', mode: 'cors' });
+            if (res.ok) {
+                internetStatus.className = 'badge badge-lg bg-success';
+                internetStatus.textContent = '✅ Internet OK';
+            } else {
+                internetStatus.className = 'badge badge-lg bg-danger';
+                internetStatus.textContent = '❌ Internet Down';
+            }
+        } catch (e) {
+            internetStatus.className = 'badge badge-lg bg-danger';
+            internetStatus.textContent = '❌ Internet Down';
         }
     }
 
