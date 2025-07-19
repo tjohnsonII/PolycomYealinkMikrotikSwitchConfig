@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/Logo123Net.css';
+import '../styles/inline-styles-fix.css';
 
 interface Logo123NetProps {
   size?: 'small' | 'medium' | 'large' | 'compact';
@@ -61,6 +61,7 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
   } as React.CSSProperties;
 
   return (
+     
     <div 
       className={`logo-123net ${className}`}
       style={{
