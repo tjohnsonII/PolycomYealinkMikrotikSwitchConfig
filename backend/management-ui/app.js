@@ -147,13 +147,11 @@ class ManagementConsole {
         const webappStatusElement = document.getElementById('webapp-status');
         if (webappStatusElement) {
             webappStatusElement.className = 'badge badge-lg';
-            
             // Check if all main services are healthy
-            const requiredServices = ['ssh-ws', 'auth', 'proxy'];
+            const requiredServices = ['vpn', 'development', 'production'];
             const allHealthy = requiredServices.every(service => 
                 this.services[service] && this.services[service].status === 'healthy'
             );
-            
             if (allHealthy) {
                 webappStatusElement.classList.add('bg-success');
                 webappStatusElement.textContent = '✅ Online';
@@ -532,25 +530,25 @@ async function restartService(service) {
 
 async function startAllServices() {
     await Promise.all([
-        app.serviceAction('start', 'ssh-ws'),
-        app.serviceAction('start', 'auth'),
-        app.serviceAction('start', 'proxy')
+        app.serviceAction('start', 'vpn'),
+        app.serviceAction('start', 'development'),
+        app.serviceAction('start', 'production')
     ]);
 }
 
 async function stopAllServices() {
     await Promise.all([
-        app.serviceAction('stop', 'ssh-ws'),
-        app.serviceAction('stop', 'auth'),
-        app.serviceAction('stop', 'proxy')
+        app.serviceAction('stop', 'vpn'),
+        app.serviceAction('stop', 'development'),
+        app.serviceAction('stop', 'production')
     ]);
 }
 
 async function restartAllServices() {
     await Promise.all([
-        app.serviceAction('restart', 'ssh-ws'),
-        app.serviceAction('restart', 'auth'),
-        app.serviceAction('restart', 'proxy')
+        app.serviceAction('restart', 'vpn'),
+        app.serviceAction('restart', 'development'),
+        app.serviceAction('restart', 'production')
     ]);
 }
 

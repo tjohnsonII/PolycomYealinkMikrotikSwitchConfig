@@ -379,17 +379,7 @@ else
     echo -e "${BLUE}Development mode enabled${NC}"
 fi
 echo ""
-        --help)
-            show_usage
-            exit 0
-            ;;
-        *)
-            echo -e "${RED}Unknown option: $1${NC}"
-            show_usage
-            exit 1
-            ;;
-    esac
-done
+# End of main script
 
 # Handle network check
 if [[ "$CHECK_NETWORK" == true ]]; then

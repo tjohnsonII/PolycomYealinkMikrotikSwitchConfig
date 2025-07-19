@@ -484,46 +484,43 @@
                             </div>
                             <div class="col-md-6">
                                 <h6>🔐 Authentication:</h6>
-                                <ul class="list-unstyled">
-                                    <li><strong>Admin:</strong> admin / 123NetAdmin2024!</li>
-                                    <li><strong>User:</strong> tjohnson / Joshua3412@</li>
-                                </ul>
+                                <span class="text-muted">Login required. Credentials not shown here.</span>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Services Tab -->
-            <div class="tab-pane fade" id="services" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-server"></i> Service Management
-                    </div>
-                    <div class="card-body">
-                        <div id="services-details">
-                            <div class="loading">
-                                <i class="fas fa-spinner fa-spin"></i> Loading service details...
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                    <div>
+                                        <div><strong>Port:</strong> 3001</div>
+                                        <div><strong>Status:</strong> <span id="vpn-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('vpn')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('vpn')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('vpn')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
             </div>
-
-            <!-- Logs Tab -->
-            <div class="tab-pane fade" id="logs" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-file-alt"></i> Service Logs
-                        <div class="float-end">
-                            <select id="log-service" class="form-select form-select-sm log-service-select" title="Select log service" aria-label="Select log service">
-                                <option value="startup">Startup Log</option>
-                                <option value="ssh-ws">SSH WebSocket Log</option>
-                                <option value="auth">Auth Server Log</option>
-                                <option value="proxy">Proxy Log</option>
-                            </select>
-                            <button class="btn btn-primary btn-sm ms-2" onclick="refreshLogs()">
-                                <i class="fas fa-sync"></i> Refresh
+                                    <div>
+                                        <div><strong>Port:</strong> 3002</div>
+                                        <div><strong>Status:</strong> <span id="development-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('development')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('development')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('development')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
                             </button>
                         </div>
                     </div>
@@ -534,21 +531,21 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Files Tab -->
-            <div class="tab-pane fade" id="files" role="tabpanel">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="fas fa-folder"></i> Project Files Overview
-                        <button class="btn btn-primary btn-sm float-end" onclick="refreshFiles()">
-                            <i class="fas fa-sync"></i> Refresh
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div id="files-content">
-                            <div class="loading">
-                                <i class="fas fa-spinner fa-spin"></i> Loading file information...
-                            </div>
+                                    <div>
+                                        <div><strong>Port:</strong> 8443</div>
+                                        <div><strong>Status:</strong> <span id="production-status" class="badge badge-lg">Loading...</span></div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-success btn-sm btn-custom" onclick="startService('production')">
+                                            <i class="fas fa-play"></i> Start
+                                        </button>
+                                        <button class="btn btn-warning btn-sm btn-custom" onclick="restartService('production')">
+                                            <i class="fas fa-redo"></i> Restart
+                                        </button>
+                                        <button class="btn btn-danger btn-sm btn-custom" onclick="stopService('production')">
+                                            <i class="fas fa-stop"></i> Stop
+                                        </button>
+                                    </div>
                         </div>
                     </div>
                 </div>
