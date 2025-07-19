@@ -94,9 +94,9 @@ const MANAGEMENT_PORT = 3099; // Management console port
 const PROJECT_ROOT = path.join(__dirname, '..');
 
 // Configuration for network access
-const ALLOW_LAN_ACCESS = process.env.WEBUI_ALLOW_LAN === 'true' || process.argv.includes('--allow-lan');
-const BIND_ADDRESS = process.env.BIND_ADDRESS || (ALLOW_LAN_ACCESS ? '0.0.0.0' : '127.0.0.1');
-const ALLOWED_DOMAINS = process.env.ALLOWED_DOMAINS ? process.env.ALLOWED_DOMAINS.split(',') : ['localhost', '127.0.0.1'];
+const ALLOW_LAN_ACCESS = true; // Always allow LAN
+const BIND_ADDRESS = '0.0.0.0'; // Bind to all interfaces
+const ALLOWED_DOMAINS = ['localhost', '127.0.0.1', '123hostedtools.com'];
 
 // Security: Control access based on configuration
 app.use((req, res, next) => {
@@ -626,10 +626,29 @@ app.get('/api/dashboard', async (req, res) => {
     try {
         const services = await getAllServicesStatus();
         const systemInfo = await execCommand('uname -a && free -h && df -h .');
-        
+
+        // Get LAN IP address
+        const os = await import('os');
+        const interfaces = os.networkInterfaces();
+        let lanIp = null;
+        for (const name of Object.keys(interfaces)) {
+            for (const iface of interfaces[name]) {
+                if (iface.family === 'IPv4' && !iface.internal && iface.address.startsWith('192.168.')) {
+                    lanIp = iface.address;
+                    break;
+                }
+            }
+            if (lanIp) break;
+        }
+
         res.json({
             services,
             systemInfo: systemInfo.stdout,
+            statusUrls: {
+                localhost: `http://localhost:${MANAGEMENT_PORT}`,
+                lan: lanIp ? `http://${lanIp}:${MANAGEMENT_PORT}` : null,
+                domain: `https://123hostedtools.com:8443`
+            },
             timestamp: new Date().toISOString()
         });
     } catch (error) {
