@@ -366,11 +366,7 @@ app.get('/login', (req, res) => {
         <div id="errorMessage" class="error-message"></div>
         <div id="successMessage" class="success-message"></div>
         
-        <div class="default-creds">
-            <strong>Default Credentials:</strong><br>
-            Username: <strong>admin</strong><br>
-            Password: <strong>admin123</strong>
-        </div>
+        <!-- Default credentials removed for security -->
     </div>
 
     <script>
@@ -648,6 +644,12 @@ app.get('/api/dashboard', async (req, res) => {
                 localhost: `http://localhost:${MANAGEMENT_PORT}`,
                 lan: lanIp ? `http://${lanIp}:${MANAGEMENT_PORT}` : null,
                 domain: `https://123hostedtools.com:8443`
+            },
+            lanAccess: {
+                enabled: ALLOW_LAN_ACCESS,
+                ip: lanIp,
+                status: lanIp ? 'LAN available' : 'LAN unavailable',
+                message: lanIp ? `LAN access enabled at http://${lanIp}:${MANAGEMENT_PORT}` : 'LAN access not detected'
             },
             timestamp: new Date().toISOString()
         });
