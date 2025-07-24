@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import '../styles/inline-styles-fix.css';
 
 interface Logo123NetProps {
@@ -23,7 +23,7 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
     large: { fontSize: 48, blockSize: 72 }
   };
 
-  const { fontSize, blockSize } = dimensions[size];
+  const { fontSize, blockSize } = dimensions[size as keyof typeof dimensions];
 
   // Color variants for different backgrounds
   const colors = {
@@ -41,7 +41,7 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
     }
   };
 
-  const colorScheme = colors[variant];
+  const colorScheme = colors[variant as keyof typeof colors];
 
   // Create CSS custom properties for dynamic styling
   const cssVars = {

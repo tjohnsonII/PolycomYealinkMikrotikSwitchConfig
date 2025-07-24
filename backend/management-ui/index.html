@@ -3,49 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📱 Phone Config Manager - Web Console</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <link rel="stylesheet" href="/dist/assets/index-ygmzo40q.css">
+    <title>Phone Config Manager - Web Console</title>
     <style>
         :root {
-            --bg-dark: #1a1a1a;
-            --bg-card: #2d2d2d;
-            --text-light: #f8f9fa;
-            --border-color: #444;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --info: #17a2b8;
+            --bg-dark: #181c24;
+            --bg-card: #232a36;
+            --text-light: #f4f6fa;
+            --border-color: #2c3440;
+            --success: #4ade80;
+            --warning: #facc15;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --accent: #6366f1;
+            --shadow: 0 4px 24px rgba(0,0,0,0.18);
         }
 
         body {
-            background-color: var(--bg-dark);
+            background: linear-gradient(135deg, #232a36 0%, #181c24 100%);
             color: var(--text-light);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
         }
 
         .navbar {
-            background-color: var(--bg-card) !important;
-            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(90deg, var(--bg-card) 60%, var(--accent) 100%) !important;
+            border-bottom: 1.5px solid var(--border-color);
+            box-shadow: var(--shadow);
         }
 
         .navbar-brand {
             font-weight: bold;
             color: var(--text-light) !important;
+            letter-spacing: 1px;
+            font-size: 1.3em;
         }
 
         .card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.2s;
         }
 
         .card-header {
-            background-color: var(--bg-card);
+            background: transparent;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-light);
+            font-weight: 500;
+            font-size: 1.1em;
         }
 
         .card-body {
@@ -58,74 +67,83 @@
         .status-stopped { color: var(--danger); }
 
         .service-card {
-            transition: all 0.3s ease;
+            transition: box-shadow 0.3s, transform 0.2s;
         }
-
         .service-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 32px rgba(56,189,248,0.12);
         }
 
         .log-output {
-            background-color: #0d1117;
+            background: #10141b;
             border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 15px;
-            color: #f0f6fc;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+            border-radius: 8px;
+            padding: 18px;
+            color: #e0e6ef;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
             max-height: 400px;
             overflow-y: auto;
             white-space: pre-wrap;
         }
 
         .btn-custom {
-            margin: 2px;
+            margin: 3px 4px 3px 0;
+            border-radius: 6px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(99,102,241,0.04);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .btn-custom:active {
+            box-shadow: 0 1px 2px rgba(99,102,241,0.08);
         }
 
         .tab-content {
-            padding: 20px 0;
+            padding: 28px 0 0 0;
         }
 
         .nav-tabs .nav-link {
             color: var(--text-light);
             border-color: var(--border-color);
+            border-radius: 8px 8px 0 0;
+            margin-right: 2px;
         }
-
         .nav-tabs .nav-link.active {
-            background-color: var(--bg-card);
-            border-color: var(--border-color);
-            color: var(--text-light);
+            background: var(--accent);
+            border-color: var(--accent) var(--accent) var(--bg-card);
+            color: #fff;
+            font-weight: 600;
         }
 
         .table-dark {
-            background-color: var(--bg-card);
+            background: var(--bg-card);
         }
 
         .badge-lg {
-            font-size: 0.9em;
-            padding: 0.5em 0.8em;
+            font-size: 1em;
+            padding: 0.6em 1em;
+            border-radius: 6px;
         }
 
         .file-tree {
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 15px;
         }
-
         .file-exists { color: var(--success); }
         .file-missing { color: var(--danger); }
         .file-directory { color: var(--info); }
 
         .real-time-indicator {
             display: inline-block;
-            width: 10px;
-            height: 10px;
-            background-color: var(--success);
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, var(--success), var(--accent));
             border-radius: 50%;
-            margin-right: 5px;
+            margin-right: 7px;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--success);
         }
-
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -134,68 +152,88 @@
 
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 22px;
             color: var(--info);
+            font-size: 1.1em;
         }
 
         .header-stats {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            background-color: var(--bg-card);
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            align-items: stretch;
+            background: linear-gradient(90deg, var(--bg-card) 80%, var(--accent) 100%);
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 12px rgba(56,189,248,0.08);
         }
-
         .stat-item {
             text-align: center;
+            flex: 1;
         }
-
         .stat-value {
-            font-size: 1.5em;
-            font-weight: bold;
+            font-size: 2em;
+            font-weight: 700;
         }
-
         .stat-label {
-            font-size: 0.9em;
-            color: #888;
+            font-size: 1em;
+            color: #b0b8c9;
+            margin-top: 2px;
         }
 
         /* Terminal Styles */
         .terminal-output {
-            background-color: #1a1a1a;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.4;
-            color: #00ff00;
+            background: #181c24;
+            border: 1.5px solid var(--border-color);
+            border-radius: 10px;
+            padding: 18px;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #4ade80;
             height: 400px;
             overflow-y: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
-
-        .terminal-welcome {
-            color: #00aaff;
+        .terminal-command {
+            color: #facc15;
             font-weight: bold;
         }
-
-        .terminal-input {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-light);
-            font-family: 'Courier New', monospace;
+        .terminal-error {
+            color: #ef4444;
         }
-
-        .terminal-input:focus {
-            background-color: var(--bg-card);
-            border-color: #00aaff;
-            box-shadow: 0 0 0 0.2rem rgba(0, 170, 255, 0.25);
-            color: var(--text-light);
+        .terminal-success {
+            color: #4ade80;
         }
+        .terminal-info {
+            color: #38bdf8;
+        }
+        .log-service-select {
+            width: auto;
+            display: inline;
+        }
+        /* Responsive tweaks */
+        @media (max-width: 900px) {
+            .header-stats {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 8px;
+            }
+            .stat-item {
+                margin-bottom: 8px;
+            }
+        }
+        @media (max-width: 600px) {
+            .card, .header-stats {
+                border-radius: 6px;
+                padding: 8px 4px;
+            }
+            .tab-content {
+                padding: 10px 0 0 0;
+            }
+        }
+    </style>
 
         .terminal-command {
             color: #ffff00;
@@ -221,26 +259,78 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-phone"></i> Phone Config Manager
-                <small class="text-muted">Web Console</small>
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <a class="navbar-brand d-flex align-items-center gap-2 custom-navbar-brand" href="#">
+                <span class="navbar-logo">
+                    <i class="fas fa-cogs fa-lg"></i>
+                </span>
+                <span>
+                    <span class="navbar-title">Phone Config Manager</span>
+                    <span class="navbar-subtitle">Web Console</span>
+                </span>
             </a>
-            <div class="navbar-nav ms-auto">
-                <a class="btn btn-outline-light me-2" href="diagnostics.html">
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <a class="btn btn-gradient me-2" href="diagnostics.html">
                     <i class="fas fa-stethoscope"></i> Diagnostics
                 </a>
-                <a class="btn btn-outline-light me-2" href="vpn-management.html">
+                <a class="btn btn-gradient me-2" href="vpn-management.html">
                     <i class="fas fa-shield-alt"></i> VPN
                 </a>
-                <span class="navbar-text">
+                <span class="navbar-text d-flex align-items-center ms-2 custom-navbar-text">
                     <span class="real-time-indicator"></span>
                     <small id="last-update">Loading...</small>
                 </span>
             </div>
         </div>
     </nav>
+    <style>
+        .custom-navbar {
+            background: linear-gradient(90deg, #232a36 60%, #6366f1 100%) !important;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+            min-height: 64px;
+        }
+        .custom-navbar-brand {
+            font-size: 1.5em;
+        }
+        .navbar-logo {
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            border-radius: 50%;
+            padding: 7px 11px 7px 10px;
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+            color: #fff;
+        }
+        .navbar-title {
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .navbar-subtitle {
+            display: block;
+            font-size: 0.7em;
+            font-weight: 400;
+            color: #b0b8c9;
+            margin-top: -2px;
+        }
+        .btn-gradient {
+            background: linear-gradient(90deg, #6366f1 60%, #38bdf8 100%);
+            color: #fff !important;
+            border: none;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 6px 18px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .btn-gradient:hover, .btn-gradient:focus {
+            background: linear-gradient(90deg, #38bdf8 60%, #6366f1 100%);
+            color: #fff !important;
+        }
+        .custom-navbar-text {
+            font-size: 0.95em;
+            color: #b0b8c9;
+        }
+    </style>
 
     <div class="container-fluid mt-3">
         <!-- Header Stats -->
