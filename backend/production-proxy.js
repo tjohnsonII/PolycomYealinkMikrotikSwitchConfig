@@ -24,8 +24,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Production configuration
-const HTTP_PORT = 80;
-const HTTPS_PORT = 443;
+const HTTP_PORT = 8080;
+const HTTPS_PORT = 8443;
 const DOMAIN = '123hostedtools.com';
 
 // Get the project root directory

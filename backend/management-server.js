@@ -637,13 +637,18 @@ app.get('/api/dashboard', async (req, res) => {
             if (lanIp) break;
         }
 
+        // If LAN IP is detected, use it for the 123hostedtools.com domain status URL
+        const domainUrl = lanIp
+            ? `https://123hostedtools.com:8443`.replace('123hostedtools.com', lanIp)
+            : `https://123hostedtools.com:8443`;
+
         res.json({
             services,
             systemInfo: systemInfo.stdout,
             statusUrls: {
                 localhost: `http://localhost:${MANAGEMENT_PORT}`,
                 lan: lanIp ? `http://${lanIp}:${MANAGEMENT_PORT}` : null,
-                domain: `https://123hostedtools.com:8443`
+                domain: domainUrl
             },
             lanAccess: {
                 enabled: ALLOW_LAN_ACCESS,
