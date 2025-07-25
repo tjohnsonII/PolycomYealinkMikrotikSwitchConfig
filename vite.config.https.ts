@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import fs from 'fs'
-import path from 'path'
 
 // HTTPS Configuration for Vite
 // This file will replace vite.config.ts when enabling HTTPS

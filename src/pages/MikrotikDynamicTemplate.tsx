@@ -39,14 +39,14 @@ add name=Phones_Options options="GMT Offset -5,NTP,prov_66,prov_160,Phone_vlan"
 /ip pool 
 add name=Phones_IP_Pool ranges=172.16.1.30-172.16.1.250 
 /ip dhcp-server 
-add address-pool=Phones_IP_Pool authoritative=after-2sec-delay dhcp-option-set=\ 
+add address-pool=Phones_IP_Pool authoritative=after-2sec-delay dhcp-option-set=\\
     Phones_Options disabled=no interface=vlan202 name="Phones DHCP" 
-add address-pool="Customer Internet" disabled=no interface=vlan101 name=\ 
+add address-pool="Customer Internet" disabled=no interface=vlan101 name=\\
     "Customer Internet" 
 /snmp community 
 set [ find default=yes ] addresses=66.103.225.120/29,216.234.96.0/23 
 /user group 
-set full policy="local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,passw\ 
+set full policy="local,telnet,ssh,ftp,reboot,read,write,policy,test,winbox,passw\\
     ord,web,sniff,sensitive,api,romon,dude,tikapp" 
 /ip neighbor discovery-settings 
 set discover-interface-list=!dynamic 
@@ -56,8 +56,8 @@ add address=192.168.10.1/24 interface=vlan102 network=192.168.10.0
 add address=172.16.1.1/24 interface=vlan202 network=172.16.1.0 
 add address={WAN_IP}/29 interface=ether10 network={NETWORK_IP} 
 /ip dhcp-server network 
-add address=172.16.1.0/24 dhcp-option-set=Phones_Options dns-server=\ 
-    8.8.8.8,216.234.97.2,216.234.97.3 gateway=172.16.1.1 netmask=24 \ 
+add address=172.16.1.0/24 dhcp-option-set=Phones_Options dns-server=\\
+    8.8.8.8,216.234.97.2,216.234.97.3 gateway=172.16.1.1 netmask=24 \\
     ntp-server=184.105.182.16 
 /ip firewall address-list 
 add address=216.234.96.0/23 list=MGMT 
@@ -109,7 +109,7 @@ set api disabled=yes
 set winbox address=66.103.225.120/29,216.234.96.0/23,192.168.88.0/24 
 set api-ssl disabled=yes 
 /snmp 
-set enabled=yes location="{LOCATION}" \ 
+set enabled=yes location="{LOCATION}" \\
     trap-version=2 
 /system clock 
 set time-zone-name=America/Detroit 

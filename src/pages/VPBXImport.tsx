@@ -370,7 +370,7 @@ const VPBXImport: React.FC = () => {
                       <select
                         name={f}
                         value={row[f] || ''}
-                        onChange={e => handleVpbxChange(idx, e as any)}
+                        onChange={e => handleVpbxChange(idx, e as React.ChangeEvent<HTMLSelectElement>)}
                         style={{ 
                           width: '95%', // Slight margin within cell
                           padding: '5px',

@@ -681,7 +681,7 @@ app.post('/vpn/connect', async (req, res) => {
   }
 });
 
-// Dedicated SAML Connect endpoint
+// Dedicated SAML Connect endpoint - Simple Work VPN Connection
 app.post('/vpn/saml-connect', async (req, res) => {
   try {
     const { name } = req.body;
@@ -691,15 +691,20 @@ app.post('/vpn/saml-connect', async (req, res) => {
     
     addVpnLog(`🔐 Starting SAML authentication for ${vpnName} VPN...`);
     
-    // Get the config path
-    const configPath = path.join(path.dirname(new URL(import.meta.url).pathname), `${vpnName}.ovpn`);
+    // Get the config path - check for uploaded config first, then work.ovpn
+    let configPath = path.join(path.dirname(new URL(import.meta.url).pathname), `${vpnName}.ovpn`);
     
     if (!await fs.access(configPath).then(() => true).catch(() => false)) {
-      addVpnLog(`❌ Configuration file not found: ${configPath}`);
-      return res.status(404).json({ 
-        error: 'Configuration file not found',
-        message: `No configuration file found for ${vpnName} VPN`
-      });
+      // Try uploaded config
+      configPath = path.join(path.dirname(new URL(import.meta.url).pathname), 'work-vpn.ovpn');
+      
+      if (!await fs.access(configPath).then(() => true).catch(() => false)) {
+        addVpnLog(`❌ Configuration file not found: ${configPath}`);
+        return res.status(404).json({ 
+          error: 'Configuration file not found',
+          message: `No configuration file found for ${vpnName} VPN. Please upload a config file first.`
+        });
+      }
     }
     
     // Update VPN state
@@ -709,146 +714,75 @@ app.post('/vpn/saml-connect', async (req, res) => {
     vpnState.connected = false;
     vpnState.connectionType = 'saml';
     
-    addVpnLog('🚀 Using OpenVPN3 for SAML authentication...');
+    addVpnLog('🚀 Starting OpenVPN3 SAML connection...');
     
-    try {
-      // First, import the configuration
-      const { spawn } = await import('child_process');
+    // Simple OpenVPN3 session start - this will open browser for SAML
+    const connectProcess = spawn('openvpn3', [
+      'session-start',
+      '--config', configPath
+    ], {
+      stdio: 'pipe',
+      detached: true
+    });
+    
+    let output = '';
+    
+    connectProcess.stdout.on('data', (data) => {
+      const message = data.toString();
+      output += message;
+      addVpnLog(`📡 OpenVPN3: ${message.trim()}`);
       
-      // Remove existing configuration if it exists
-      const removeProcess = spawn('openvpn3', ['config-remove', '--config', vpnName], {
-        stdio: 'pipe'
-      });
-      
-      removeProcess.on('close', async (removeCode) => {
-        // Import the configuration
-        const importProcess = spawn('openvpn3', ['config-import', '--config', configPath, '--name', vpnName, '--persistent'], {
-          stdio: 'pipe'
-        });
-        
-        let importOutput = '';
-        importProcess.stdout.on('data', (data) => {
-          importOutput += data.toString();
-          addVpnLog(`📥 Import: ${data.toString().trim()}`);
-        });
-        
-        importProcess.stderr.on('data', (data) => {
-          addVpnLog(`❌ Import error: ${data.toString().trim()}`);
-        });
-        
-        importProcess.on('close', async (importCode) => {
-          if (importCode === 0) {
-            addVpnLog('✅ Configuration imported successfully');
-            
-            // Now start the VPN session with SAML support
-            addVpnLog('🚀 Starting OpenVPN3 session with SAML support...');
-            
-            const sessionProcess = spawn('openvpn3', ['session-start', '--config', vpnName], {
-              stdio: 'pipe'
-            });
-            
-            let sessionOutput = '';
-            sessionProcess.stdout.on('data', (data) => {
-              const text = data.toString();
-              sessionOutput += text;
-              addVpnLog(`📊 Session: ${text.trim()}`);
-              
-              // Check for SAML authentication prompts
-              if (text.includes('https://') || text.includes('terminal.123.net/auth')) {
-                addVpnLog('🌐 SAML authentication required - browser should open automatically');
-                
-                // Extract the authentication URL
-                const urlMatch = text.match(/https:\/\/[^\s]+/);
-                if (urlMatch) {
-                  const authUrl = urlMatch[0];
-                  addVpnLog(`🔗 Authentication URL: ${authUrl}`);
-                  
-                  // Try to open browser
-                  try {
-                    const { spawn: spawnBrowser } = require('child_process');
-                    spawnBrowser('xdg-open', [authUrl], { detached: true, stdio: 'ignore' });
-                  } catch (error) {
-                    addVpnLog(`⚠️ Could not open browser automatically: ${error.message}`);
-                  }
-                }
-              }
-              
-              // Check for successful connection
-              if (text.includes('Connection established') || text.includes('Initialization Sequence Completed')) {
-                addVpnLog('✅ SAML VPN connection completed successfully');
-                vpnState.connected = true;
-                vpnState.connecting = false;
-              }
-            });
-            
-            sessionProcess.stderr.on('data', (data) => {
-              addVpnLog(`❌ Session error: ${data.toString().trim()}`);
-            });
-            
-            sessionProcess.on('close', (sessionCode) => {
-              if (sessionCode === 0) {
-                addVpnLog('✅ SAML VPN connection completed successfully');
-                vpnState.connected = true;
-                vpnState.connecting = false;
-              } else {
-                addVpnLog(`❌ SAML VPN connection failed with exit code ${sessionCode}`);
-                vpnState.connected = false;
-                vpnState.connecting = false;
-              }
-            });
-            
-            // Store process reference
-            vpnState.process = sessionProcess;
-            
-          } else {
-            addVpnLog(`❌ Failed to import configuration with exit code ${importCode}`);
-            vpnState.connecting = false;
-            return res.status(500).json({
-              error: 'Failed to import VPN configuration',
-              message: 'Could not import VPN configuration for SAML authentication'
-            });
-          }
-        });
-      });
-      
-      // Set timeout for connection attempt
-      setTimeout(() => {
-        if (vpnState.connecting) {
-          addVpnLog('⏰ SAML connection timeout - terminating process');
-          if (vpnState.process) {
-            vpnState.process.kill();
-          }
-          vpnState.connecting = false;
-          vpnState.connected = false;
-        }
-      }, 120000); // 2 minute timeout for SAML
-      
-      res.json({
-        success: true,
-        message: `SAML authentication initiated for ${vpnName} VPN`,
-        connectionType: 'saml',
-        instructions: [
-          '1. Browser window will open automatically for SAML authentication',
-          '2. Enter your work username and password',
-          '3. Enter your 2FA/OTP code',
-          '4. VPN will connect automatically after authentication'
-        ]
-      });
-      
-    } catch (error) {
-      addVpnLog(`❌ OpenVPN3 SAML authentication error: ${error.message}`);
-      vpnState.connecting = false;
-      return res.status(500).json({ 
-        error: 'OpenVPN3 SAML authentication failed',
-        message: 'Unable to start SAML authentication with OpenVPN3',
-        authType: 'saml'
-      });
-    }
+      // Check for successful connection
+      if (message.includes('Connection established') || message.includes('Initialization Sequence Completed')) {
+        addVpnLog('✅ Work VPN connected successfully!');
+        vpnState.connecting = false;
+        vpnState.connected = true;
+      }
+    });
+    
+    connectProcess.stderr.on('data', (data) => {
+      const message = data.toString();
+      output += message;
+      addVpnLog(`� OpenVPN3: ${message.trim()}`);
+    });
+    
+    connectProcess.on('close', (code) => {
+      if (code === 0) {
+        addVpnLog('✅ OpenVPN3 SAML connection successful!');
+        vpnState.connecting = false;
+        vpnState.connected = true;
+      } else {
+        addVpnLog(`❌ OpenVPN3 connection failed with code: ${code}`);
+        vpnState.connecting = false;
+        vpnState.connected = false;
+      }
+    });
+    
+    // Store the process for later cleanup
+    vpnState.process = connectProcess;
+    
+    // Return immediately - OpenVPN3 will handle the browser redirect
+    res.json({ 
+      success: true,
+      message: 'SAML authentication started. Browser will open automatically for login.',
+      samlAuth: true,
+      instructions: [
+        '1. Browser window will open automatically',
+        '2. Enter your work username and password',
+        '3. Enter your 2FA/OTP code',
+        '4. VPN will connect automatically after authentication'
+      ]
+    });
     
   } catch (error) {
     addVpnLog(`❌ SAML connection error: ${error.message}`);
     vpnState.connecting = false;
-    res.status(500).json({ error: error.message });
+    vpnState.connected = false;
+    
+    res.status(500).json({ 
+      error: 'SAML connection failed',
+      message: error.message
+    });
   }
 });
 
@@ -1357,7 +1291,7 @@ app.get('/system/server-vpn-status', async (req, res) => {
 });
 
 // Start the combined HTTP/WebSocket server
-const PORT = 3001;
+const PORT = process.env.SSH_WS_PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`SSH WebSocket server with diagnostics running on http://0.0.0.0:${PORT}`);
   console.log('Available endpoints:');

@@ -279,7 +279,7 @@ const handleRequest = (req, res) => {
   
   // API proxying with enhanced error handling
   if (url.startsWith('/api/')) {
-    let target = 'http://localhost:3001';
+    let target = 'http://localhost:3000';
     let targetUrl = url;
     
     // Route different API endpoints to appropriate services
@@ -346,8 +346,8 @@ server.on('upgrade', (req, socket, head) => {
   if (url.startsWith('/ws/')) {
     const targetUrl = url.replace('/ws', '');
     req.url = targetUrl;
-    console.log(`🔄 Proxying WebSocket ${url} → localhost:3001${targetUrl}`);
-    proxy.ws(req, socket, head, { target: 'http://localhost:3001' });
+    console.log(`🔄 Proxying WebSocket ${url} → localhost:3000${targetUrl}`);
+    proxy.ws(req, socket, head, { target: 'http://localhost:3000' });
   } else {
     console.log(`🚫 Rejected WebSocket upgrade for: ${url}`);
     socket.destroy();
@@ -400,10 +400,10 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log('🔄 API Routes:');
   console.log(`   • /api/auth/* → localhost:3002/*`);
   console.log(`   • /api/admin/* → localhost:3002/api/admin/*`);
-  console.log(`   • /api/vpn/* → localhost:3001/vpn/*`);
-  console.log(`   • /api/system/* → localhost:3001/system/*`);
-  console.log(`   • /api/* → localhost:3001/api/*`);
-  console.log(`   • /ws/* → localhost:3001/* (WebSocket)`);
+  console.log(`   • /api/vpn/* → localhost:3000/vpn/*`);
+  console.log(`   • /api/system/* → localhost:3000/system/*`);
+  console.log(`   • /api/* → localhost:3000/api/*`);
+  console.log(`   • /ws/* → localhost:3000/* (WebSocket)`);
   console.log('');
   console.log('🌐 External Access:');
   console.log(`   • https://123hostedtools.com${PORT !== 443 ? ':' + PORT : ''}`);

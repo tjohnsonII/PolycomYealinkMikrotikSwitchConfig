@@ -344,26 +344,37 @@
 
         <!-- Connection Controls -->
         <div class="card">
-            <h2>⚡ Quick Actions</h2>
+            <h2>⚡ VPN Connection</h2>
+            <div style="margin-bottom: 15px;">
+                <p><strong>Work VPN (SAML/2FA):</strong> Click the button below to connect to your work VPN. This will:</p>
+                <ul style="margin-left: 20px; margin-bottom: 15px;">
+                    <li>Use your work.ovpn configuration file</li>
+                    <li>Start OpenVPN3 with SAML authentication</li>
+                    <li>Automatically open your browser for login</li>
+                    <li>Handle the SAML authentication and OTP process</li>
+                </ul>
+            </div>
             <div>
-                <button class="btn btn-success" onclick="connectWorkVPN()">🏢 Connect Work VPN</button>
-                <button class="btn btn-primary" onclick="connectHomeVPN()">🏠 Connect Home VPN</button>
-                <button class="btn btn-warning" onclick="connectSamlVPN()">🔐 SAML Work VPN</button>
-                <button class="btn btn-info" onclick="startDualVPN()">🔄 Start Dual VPN</button>
+                <button class="btn btn-warning btn-lg" onclick="connectSamlVPN()" style="margin-right: 10px;">🔐 Connect Work VPN (SAML)</button>
+                <button class="btn btn-primary" onclick="connectHomeVPN()" style="margin-right: 10px;">🏠 Connect Home VPN</button>
+                <button class="btn btn-info" onclick="startDualVPN()" style="margin-right: 10px;">🔄 Start Dual VPN</button>
                 <button class="btn btn-danger" onclick="disconnectAll()">🛑 Disconnect All</button>
             </div>
         </div>
 
-        <!-- SAML Authentication -->
+        <!-- SAML Authentication Instructions -->
         <div class="card">
-            <h2>🔐 SAML Authentication</h2>
+            <h2>🔐 SAML Authentication Process</h2>
             <div id="samlAuthContainer">
-                <p>For work VPNs requiring SAML authentication, use the SAML connection process:</p>
-                <div>
-                    <button class="btn btn-primary" onclick="getSamlLoginUrl()">🔗 Get SAML Login URL</button>
-                    <button class="btn btn-success" onclick="attemptSamlConnection()">🚀 Attempt SAML Connection</button>
-                    <button class="btn btn-warning" onclick="showSamlAuthModal()">🔐 Manual SAML Login</button>
-                    <button class="btn btn-info" onclick="showSamlInstructions()">📋 SAML Instructions</button>
+                <p>When you click "Connect Work VPN (SAML)", here's what happens:</p>
+                <ol style="margin-left: 20px; margin-bottom: 15px;">
+                    <li><strong>OpenVPN3 starts:</strong> Uses your work.ovpn configuration</li>
+                    <li><strong>Browser opens:</strong> Automatically redirects to SAML login page</li>
+                    <li><strong>You authenticate:</strong> Enter your work credentials and OTP</li>
+                    <li><strong>Connection completes:</strong> VPN connects automatically after successful auth</li>
+                </ol>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-info" onclick="showSamlInstructions()">📋 Detailed SAML Instructions</button>
                 </div>
                 <div id="samlStatus" style="margin-top: 15px;"></div>
             </div>

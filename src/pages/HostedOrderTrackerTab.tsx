@@ -139,7 +139,8 @@ const HostedOrderTrackerTab: React.FC = () => {
     setData(d => {
       const newData = { ...d };
       for (const f of fields) {
-        const { [name]: _removed, ...rest } = newData[f];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { [name]: _, ...rest } = newData[f];
         newData[f] = rest;
       }
       return newData;

@@ -28,7 +28,7 @@ const HealthCheck: React.FC = () => {
         ...prev, 
         auth: authResponse.ok ? 'healthy' : 'error' 
       }));
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, auth: 'error' }));
     }
 
@@ -46,7 +46,7 @@ const HealthCheck: React.FC = () => {
         ...prev, 
         api: apiResponse.ok ? 'healthy' : 'error' 
       }));
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, api: 'error' }));
     }
 
@@ -68,7 +68,7 @@ const HealthCheck: React.FC = () => {
           ws.close();
         }
       }, 5000);
-    } catch (error) {
+    } catch {
       setHealthStatus(prev => ({ ...prev, ws: 'error' }));
     }
   };

@@ -138,7 +138,13 @@ const Diagnostic: React.FC = () => {
       }
 
       // Start VPN connection
-      const connectPayload: any = {};
+      const connectPayload: { 
+        username?: string; 
+        password?: string; 
+        name?: string; 
+        otp?: string; 
+        samlAuth?: boolean; 
+      } = {};
       if (requiresCredentials && authType === 'credentials') {
         connectPayload.username = vpnCredentials.username;
         connectPayload.password = vpnCredentials.password;
@@ -188,7 +194,7 @@ const Diagnostic: React.FC = () => {
           addLog('💡 Import this file into OpenVPN Connect or compatible client');
           return;
         }
-      } catch (error) {
+      } catch {
         console.log('Backend config not available, trying uploaded file');
       }
 
@@ -259,7 +265,7 @@ const Diagnostic: React.FC = () => {
           window.open(url, '_blank');
           URL.revokeObjectURL(url);
           addLog('🔗 Opened config in new tab - save and import to VPN client');
-        } catch (error) {
+        } catch {
           addLog('❌ Could not open in VPN client - please download and import manually');
         }
       }
@@ -281,7 +287,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           fileContent = result.content;
         }
-      } catch (error) {
+      } catch {
         console.log('Backend config not available, trying uploaded file');
       }
 
@@ -331,7 +337,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           fileContent = result.content;
         }
-      } catch (error) {
+      } catch {
         if (vpnConfig.configFile) {
           fileContent = await readFileAsText(vpnConfig.configFile);
         }
@@ -413,33 +419,36 @@ const Diagnostic: React.FC = () => {
     }
   };
 
-  // Run connect-vpn.sh script to connect to available VPN configs
-  const runVpnConnectScript = async () => {
+  // Simple Work VPN SAML connection using OpenVPN3
+  const connectSamlVPN = async () => {
+    setVpnStatus('connecting');
+    addLog('🔐 Starting SAML authentication for work VPN...');
+    
     try {
-      addLog('🚀 Starting VPN connection script...');
-      
-      const response = await fetch(getApiUrl('vpnConnectScript'), {
+      const response = await fetch(getApiUrl('vpnSamlConnect'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'work' })
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        addLog('✅ ' + result.message);
-        if (result.note) {
-          addLog('💡 ' + result.note);
-        }
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        addLog('✅ SAML authentication started!');
+        addLog('🌐 Browser should open automatically for authentication');
+        addLog('💡 Complete login with your work credentials and OTP');
         
-        // Start polling for updated logs and status
-        setTimeout(() => {
-          loadVpnStatus();
-        }, 2000);
+        // Start monitoring connection status
+        pollVpnStatus();
+        
       } else {
-        const error = await response.json();
-        addLog('❌ Failed to run VPN script: ' + error.error);
+        setVpnStatus('error');
+        addLog(`❌ Failed to start SAML authentication: ${result.error || result.message}`);
       }
+      
     } catch (error) {
-      addLog('❌ Error running VPN script: ' + (error as Error).message);
+      setVpnStatus('error');
+      addLog(`❌ SAML connection error: ${(error as Error).message}`);
     }
   };
 
@@ -522,7 +531,7 @@ const Diagnostic: React.FC = () => {
         // Fallback to browser-based connectivity test
         return await performBrowserConnectivityTest(host, port);
       }
-    } catch (error) {
+    } catch {
       // Fallback to browser-based connectivity test
       return await performBrowserConnectivityTest(host, port);
     }
@@ -648,7 +657,7 @@ const Diagnostic: React.FC = () => {
           const result = await response.json();
           samlUrl = result.loginUrl;
         }
-      } catch (error) {
+      } catch {
         console.log('Could not get SAML URL from backend, using default');
       }
       
@@ -728,7 +737,7 @@ const Diagnostic: React.FC = () => {
           configContent = result.content;
           filename = result.filename || filename;
         }
-      } catch (error) {
+      } catch {
         if (vpnConfig.configFile) {
           configContent = await readFileAsText(vpnConfig.configFile);
           filename = vpnConfig.configFile.name;
@@ -764,7 +773,7 @@ const Diagnostic: React.FC = () => {
       try {
         await fetch(getApiUrl('systemOpenNetworkSettings'), { method: 'POST' });
         addLog('🔧 Attempted to open Network Settings');
-      } catch (error) {
+      } catch {
         addLog('💡 Manually open: Settings → Network → VPN → + → Import from file');
       }
     } catch (error) {
@@ -1381,7 +1390,7 @@ const Diagnostic: React.FC = () => {
               🔌 Disconnect
             </button>
             <button
-              onClick={runVpnConnectScript}
+              onClick={connectVPN}
               style={{
                 backgroundColor: '#17a2b8',
                 color: 'white',
@@ -1394,9 +1403,25 @@ const Diagnostic: React.FC = () => {
             >
               🚀 Run VPN Script
             </button>
+            <button
+              onClick={connectSamlVPN}
+              style={{
+                backgroundColor: '#ffc107',
+                color: '#212529',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '8px 16px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              🔐 Connect Work VPN (SAML)
+            </button>
           </div>
           <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
             💡 The "Run VPN Script" button executes connect-vpn.sh to connect all available VPN configs using appropriate methods (OpenVPN 3 for SAML, classic OpenVPN for others)
+            <br />
+            🔐 The "Connect Work VPN (SAML)" button uses OpenVPN3 for direct SAML authentication and will open your browser automatically
           </div>
         </div>
 

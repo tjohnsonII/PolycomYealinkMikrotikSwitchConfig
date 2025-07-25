@@ -1,0 +1,286 @@
+version: '3.8'
+
+services:
+  # Main application
+  phone-config-app:
+    build: .
+    container_name: phone-config-generator
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # SSH WebSocket
+      - "3001:3001"   # Authentication
+      - "3099:3099"   # Management Console
+      - "3443:3443"   # Main Application
+      - "443:443"     # HTTPS Proxy
+      - "80:80"       # HTTP Redirect
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - ./ssl:/app/ssl:ro
+      - ./vpn-configs:/app/vpn-configs
+      - ./backups:/app/backups
+      - ./uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3443
+      - SSH_WS_PORT=3000
+      - AUTH_PORT=3001
+      - MANAGEMENT_PORT=3099
+      - HTTPS_PORT=443
+      - DOMAIN=123hostedtools.com
+      - WEBUI_ALLOW_LAN=true
+      - LOG_LEVEL=info
+    env_file:
+      - .env.production
+    networks:
+      - phone-config-network
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    devices:
+      - /dev/net/tun
+    sysctls:
+      - net.ipv4.ip_forward=1
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phone-config.rule=Host(`123hostedtools.com`)"
+      - "traefik.http.routers.phone-config.tls=true"
+      - "traefik.http.routers.phone-config.tls.certresolver=letsencrypt"
+      - "traefik.http.services.phone-config.loadbalancer.server.port=3443"
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: phone-config-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    networks:
+      - phone-config-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # PostgreSQL for persistent data (optional, can use SQLite instead)
+  postgres:
+    image: postgres:15-alpine
+    container_name: phone-config-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - POSTGRES_DB=phone_config
+      - POSTGRES_USER=${POSTGRES_USER:-phoneconfig}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - phone-config-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-phoneconfig}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Nginx reverse proxy (alternative to Traefik)
+  nginx:
+    image: nginx:alpine
+    container_name: phone-config-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/ssl/certs:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - phone-config-network
+    depends_on:
+      - phone-config-app
+    profiles:
+      - nginx
+
+  # Traefik reverse proxy (alternative to Nginx)
+  traefik:
+    image: traefik:v2.10
+    container_name: phone-config-traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - ./ssl:/etc/ssl/certs:ro
+      - traefik_data:/data
+    networks:
+      - phone-config-network
+    environment:
+      - CF_API_EMAIL=${CF_API_EMAIL}
+      - CF_API_KEY=${CF_API_KEY}
+    profiles:
+      - traefik
+
+  # Monitoring with Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: phone-config-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - phone-config-network
+    profiles:
+      - monitoring
+
+  # Grafana for monitoring dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: phone-config-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - phone-config-network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+
+  # Log aggregation with Loki
+  loki:
+    image: grafana/loki:latest
+    container_name: phone-config-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki.yml
+    networks:
+      - phone-config-network
+    profiles:
+      - monitoring
+
+  # Promtail for log collection
+  promtail:
+    image: grafana/promtail:latest
+    container_name: phone-config-promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail.yml:/etc/promtail/promtail.yml:ro
+      - ./logs:/var/log/phone-config:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/promtail.yml
+    networks:
+      - phone-config-network
+    depends_on:
+      - loki
+    profiles:
+      - monitoring
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: phone-config-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - phone-config-network
+    profiles:
+      - monitoring
+
+  # Backup service
+  backup:
+    image: alpine:latest
+    container_name: phone-config-backup
+    restart: "no"
+    volumes:
+      - ./data:/app/data:ro
+      - ./backups:/app/backups
+      - ./ssl:/app/ssl:ro
+      - ./vpn-configs:/app/vpn-configs:ro
+    environment:
+      - BACKUP_RETENTION_DAYS=30
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_BUCKET=${AWS_BUCKET}
+    command: |
+      sh -c "
+        apk add --no-cache curl aws-cli
+        cd /app
+        tar -czf backups/phone-config-backup-$(date +%Y%m%d-%H%M%S).tar.gz data ssl vpn-configs
+        find backups -name '*.tar.gz' -mtime +${BACKUP_RETENTION_DAYS} -delete
+        if [ -n '${AWS_BUCKET}' ]; then
+          aws s3 sync backups/ s3://${AWS_BUCKET}/phone-config-backups/
+        fi
+      "
+    profiles:
+      - backup
+
+networks:
+  phone-config-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  traefik_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local

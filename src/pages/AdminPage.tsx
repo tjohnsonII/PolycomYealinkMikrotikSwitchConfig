@@ -90,7 +90,7 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to fetch users');
       }
-    } catch (err) {
+    } catch {
       setError('Error fetching users');
     } finally {
       setLoading(false);
@@ -114,8 +114,8 @@ const AdminPage: React.FC = () => {
       } else {
         console.error('Failed to fetch pending users');
       }
-    } catch (err) {
-      console.error('Error fetching pending users:', err);
+    } catch {
+      console.error('Error fetching pending users:', 'Network error');
     } finally {
       setPendingLoading(false);
     }
@@ -145,7 +145,7 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to update user role');
       }
-    } catch (err) {
+    } catch {
       setError('Error updating user role');
     }
   };
@@ -175,7 +175,7 @@ const AdminPage: React.FC = () => {
       } else {
         setError('Failed to delete user');
       }
-    } catch (err) {
+    } catch {
       setError('Error deleting user');
     }
   };
@@ -217,7 +217,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to create user');
       }
-    } catch (err) {
+    } catch {
       setError('Error creating user');
     }
   };
@@ -276,7 +276,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to approve user');
       }
-    } catch (err) {
+    } catch {
       setError('Error approving user');
     }
   };
@@ -306,7 +306,7 @@ const AdminPage: React.FC = () => {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to deny user');
       }
-    } catch (err) {
+    } catch {
       setError('Error denying user');
     }
   };

@@ -28,6 +28,12 @@ import { fileURLToPath } from 'url';
 import { spawn, exec } from 'child_process';
 import { promisify } from 'util';
 
+// Logging utility
+function log(level, message) {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${level}: ${message}`);
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const execAsync = promisify(exec);
@@ -92,8 +98,8 @@ app.use(express.static(path.join(__dirname, 'management-ui')));
 const SERVICES = {
     'ssh-ws': {
         script: 'backend/ssh-ws-server.js',
-        port: 3001,
-        health: 'http://localhost:3001/health',
+        port: 3000,
+        health: 'http://localhost:3000/health',
         name: 'SSH WebSocket Server',
         type: 'backend'
     },
@@ -105,7 +111,7 @@ const SERVICES = {
         type: 'backend'
     },
     'proxy': {
-        script: 'backend/simple-proxy-https.js',
+        script: 'backend/simple-proxy-https-robust.js',
         port: 8443,
         health: 'https://localhost:8443/proxy-health',
         name: 'HTTPS Proxy Server',
@@ -171,8 +177,8 @@ const getServiceStatus = async (serviceKey) => {
     // Test health endpoint
     try {
         const healthCommand = service.health.startsWith('https:') 
-            ? `curl -k -s -f --connect-timeout 3 "${service.health}"`
-            : `curl -s -f --connect-timeout 3 "${service.health}"`;
+            ? `curl -k -s --connect-timeout 3 "${service.health}"`
+            : `curl -s --connect-timeout 3 "${service.health}"`;
         
         const result = await execCommand(healthCommand);
         if (result.success) {
@@ -314,8 +320,8 @@ app.post('/api/services/:service/start', async (req, res) => {
                     
                     // Start service
                     const startCommand = key === 'proxy' 
-                        ? `cd backend && PROXY_PORT=${svc.port} nohup node simple-proxy-https.js > ${key}.log 2>&1 &`
-                        : `cd backend && nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`;
+                        ? `sudo node backend/simple-proxy-https-robust.js > ${key}.log 2>&1 &`
+                        : `nohup node ${path.basename(svc.script)} > ${key}.log 2>&1 &`;
                     
                     const startResult = await execCommand(startCommand);
                     log("INFO", `Started ${svc.name}: ${startResult.success ? 'OK' : 'Failed'}`);
@@ -336,8 +342,8 @@ app.post('/api/services/:service/start', async (req, res) => {
             const killResult = await execCommand(`pkill -f "${serviceConfig.script}"`);
             
             const startCommand = service === 'proxy' 
-                ? `cd backend && PROXY_PORT=${serviceConfig.port} nohup node simple-proxy-https.js > ${service}.log 2>&1 &`
-                : `cd backend && nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
+                ? `sudo node backend/simple-proxy-https-robust.js > ${service}.log 2>&1 &`
+                : `nohup node ${path.basename(serviceConfig.script)} > ${service}.log 2>&1 &`;
             
             const result = await execCommand(startCommand);
             
@@ -650,10 +656,10 @@ app.post('/api/build', async (req, res) => {
 // VPN Management endpoints
 app.get('/api/vpn/status', async (req, res) => {
     try {
-        const sshWsResponse = await fetch('http://localhost:3001/vpn/status');
+        const sshWsResponse = await fetch('http://localhost:3000/vpn/status');
         const vpnStatus = await sshWsResponse.json();
         
-        const systemVpnResponse = await fetch('http://localhost:3001/system/vpn-status');
+        const systemVpnResponse = await fetch('http://localhost:3000/system/vpn-status');
         const systemVpnStatus = await systemVpnResponse.json();
         
         res.json({
@@ -668,7 +674,7 @@ app.get('/api/vpn/status', async (req, res) => {
 
 app.post('/api/vpn/connect', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/connect', {
+        const response = await fetch('http://localhost:3000/vpn/connect', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
@@ -682,7 +688,7 @@ app.post('/api/vpn/connect', async (req, res) => {
 
 app.post('/api/vpn/disconnect', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/disconnect', {
+        const response = await fetch('http://localhost:3000/vpn/disconnect', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
@@ -696,7 +702,7 @@ app.post('/api/vpn/disconnect', async (req, res) => {
 
 app.post('/api/vpn/dual/start', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/dual/start', {
+        const response = await fetch('http://localhost:3000/vpn/dual/start', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
@@ -710,7 +716,7 @@ app.post('/api/vpn/dual/start', async (req, res) => {
 
 app.post('/api/vpn/dual/stop', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/dual/stop', {
+        const response = await fetch('http://localhost:3000/vpn/dual/stop', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
@@ -724,7 +730,7 @@ app.post('/api/vpn/dual/stop', async (req, res) => {
 
 app.get('/api/vpn/dual/logs', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/dual/logs');
+        const response = await fetch('http://localhost:3000/vpn/dual/logs');
         const result = await response.json();
         res.json(result);
     } catch (error) {
@@ -734,7 +740,7 @@ app.get('/api/vpn/dual/logs', async (req, res) => {
 
 app.get('/api/vpn/config-content', async (req, res) => {
     try {
-        const response = await fetch(`http://localhost:3001/vpn/config-content?name=${req.query.name}`);
+        const response = await fetch(`http://localhost:3000/vpn/config-content?name=${req.query.name}`);
         const result = await response.json();
         res.json(result);
     } catch (error) {
@@ -744,7 +750,7 @@ app.get('/api/vpn/config-content', async (req, res) => {
 
 app.post('/api/vpn/upload-config', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/upload-config', {
+        const response = await fetch('http://localhost:3000/vpn/upload-config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(req.body)
@@ -758,7 +764,7 @@ app.post('/api/vpn/upload-config', async (req, res) => {
 
 app.get('/api/vpn/requires-credentials', async (req, res) => {
     try {
-        const response = await fetch(`http://localhost:3001/vpn/requires-credentials?name=${req.query.name}`);
+        const response = await fetch(`http://localhost:3000/vpn/requires-credentials?name=${req.query.name}`);
         const result = await response.json();
         res.json(result);
     } catch (error) {
@@ -768,7 +774,7 @@ app.get('/api/vpn/requires-credentials', async (req, res) => {
 
 app.get('/api/vpn/saml-login-url', async (req, res) => {
     try {
-        const response = await fetch('http://localhost:3001/vpn/saml-login-url');
+        const response = await fetch('http://localhost:3000/vpn/saml-login-url');
         const result = await response.json();
         res.json(result);
     } catch (error) {
@@ -786,7 +792,7 @@ app.post('/api/vpn/saml-connect', async (req, res) => {
             
             // For manual SAML authentication, we'll use the regular connect endpoint
             // but with SAML flag and credentials
-            const response = await fetch('http://localhost:3001/vpn/connect', {
+            const response = await fetch('http://localhost:3000/vpn/connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -803,7 +809,7 @@ app.post('/api/vpn/saml-connect', async (req, res) => {
             // For automated SAML authentication, use the dedicated SAML endpoint
             console.log('SAML connection using OpenVPN3 automated flow:', { name });
             
-            const response = await fetch('http://localhost:3001/vpn/saml-connect', {
+            const response = await fetch('http://localhost:3000/vpn/saml-connect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

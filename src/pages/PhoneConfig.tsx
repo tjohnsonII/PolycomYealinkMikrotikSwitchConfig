@@ -189,8 +189,9 @@ const PhoneConfig: React.FC = () => {
       }
       setOutput(config);
       setGeneratedConfig({ model, phoneType, config });
-    } catch (e: any) {
-      setError('An unexpected error occurred: ' + (e?.message || e));
+    } catch (e: unknown) {
+      const error = e as Error;
+      setError('An unexpected error occurred: ' + (error?.message || String(e)));
       setOutput('');
     }
   };
@@ -309,7 +310,9 @@ const PhoneConfig: React.FC = () => {
             let expansionConfig = '';
             try {
               expansionConfig = localStorage.getItem('expansionConfig') || '';
-            } catch {}
+            } catch {
+              // Ignore localStorage errors
+            }
             if (!expansionConfig) {
               alert('No expansion module config found. Please generate one in the Expansion Modules tab first.');
               return;

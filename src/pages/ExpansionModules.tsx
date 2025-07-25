@@ -138,7 +138,9 @@ const ExpansionModules: React.FC = () => {
       localStorage.removeItem('yealinkSlots');
       localStorage.removeItem('yealinkTemplateType');
       localStorage.removeItem('polycomSlots');
-    } catch {}
+    } catch {
+      // Ignore localStorage errors
+    }
   };
 
   // Utility function to download text as a file
@@ -247,7 +249,9 @@ const ExpansionModules: React.FC = () => {
             setYealinkOutput(lines.join('\n'));
             try {
               localStorage.setItem('expansionConfig', lines.join('\n'));
-            } catch {}
+            } catch {
+              // Ignore localStorage errors
+            }
           }} style={{ marginTop: 8, marginRight: 8 }}>Generate Yealink Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={yealinkOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />
@@ -341,7 +345,9 @@ const ExpansionModules: React.FC = () => {
             setPolycomOutput(lines.join('\n'));
             try {
               localStorage.setItem('expansionConfig', lines.join('\n'));
-            } catch {}
+            } catch {
+              // Ignore localStorage errors
+            }
           }} style={{ marginTop: 8, marginRight: 8 }}>Generate Polycom Expansion Config</button>
           <div className="output" style={{ marginTop: 12 }}>
             <textarea value={polycomOutput} readOnly rows={14} style={{ width: '100%', fontSize: 15, minHeight: 220 }} />

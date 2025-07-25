@@ -75,6 +75,7 @@ export const API_CONFIG = {
     vpnConnectScript: '/api/vpn/connect-script',
     'vpnConnect-script': '/api/vpn/connect-script',
     vpnSamlLoginUrl: '/api/vpn/saml-login-url',
+    vpnSamlConnect: '/api/vpn/saml-connect',
     
     // System endpoints (use /api/ prefix)
     ping: '/api/ping',

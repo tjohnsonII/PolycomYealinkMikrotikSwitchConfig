@@ -26,21 +26,24 @@
 ## Required Port Forwarding
 
 ### Minimum Required (Production)
-```
-External Port 443 → Internal IP:443 (HTTPS Proxy)
-```
 
-### Optional Administrative Access
-```
+External Port 443 → Internal IP:443 (HTTPS Proxy)
 External Port 22 → Internal IP:22 (SSH)
 External Port 3389 → Internal IP:3389 (RDP)
-```
+
+External Port 443 → Internal IP:443 (HTTPS Proxy)
+
+### Optional Administrative Access
+
+External Port 22 → Internal IP:22 (SSH)
+External Port 3389 → Internal IP:3389 (RDP)
 
 ## Network Configuration
+
 - **Server LAN IP:** 192.168.1.60
 - **Gateway:** 192.168.1.1
 - **Public IP:** 67.149.139.23
-- **Domains:** 
+- **Domains:**
   - timsablab.ddns.net → 67.149.139.23
   - 123hostedtools.com → 67.149.139.23
 
@@ -68,6 +71,7 @@ External Port 3389 → Internal IP:3389 (RDP)
 ## Testing Your Configuration
 
 ### 1. Test Internal Services
+
 ```bash
 # Check all services are running
 sudo ./start-robust.sh
@@ -79,6 +83,7 @@ curl https://localhost:443/proxy-health # Proxy (if HTTPS)
 ```
 
 ### 2. Test External Access
+
 ```bash
 # Test from another machine on your network
 curl -k https://192.168.1.60:443/proxy-health
@@ -90,43 +95,52 @@ curl -k https://123hostedtools.com/proxy-health
 ### 3. Common Issues and Solutions
 
 #### Issue: "Connection refused" from external
+
 - **Solution:** Forward port 443 in your router
 - **Check:** `telnet 67.149.139.23 443` from external machine
 
 #### Issue: "Certificate not trusted"
+
 - **Solution:** Use proper SSL certificate (already configured)
-- **Check:** Browser shows lock icon for https://123hostedtools.com
+- **Check:** Browser shows lock icon for <https://123hostedtools.com>
 
 #### Issue: Health checks fail
+
 - **Solution:** Check firewall, ensure services started properly
 - **Check:** `sudo netstat -tlnp | grep -E ':(443|3001|3002)'`
 
 ## Router Configuration
 
-### Typical Router Setup
-```
 Port Forwarding Rules:
+
 - External Port: 443
 - Internal IP: 192.168.1.60 (or your server's IP)
 - Internal Port: 443
 - Protocol: TCP
-```
+
+- Internal IP: 192.168.1.60 (or your server's IP)
+- Internal Port: 443
+- Protocol: TCP
 
 ### DNS Configuration (Namecheap)
+
 **ISSUE IDENTIFIED:** You have conflicting DNS records that need to be fixed:
 
 **Current problematic setup:**
+
 - A Record: @ → 67.149.139.23 ✅ (correct)
 - A Record: www → 67.149.139.23 ✅ (correct)  
-- URL Redirect: @ → http://www.123hostedtools.com/ ❌ (REMOVE THIS)
+- URL Redirect: @ → <http://www.123hostedtools.com/> ❌ (REMOVE THIS)
 
 **Required fix:**
+
 1. **Remove the URL Redirect Record** for @ (root domain)
 2. **Keep only the A records:**
    - A Record: @ → 67.149.139.23
    - A Record: www → 67.149.139.23
 
 **Why this fixes the issue:**
+
 - The URL redirect is causing DNS resolution conflicts
 - It's redirecting HTTPS requests to HTTP, breaking SSL
 - Only A records should point to your IP address
@@ -134,6 +148,7 @@ Port Forwarding Rules:
 ## Testing External Access
 
 ### From Outside Your Network
+
 ```bash
 # Test HTTPS access
 curl -I https://123hostedtools.com
@@ -143,6 +158,7 @@ curl -I https://123hostedtools.com:8443
 ```
 
 ### From Inside Your Network
+
 ```bash
 # Test local access
 curl -k -I https://192.168.1.60:443
@@ -154,14 +170,15 @@ curl -k -I https://localhost:443
 ✅ **HTTPS Proxy (443)** - Running and serving content  
 ✅ **SSL Certificates** - 123hostedtools.com certs installed  
 ✅ **Internal Services** - All backend services running  
-✅ **LAN Management** - Management console accessible at http://192.168.1.60:3099  
-✅ **Port Forwarding** - Direct IP access works: https://67.149.139.23:443/  
-✅ **DNS Fixed** - Domain access works: https://123hostedtools.com/  
-✅ **External Access** - Both https://123hostedtools.com and https://www.123hostedtools.com working  
+✅ **LAN Management** - Management console accessible at <http://192.168.1.60:3099>  
+✅ **Port Forwarding** - Direct IP access works: <https://67.149.139.23:443/>  
+✅ **DNS Fixed** - Domain access works: <https://123hostedtools.com/>  
+✅ **External Access** - Both <https://123hostedtools.com> and <https://www.123hostedtools.com> working  
 
 ## Firewall Considerations
 
 ### Ubuntu UFW (if enabled)
+
 ```bash
 sudo ufw allow 443/tcp
 sudo ufw allow 22/tcp  # Optional for SSH
@@ -169,12 +186,14 @@ sudo ufw allow 3389/tcp  # Optional for RDP
 ```
 
 ### Router Firewall
+
 - Ensure port 443 is open for inbound connections
 - Consider blocking all other ports from external access
 
 ## Troubleshooting
 
 ### If External Access Fails
+
 1. **DNS Issue (URGENT):** Remove the URL Redirect Record for @ in Namecheap
 2. Check router port forwarding is configured
 3. Verify external IP with `curl ifconfig.me`
@@ -183,6 +202,7 @@ sudo ufw allow 3389/tcp  # Optional for RDP
 6. Verify SSL certificate: `openssl s_client -connect 123hostedtools.com:443`
 
 ### DNS Troubleshooting Steps
+
 ```bash
 # Test direct IP access (should work)
 curl -k -I https://67.149.139.23:443/
@@ -195,6 +215,7 @@ nslookup 123hostedtools.com
 ```
 
 ### Check Service Status
+
 ```bash
 # Check all services
 netstat -tlnp | grep -E "(443|3000|3001|3002|3099)"
@@ -214,7 +235,7 @@ sudo journalctl -f -u simple-proxy-https-robust
 
 1. **Configure port forwarding** in your router
 2. **Test production startup:** `sudo ./start-robust.sh`
-3. **Verify external access:** Visit https://123hostedtools.com
+3. **Verify external access:** Visit <https://123hostedtools.com>
 4. **Check SSL certificate:** Ensure no browser warnings
 
 ## URGENT DNS Fix Required ✅ COMPLETED
@@ -224,8 +245,9 @@ sudo journalctl -f -u simple-proxy-https-robust
 **Solution:** ✅ **FIXED** - URL Redirect Record has been removed from Namecheap
 
 **Current Status:**
-- ✅ https://123hostedtools.com → Working perfectly
-- ✅ https://www.123hostedtools.com → Working perfectly  
+
+- ✅ <https://123hostedtools.com> → Working perfectly
+- ✅ <https://www.123hostedtools.com> → Working perfectly  
 - ✅ SSL certificates → Valid and trusted
 - ✅ All API endpoints → Accessible and functioning
 

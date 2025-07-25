@@ -1,0 +1,58 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  - job_name: 'phone-config-app'
+    static_configs:
+      - targets: ['phone-config-app:3001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  - job_name: 'phone-config-ssh-ws'
+    static_configs:
+      - targets: ['phone-config-app:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'phone-config-management'
+    static_configs:
+      - targets: ['phone-config-app:3099']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 15s
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 15s
+
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB

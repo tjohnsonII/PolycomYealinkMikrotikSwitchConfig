@@ -267,8 +267,72 @@ function showSamlAuthModal() {
     }
 
     async connectSamlVPN() {
-        debugLog('🔧 connectSamlVPN method called');
-        await this.connectVPN('work', {}, true);
+        try {
+            debugLog('🔧 connectSamlVPN method called');
+            
+            this.showAlert('🔐 Starting SAML authentication for work VPN...', 'info');
+            
+            const response = await fetch('/api/vpn/saml-connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: 'work'
+                })
+            });
+
+            const result = await response.json();
+            debugLog('📡 SAML Connect Response: ' + JSON.stringify(result));
+            
+            if (response.ok && result.success) {
+                this.showAlert('✅ SAML authentication started! OpenVPN3 should have opened your browser for authentication. Complete the login process there.', 'success');
+                
+                // Start monitoring connection status
+                this.monitorSamlConnection();
+                
+            } else {
+                this.showAlert(`❌ Failed to start SAML authentication: ${result.error || result.message}`, 'error');
+            }
+            
+        } catch (error) {
+            debugLog('❌ Error in connectSamlVPN: ' + error.message);
+            this.showAlert(`❌ SAML connection error: ${error.message}`, 'error');
+        }
+    }
+
+    async monitorSamlConnection() {
+        let attempts = 0;
+        const maxAttempts = 60; // Monitor for 5 minutes
+        
+        const checkConnection = async () => {
+            try {
+                const response = await fetch('/api/vpn/status');
+                const status = await response.json();
+                
+                if (status.connected) {
+                    this.showAlert('✅ VPN connected successfully!', 'success');
+                    this.refreshStatus();
+                    return;
+                }
+                
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkConnection, 5000); // Check every 5 seconds
+                } else {
+                    this.showAlert('⏱️ Connection monitoring timed out. Please check VPN status manually.', 'warning');
+                }
+            } catch (error) {
+                // Continue monitoring even if there's an error
+                if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(checkConnection, 5000);
+                }
+            }
+        };
+        
+        // Start monitoring after a short delay
+        setTimeout(checkConnection, 3000);
     }
 
     async connectVPN(name, credentials = {}, useSaml = false) {
