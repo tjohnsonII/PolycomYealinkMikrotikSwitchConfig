@@ -6,21 +6,22 @@
     <title>Phone Config Manager - Web Console</title>
     <style>
         :root {
-            --bg-dark: #181c24;
-            --bg-card: #232a36;
-            --text-light: #f4f6fa;
-            --border-color: #2c3440;
-            --success: #4ade80;
+            --bg-dark: #fff;
+            --bg-card: #fff;
+            --text-light: #232a36;
+            --border-color: #e0e6ef;
+            --success: #22c55e;
             --warning: #facc15;
             --danger: #ef4444;
-            --info: #38bdf8;
-            --accent: #6366f1;
-            --shadow: 0 4px 24px rgba(0,0,0,0.18);
+            --info: #0072ce;
+            --accent: #0072ce;
+            --accent-green: #2ecc40;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
         }
 
         body {
-            background: linear-gradient(135deg, #232a36 0%, #181c24 100%);
-            color: var(--text-light);
+            background: #fff;
+            color: #232a36;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
@@ -28,37 +29,39 @@
         }
 
         .navbar {
-            background: linear-gradient(90deg, var(--bg-card) 60%, var(--accent) 100%) !important;
-            border-bottom: 1.5px solid var(--border-color);
+            background: #111 !important;
+            border-bottom: 2px solid #0072ce;
             box-shadow: var(--shadow);
         }
 
         .navbar-brand {
             font-weight: bold;
-            color: var(--text-light) !important;
+            color: #fff !important;
             letter-spacing: 1px;
-            font-size: 1.3em;
+            font-size: 1.5em;
         }
 
         .card {
             background: var(--bg-card);
             border: 1.5px solid var(--border-color);
-            border-radius: 14px;
-            margin-bottom: 28px;
-            box-shadow: var(--shadow);
+            border-radius: 18px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.06);
             transition: box-shadow 0.2s;
         }
 
         .card-header {
             background: transparent;
             border-bottom: 1px solid var(--border-color);
-            color: var(--text-light);
-            font-weight: 500;
-            font-size: 1.1em;
+            color: #111;
+            font-weight: 700;
+            font-size: 1.18em;
+            letter-spacing: 0.5px;
         }
 
         .card-body {
-            color: var(--text-light);
+            color: #232a36;
+            padding: 1.5rem 1.5rem 1.2rem 1.5rem;
         }
 
         .status-healthy { color: var(--success); }
@@ -88,32 +91,41 @@
         }
 
         .btn-custom {
-            margin: 3px 4px 3px 0;
-            border-radius: 6px;
-            font-weight: 500;
+            margin: 3px 6px 3px 0;
+            border-radius: 8px;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            box-shadow: 0 2px 8px rgba(99,102,241,0.04);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 0.5em 1.2em;
+            font-size: 1em;
+            border: none;
+            background: #0072ce;
+            color: #fff;
             transition: background 0.2s, color 0.2s, box-shadow 0.2s;
         }
-        .btn-custom:active {
-            box-shadow: 0 1px 2px rgba(99,102,241,0.08);
+        .btn-custom:active, .btn-custom:focus {
+            background: #2ecc40;
+            color: #fff;
         }
 
         .tab-content {
-            padding: 28px 0 0 0;
+            padding: 32px 0 0 0;
         }
 
         .nav-tabs .nav-link {
-            color: var(--text-light);
+            color: #0072ce;
             border-color: var(--border-color);
-            border-radius: 8px 8px 0 0;
+            border-radius: 10px 10px 0 0;
             margin-right: 2px;
+            font-weight: 700;
+            background: #fff;
+            transition: background 0.2s, color 0.2s;
         }
         .nav-tabs .nav-link.active {
-            background: var(--accent);
-            border-color: var(--accent) var(--accent) var(--bg-card);
+            background: #0072ce;
+            border-color: #0072ce #0072ce var(--bg-card);
             color: #fff;
-            font-weight: 600;
+            font-weight: 700;
         }
 
         .table-dark {
@@ -161,24 +173,26 @@
             display: flex;
             justify-content: space-between;
             align-items: stretch;
-            background: linear-gradient(90deg, var(--bg-card) 80%, var(--accent) 100%);
-            padding: 18px 24px;
-            border-radius: 10px;
-            margin-bottom: 28px;
-            box-shadow: 0 2px 12px rgba(56,189,248,0.08);
+            background: #f4f6fa;
+            padding: 22px 32px;
+            border-radius: 14px;
+            margin-bottom: 36px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         }
         .stat-item {
             text-align: center;
             flex: 1;
         }
         .stat-value {
-            font-size: 2em;
-            font-weight: 700;
+            font-size: 2.2em;
+            font-weight: 800;
+            color: #0072ce;
         }
         .stat-label {
-            font-size: 1em;
-            color: #b0b8c9;
+            font-size: 1.1em;
+            color: #2ecc40;
             margin-top: 2px;
+            font-weight: 600;
         }
 
         /* Terminal Styles */
@@ -259,31 +273,121 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar">
-        <div class="container-fluid d-flex align-items-center justify-content-between">
-            <a class="navbar-brand d-flex align-items-center gap-2 custom-navbar-brand" href="#">
-                <span class="navbar-logo">
-                    <i class="fas fa-cogs fa-lg"></i>
-                </span>
-                <span>
-                    <span class="navbar-title">Phone Config Manager</span>
-                    <span class="navbar-subtitle">Web Console</span>
-                </span>
-            </a>
-            <div class="d-flex align-items-center gap-2 ms-auto">
-                <a class="btn btn-gradient me-2" href="diagnostics.html">
-                    <i class="fas fa-stethoscope"></i> Diagnostics
-                </a>
-                <a class="btn btn-gradient me-2" href="vpn-management.html">
-                    <i class="fas fa-shield-alt"></i> VPN
-                </a>
-                <span class="navbar-text d-flex align-items-center ms-2 custom-navbar-text">
-                    <span class="real-time-indicator"></span>
-                    <small id="last-update">Loading...</small>
-                </span>
-            </div>
+    <div class="login-bg">
+      <div class="login-container">
+        <div class="login-logo">
+          <img src="/vite.svg" alt="123NET Logo" class="login-logo-img" />
+          <div class="login-logo-subtitle">
+            Polycom/Yealink Configuration Manager<br />THE INTERNET YOU CAN COUNT ON
+          </div>
         </div>
-    </nav>
+        <div class="login-title">Welcome Back</div>
+        <div id="login-error" class="login-error"></div>
+        <form class="login-form" id="login-form">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" autocomplete="username" required />
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required />
+          <button type="submit" class="btn-custom">Sign In</button>
+          <div class="form-footer">
+            Don't have an account? <a href="#" class="login-create-account">Create Account</a>
+        .login-logo-img {
+            max-width: 180px;
+            margin-bottom: 0.5rem;
+        }
+        .login-error {
+            display: none;
+        }
+        .login-error.active {
+            display: block;
+        }
+        .login-create-account {
+            color: #0072ce;
+            font-weight: 600;
+        }
+          </div>
+        </form>
+      </div>
+    </div>
+        /* Login page centering and spacing improvements */
+        .login-bg {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0072ce 0%, #2ecc40 100%);
+        }
+        .login-container {
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 340px;
+            max-width: 370px;
+        }
+        .login-logo {
+            margin-bottom: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .login-logo img {
+            max-width: 180px;
+            margin-bottom: 0.5rem;
+        }
+        .login-logo-subtitle {
+            font-size: 1.05em;
+            color: #0072ce;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .login-title {
+            font-size: 1.35em;
+            font-weight: 700;
+            color: #0072ce;
+            margin-bottom: 1.1rem;
+            text-align: center;
+        }
+        .login-form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.7rem;
+        }
+        .login-form label {
+            font-weight: 500;
+            color: #232a36;
+            margin-bottom: 0.2rem;
+        }
+        .login-form input {
+            border: 1.5px solid #e0e6ef;
+            border-radius: 6px;
+            padding: 0.5em 0.9em;
+            font-size: 1em;
+            margin-bottom: 0.2rem;
+        }
+        .login-form .btn-custom {
+            width: 100%;
+            margin: 0.5rem 0 0.2rem 0;
+        }
+        .login-form .form-footer {
+            text-align: center;
+            margin-top: 0.7rem;
+        }
+        .login-error {
+            background: #ffeaea;
+            color: #d32f2f;
+            border-radius: 6px;
+            padding: 0.7em 1em;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+        }
     <style>
         .custom-navbar {
             background: linear-gradient(90deg, #232a36 60%, #6366f1 100%) !important;
