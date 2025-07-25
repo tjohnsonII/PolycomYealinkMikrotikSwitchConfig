@@ -25,9 +25,9 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ HTTP Server running on port ${PORT}`);
-  console.log(`📱 Access at: http://localhost:${PORT}`);
+  console.log(`📱 Access at: http://<your-ip>:${PORT}`);
 });
 
 // Graceful shutdown

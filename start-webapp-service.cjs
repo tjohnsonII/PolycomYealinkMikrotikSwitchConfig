@@ -34,9 +34,9 @@ if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
       cert: fs.readFileSync(sslCertPath)
     };
     
-    https.createServer(options, app).listen(PORT, () => {
+    https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
       console.log(`✅ HTTPS Server running on port ${PORT}`);
-      console.log(`📱 Access at: https://localhost:${PORT}`);
+      console.log(`📱 Access at: https://<your-ip>:${PORT}`);
     });
   } catch (error) {
     console.error('❌ SSL Error:', error.message);
