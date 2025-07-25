@@ -1,5 +1,5 @@
 import * as React from 'react';
-import '../styles/inline-styles-fix.css';
+import '../styles/Logo123Net.css';
 
 interface Logo123NetProps {
   size?: 'small' | 'medium' | 'large' | 'compact';
@@ -61,44 +61,22 @@ const Logo123Net: React.FC<Logo123NetProps> = ({
   } as React.CSSProperties;
 
   return (
-     
-    <div 
-      className={`logo-123net ${className}`}
-      style={{
-        ...cssVars,
-        ...style
-      }}
+    <div
+      className={`logo-123net modern-logo-123net ${className}`}
+      style={{ ...cssVars, ...style }}
     >
-      {/* 123 Blocks */}
       <div className="logo-123net-blocks">
-        {/* Red "1" Block */}
-        <div className="logo-123net-block logo-123net-block-1">
-          1
-        </div>
-        
-        {/* Green "2" Block */}
-        <div className="logo-123net-block logo-123net-block-2">
-          2
-        </div>
-        
-        {/* Blue "3" Block */}
-        <div className="logo-123net-block logo-123net-block-3">
-          3
-        </div>
+        <div className="logo-123net-block logo-123net-block-1">1</div>
+        <div className="logo-123net-block logo-123net-block-2">2</div>
+        <div className="logo-123net-block logo-123net-block-3">3</div>
       </div>
-
-      {/* NET Text and Connection Icon */}
       {showText && (
         <div className="logo-123net-text-container">
-          <span className="logo-123net-text">
-            NET
-          </span>
-          
-          {/* Connection Icon */}
+          <span className="logo-123net-text">NET</span>
           <div className="logo-123net-connection-icon">
             <div className="logo-123net-connection-dot-left" />
-            <div className="logo-123net-connection-dot-right" />
             <div className="logo-123net-connection-line" />
+            <div className="logo-123net-connection-dot-right" />
           </div>
         </div>
       )}
